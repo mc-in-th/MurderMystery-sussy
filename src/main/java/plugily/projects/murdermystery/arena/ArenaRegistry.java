@@ -30,6 +30,7 @@ import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
+import plugily.projects.murdermystery.arena.task.TaskType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,12 +88,42 @@ public class ArenaRegistry extends PluginArenaRegistry {
     }
     ((Arena) arena).setGoldSpawnPoints(goldSpawnPoints);
 
+    List<Location> taskLocations = new ArrayList<>();
+    for(String loc : section.getStringList(id + ".tasklocations")) {
+      Location l = LocationSerializer.getLocation(loc);
+      if(l != null) {
+        taskLocations.add(l);
+      }
+    }
+    ((Arena) arena).setTaskLocations(taskLocations);
+
+    ConfigurationSection tasksSec = section.getConfigurationSection(id + ".tasks");
+    if(tasksSec != null) {
+      for(String key : tasksSec.getKeys(false)) {
+        TaskType type = TaskType.fromInput(key);
+        if(type != null) {
+          for(String locStr : tasksSec.getStringList(key)) {
+            Location l = LocationSerializer.getLocation(locStr);
+            if(l != null) {
+              ((Arena) arena).addSpecificTaskLocation(type, l);
+            }
+          }
+        }
+      }
+    }
+
     List<SpecialBlock> specialBlocks = new ArrayList<>();
     for(String loc : section.getStringList(id + ".mystery-cauldrons")) {
       specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.MYSTERY_CAULDRON));
     }
     for(String loc : section.getStringList(id + ".confessionals")) {
       specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.PRAISE_DEVELOPER));
+    }
+    for(String loc : section.getStringList(id + ".sewers")) {
+      specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION));
+    }
+    for(String loc : section.getStringList(id + ".rapid-teleportation")) {
+      specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION));
     }
 
     specialBlocks.forEach(((Arena) arena)::loadSpecialBlock);
