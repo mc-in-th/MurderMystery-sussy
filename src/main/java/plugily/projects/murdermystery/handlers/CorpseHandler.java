@@ -19,8 +19,10 @@
 package plugily.projects.murdermystery.handlers;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -46,7 +48,9 @@ import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
 import plugily.projects.murdermystery.arena.corpse.Stand;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -83,13 +87,19 @@ public class CorpseHandler implements Listener {
 
   @SuppressWarnings("deprecation")
   public void spawnCorpse(Player player, Arena arena, @Nullable Player killer) {
+    if(arena.getVotingManager().isVotingActive()) {
+      return;
+    }
     MurderGameCorpseSpawnEvent murderGameCorpseSpawnEvent = new MurderGameCorpseSpawnEvent(arena, player.getPlayer(), player.getLocation(), killer);
     Bukkit.getPluginManager().callEvent(murderGameCorpseSpawnEvent);
     if(murderGameCorpseSpawnEvent.isCancelled()) {
       return;
     }
+
+    Location deathLoc = player.getLocation().clone();
+
     if(!plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
-      ArmorStand stand = player.getLocation().getWorld().spawn(player.getLocation().add(0.0D, -1.25D, 0.0D), ArmorStand.class);
+      ArmorStand stand = deathLoc.getWorld().spawn(deathLoc.clone().add(0.0D, -1.25D, 0.0D), ArmorStand.class);
       SkullMeta meta = (SkullMeta) head.getItemMeta();
       meta = VersionUtils.setPlayerHead(player, meta);
       head.setItemMeta(meta);
@@ -102,29 +112,37 @@ public class CorpseHandler implements Listener {
       }
       stand.setGravity(false);
       stand.setCustomNameVisible(false);
-      stand.setHeadPose(new EulerAngle(Math.toRadians(player.getLocation().getX()), Math.toRadians(player.getLocation().getPitch()), Math.toRadians(player.getLocation().getZ())));
+      stand.setHeadPose(new EulerAngle(Math.toRadians(deathLoc.getX()), Math.toRadians(deathLoc.getPitch()), Math.toRadians(deathLoc.getZ())));
+
+      ArmorStand hitboxStand = deathLoc.getWorld().spawn(deathLoc.clone().add(0.0D, -0.2D, 0.0D), ArmorStand.class);
+      hitboxStand.setVisible(false);
+      hitboxStand.setGravity(false);
+      hitboxStand.setCustomNameVisible(false);
 
       plugin.getHologramManager().getArmorStands().add(stand);
+      plugin.getHologramManager().getArmorStands().add(hitboxStand);
+
       ArmorStandHologram hologram = getLastWordsHologram(player);
       arena.addHead(new Stand(hologram, stand));
-      arena.spawnTextDisplay(player.getLocation().clone().add(0, 0.9, 0), "&c&l ร่างผู้เสียชีวิต (DEAD BODY) \n&e[คลิกขวาเพื่อรายงานศพ / Report]");
-      Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        hologram.delete();
-        plugin.getHologramManager().getArmorStands().remove(stand);
-        Bukkit.getScheduler().runTaskLater(plugin, stand::remove, 20 * 20);
-      }, 15 * 20);
+      arena.addHead(new Stand(null, hitboxStand));
+
+      TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
+        "&c&l ร่างไร้วิญญาณของ &f" + player.getName() + " &c&l\n&e[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+
+      List<ArmorStand> corpseStands = new ArrayList<>();
+      corpseStands.add(stand);
+      corpseStands.add(hitboxStand);
+      arena.getVotingManager().registerDeadBody(player.getName(), deathLoc, corpseStands, td, hologram);
       return;
     }
     ArmorStandHologram hologram = getLastWordsHologram(player);
-    Corpses.CorpseData corpse = CorpseAPI.spawnCorpse(player, player.getLocation());
+    Corpses.CorpseData corpse = CorpseAPI.spawnCorpse(player, deathLoc);
     lastSpawnedCorpse = corpse;
     //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
     arena.addCorpse(new Corpse(hologram, corpse));
-    arena.spawnTextDisplay(player.getLocation().clone().add(0, 0.9, 0), "&c&l ร่างผู้เสียชีวิต (DEAD BODY) \n&e[คลิกขวาเพื่อรายงานศพ / Report]");
-    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      hologram.delete();
-      Bukkit.getScheduler().runTaskLater(plugin, corpse::destroyCorpseFromEveryone, 20 * 20);
-    }, 15 * 20);
+    TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
+      "&c&l ร่างไร้วิญญาณของ &f" + player.getName() + " &c&l\n&e[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+    arena.getVotingManager().registerDeadBody(player.getName(), deathLoc, new ArrayList<>(), td, hologram);
   }
 
   private ArmorStandHologram getLastWordsHologram(Player player) {
@@ -154,7 +172,7 @@ public class CorpseHandler implements Listener {
       if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
         IUser user = plugin.getUserManager().getUser(e.getClicker());
         if(!user.isSpectator()) {
-          arena.getVotingManager().startVoting(e.getClicker());
+          arena.getVotingManager().startVoting(e.getClicker(), e.getCorpse().getCorpseName());
         }
       }
     }
