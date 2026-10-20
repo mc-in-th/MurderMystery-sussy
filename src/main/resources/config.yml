@@ -29,6 +29,7 @@ Scoreboard:
 Tasks:
   Per-Player: 3
   Complete-Range: 3.0
+  Visual-Effects: true
 
 Voting:
   Cooldown: 30

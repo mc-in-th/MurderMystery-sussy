@@ -128,6 +128,9 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_ENGINE_OIL", new Message("In-Game.Messages.Arena.Task.Types.Check-Engine-Oil", "เช็คน้ำมันเครื่อง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", new Message("In-Game.Messages.Arena.Task.Types.Check-Tire-Pressure", "เช็คลมยาง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", new Message("In-Game.Messages.Arena.Task.Types.Check-Steering-Fluid", "เช็คน้ำมันพวงมาลัย"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_SUBMIT_SCAN", new Message("In-Game.Messages.Arena.Task.Types.Submit-Scan", "สแกนร่างกายยืนยันตัวตน"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_EMPTY_GARBAGE", new Message("In-Game.Messages.Arena.Task.Types.Empty-Garbage", "ทิ้งขยะออกนอกรถบัส"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAR_ASTEROIDS", new Message("In-Game.Messages.Arena.Task.Types.Clear-Asteroids", "ยิงสกัดสิ่งกีดขวาง"));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown",
         "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!"));

@@ -77,10 +77,13 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ภารกิจของคุณ</bold></gradient> <#B8B0C8>(" + completed + "/" + total + "):"));
         if(tasks != null && !tasks.isEmpty()) {
           for(GameTask task : tasks) {
+            String visualTag = (task.getTaskType().isVisual() && gameArena.isVisualTasksEnabled())
+              ? " <#72EFDD>[V]"
+              : "";
             if(task.isCompleted()) {
-              lines.add(HalloweenChat.color("<#6EEB83>[/] <#6EEB83>" + task.getTaskType().getDisplayName()));
+              lines.add(HalloweenChat.color("<#6EEB83>[/] <#6EEB83>" + task.getTaskType().getDisplayName() + visualTag));
             } else {
-              lines.add(HalloweenChat.color("<#FF3B47>[x] <#F4F1DE>" + task.getTaskType().getDisplayName()));
+              lines.add(HalloweenChat.color("<#FF3B47>[x] <#F4F1DE>" + task.getTaskType().getDisplayName() + visualTag));
             }
           }
         } else {

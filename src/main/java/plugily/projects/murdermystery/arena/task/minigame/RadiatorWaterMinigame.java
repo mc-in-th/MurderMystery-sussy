@@ -257,6 +257,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         session.capOpen = true;
         XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 1F, 1.2F);
         XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
+        arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, 1, 4);
         VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เปิดฝาหม้อน้ำแล้ว! -> คลิกขวดน้ำยาทางขวา (ช่อง 15) เพื่อเทน้ำยา"));
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
@@ -276,6 +277,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         session.waterLevel++;
         XSound.ITEM_BUCKET_EMPTY.play(player.getLocation(), 0.9F, 1.2F);
         XSound.BLOCK_WATER_AMBIENT.play(player.getLocation(), 0.8F, 1.5F);
+        arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, session.waterLevel, 4);
 
         if(session.waterLevel >= 3) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);

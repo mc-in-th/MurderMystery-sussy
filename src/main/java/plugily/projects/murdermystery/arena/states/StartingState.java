@@ -112,7 +112,7 @@ public class StartingState extends PluginStartingState {
         taskLocs = pluginArena.getGoldSpawnPoints();
       }
 
-      int tasksPerPlayer = getPlugin().getConfig().getInt("Tasks.Per-Player", 3);
+      int tasksPerPlayer = pluginArena.getEffectiveTasksPerPlayer();
       pluginArena.clearPluginBossBars();
       pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
       pluginArena.getMinimap().distributeMaps();

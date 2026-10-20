@@ -118,6 +118,7 @@ public class TaskManager {
   private final Map<Player, List<GameTask>> playerTasks = new HashMap<>();
   private final List<TaskStationDisplay> stationDisplays = new ArrayList<>();
   private final TaskMinigameManager minigameManager;
+  private final VisualTaskEffectManager visualEffectManager;
   private BossBar taskBossBar;
   private BukkitTask arrowTrackerTask;
   private int totalTasks = 0;
@@ -127,10 +128,16 @@ public class TaskManager {
   public TaskManager(Arena arena) {
     this.arena = arena;
     this.minigameManager = new TaskMinigameManager(arena);
+    this.visualEffectManager = new VisualTaskEffectManager(arena);
+  }
+
+  public VisualTaskEffectManager getVisualEffectManager() {
+    return visualEffectManager;
   }
 
   public void assignTasks(List<Player> innocents, List<Location> taskLocations, int tasksPerPlayer) {
     playerTasks.clear();
+    visualEffectManager.cleanup();
     for(TaskStationDisplay station : stationDisplays) {
       station.remove();
     }
@@ -144,14 +151,27 @@ public class TaskManager {
     }
 
     TaskType[] allTaskTypes = TaskType.getValues();
+    List<TaskType> configuredPool = new ArrayList<>();
+    for(TaskType t : allTaskTypes) {
+      if(!arena.getTaskLocations(t).isEmpty()) {
+        configuredPool.add(t);
+      }
+    }
+    boolean useConfiguredFirst = !configuredPool.isEmpty() && arena.getTaskLocations().isEmpty();
+
     Random random = new Random();
     List<Set<TaskType>> assignedSets = new ArrayList<>();
 
     for(Player player : innocents) {
-      List<TaskType> pool = new ArrayList<>(Arrays.asList(allTaskTypes));
+      List<TaskType> pool;
+      if(useConfiguredFirst && configuredPool.size() >= tasksPerPlayer) {
+        pool = new ArrayList<>(configuredPool);
+      } else {
+        pool = new ArrayList<>(Arrays.asList(allTaskTypes));
+      }
       Collections.shuffle(pool, random);
 
-      int count = Math.min(tasksPerPlayer, Math.min(taskLocations.size(), pool.size()));
+      int count = Math.max(1, Math.min(tasksPerPlayer, pool.size()));
       Set<TaskType> playerTypes = new HashSet<>(pool.subList(0, count));
 
       int attempts = 0;
@@ -292,10 +312,13 @@ public class TaskManager {
     player.sendMessage(border);
     for(GameTask task : tasks) {
       String taskName = task.getTaskType().getDisplayName();
+      String visualTag = (task.getTaskType().isVisual() && arena.isVisualTasksEnabled())
+        ? " <#72EFDD>[Visual ยืนยันตัวตน]"
+        : "";
       if(task.isCompleted()) {
-        player.sendMessage(HalloweenChat.color("<#FFB703> > <#6EEB83><strikethrough>" + taskName + "</strikethrough> <#6EEB83>[/] (เสร็จสิ้น)"));
+        player.sendMessage(HalloweenChat.color("<#FFB703> > <#6EEB83><strikethrough>" + taskName + "</strikethrough>" + visualTag + " <#6EEB83>[/] (เสร็จสิ้น)"));
       } else {
-        player.sendMessage(HalloweenChat.color("<#FFB703> > <#F4F1DE>" + taskName));
+        player.sendMessage(HalloweenChat.color("<#FFB703> > <#F4F1DE>" + taskName + visualTag));
       }
     }
     player.sendMessage(HalloweenChat.color("<#5A4E7C>----------------------------------------"));
@@ -322,6 +345,7 @@ public class TaskManager {
         task.setCompleted(true);
         completedTasks++;
         updateBossBar();
+        visualEffectManager.completeVisualSession(player, task.getTaskType());
 
         String taskName = task.getTaskType().getDisplayName();
 
@@ -404,7 +428,11 @@ public class TaskManager {
 
       if(match) {
         if(minigameManager.hasMinigame(task.getTaskType())) {
-          return minigameManager.openMinigame(player, task.getTaskType());
+          boolean opened = minigameManager.openMinigame(player, task.getTaskType());
+          if(opened && task.getTaskType().isVisual()) {
+            visualEffectManager.startVisualSession(player, task.getTaskType(), task.getLocation());
+          }
+          return opened;
         } else {
           return completeTaskFromMinigame(player, task.getTaskType());
         }
@@ -456,6 +484,7 @@ public class TaskManager {
         task.setCompleted(true);
         completedTasks++;
         updateBossBar();
+        visualEffectManager.completeVisualSession(player, task.getTaskType());
 
         String taskName = task.getTaskType().getDisplayName();
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
@@ -592,6 +621,7 @@ public class TaskManager {
 
   public void cleanup() {
     stopArrowTracker();
+    visualEffectManager.cleanup();
     if(taskBossBar != null) {
       taskBossBar.setVisible(false);
       taskBossBar.removeAll();
@@ -698,6 +728,7 @@ public class TaskManager {
   }
 
   public void handlePlayerDeath(Player player) {
+    visualEffectManager.stopVisualSession(player);
     List<GameTask> tasks = playerTasks.remove(player);
     if(tasks != null) {
       for(GameTask task : tasks) {
@@ -714,6 +745,7 @@ public class TaskManager {
   }
 
   public void removePlayer(Player player) {
+    visualEffectManager.stopVisualSession(player);
     List<GameTask> tasks = playerTasks.remove(player);
     if(tasks != null) {
       for(GameTask task : tasks) {

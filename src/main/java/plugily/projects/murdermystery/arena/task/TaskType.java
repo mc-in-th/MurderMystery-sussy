@@ -23,24 +23,29 @@ import plugily.projects.murdermystery.utils.HalloweenChat;
 
 public enum TaskType {
 
-  FIND_DIESEL_FUEL("หาน้ำมันดีเซล", "IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", "[น้ำมัน]", "diesel"),
-  CHECK_CONTROL_PANEL("ตรวจสอบแผงควบคุมรถบัส", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", "[แผงไฟ]", "panel"),
-  REPAIR_ENGINE_WIRING("ซ่อมสายไฟเครื่องยนต์", "IN_GAME_MESSAGES_ARENA_TASK_REPAIR_ENGINE_WIRING", "[สายไฟ]", "wiring"),
-  CHECK_RADIATOR_WATER("เช็คระดับน้ำในหม้อน้ำ", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_RADIATOR_WATER", "[หม้อน้ำ]", "radiator"),
-  CHECK_ENGINE_OIL("เช็คน้ำมันเครื่อง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_ENGINE_OIL", "[น้ำมันเครื่อง]", "oil"),
-  CHECK_TIRE_PRESSURE("เช็คลมยาง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", "[ลมยาง]", "tire"),
-  CHECK_STEERING_FLUID("เช็คน้ำมันพวงมาลัย", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", "[พวงมาลัย]", "steering");
+  FIND_DIESEL_FUEL("หาน้ำมันดีเซล", "IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", "[น้ำมัน]", "diesel", false),
+  CHECK_CONTROL_PANEL("ตรวจสอบแผงควบคุมรถบัส", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", "[แผงไฟ]", "panel", false),
+  REPAIR_ENGINE_WIRING("ซ่อมสายไฟเครื่องยนต์", "IN_GAME_MESSAGES_ARENA_TASK_REPAIR_ENGINE_WIRING", "[สายไฟ]", "wiring", false),
+  CHECK_RADIATOR_WATER("เช็คระดับน้ำในหม้อน้ำ", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_RADIATOR_WATER", "[หม้อน้ำ]", "radiator", true),
+  CHECK_ENGINE_OIL("เช็คน้ำมันเครื่อง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_ENGINE_OIL", "[น้ำมันเครื่อง]", "oil", false),
+  CHECK_TIRE_PRESSURE("เช็คลมยาง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", "[ลมยาง]", "tire", true),
+  CHECK_STEERING_FLUID("เช็คน้ำมันพวงมาลัย", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", "[พวงมาลัย]", "steering", false),
+  SUBMIT_SCAN("สแกนร่างกายยืนยันตัวตน", "IN_GAME_MESSAGES_ARENA_TASK_SUBMIT_SCAN", "[สแกน]", "scan", true),
+  EMPTY_GARBAGE("ทิ้งขยะออกนอกรถบัส", "IN_GAME_MESSAGES_ARENA_TASK_EMPTY_GARBAGE", "[ทิ้งขยะ]", "trash", true),
+  CLEAR_ASTEROIDS("ยิงสกัดสิ่งกีดขวาง", "IN_GAME_MESSAGES_ARENA_TASK_CLEAR_ASTEROIDS", "[ป้อมปืน]", "asteroids", true);
 
   private final String defaultName;
   private final String messageKey;
   private final String icon;
   private final String shortId;
+  private final boolean visual;
 
-  TaskType(String defaultName, String messageKey, String icon, String shortId) {
+  TaskType(String defaultName, String messageKey, String icon, String shortId, boolean visual) {
     this.defaultName = defaultName;
     this.messageKey = messageKey;
     this.icon = icon;
     this.shortId = shortId;
+    this.visual = visual;
   }
 
   public String getDefaultName() {
@@ -59,6 +64,10 @@ public enum TaskType {
     return shortId;
   }
 
+  public boolean isVisual() {
+    return visual;
+  }
+
   public String getDisplayName() {
     try {
       String msg = new MessageBuilder(messageKey).asKey().build();
@@ -74,6 +83,9 @@ public enum TaskType {
   }
 
   public String getHologramTitle() {
+    if(visual) {
+      return "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>" + getDisplayName() + "</bold></gradient> <#5A4E7C>] <#72EFDD><bold>[VISUAL]</bold>";
+    }
     return "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>" + getDisplayName() + "</bold></gradient> <#5A4E7C>]";
   }
 
@@ -104,6 +116,15 @@ public enum TaskType {
     if(clean.equals("7")) {
       return CHECK_STEERING_FLUID;
     }
+    if(clean.equals("8")) {
+      return SUBMIT_SCAN;
+    }
+    if(clean.equals("9")) {
+      return EMPTY_GARBAGE;
+    }
+    if(clean.equals("10")) {
+      return CLEAR_ASTEROIDS;
+    }
 
     for(TaskType t : values()) {
       if(t.name().equalsIgnoreCase(clean) || t.getShortId().equalsIgnoreCase(clean)) {
@@ -131,6 +152,15 @@ public enum TaskType {
     }
     if(clean.contains("STEERING") || clean.contains("FLUID") || clean.contains("พวงมาลัย")) {
       return CHECK_STEERING_FLUID;
+    }
+    if(clean.contains("SCAN") || clean.contains("MEDBAY") || clean.contains("สแกน")) {
+      return SUBMIT_SCAN;
+    }
+    if(clean.contains("TRASH") || clean.contains("GARBAGE") || clean.contains("CHUTE") || clean.contains("ขยะ")) {
+      return EMPTY_GARBAGE;
+    }
+    if(clean.contains("ASTEROID") || clean.contains("WEAPON") || clean.contains("LASER") || clean.contains("TURRET") || clean.contains("ป้อมปืน")) {
+      return CLEAR_ASTEROIDS;
     }
 
     return null;

@@ -344,6 +344,8 @@ public class TirePressureMinigame implements TaskMinigame {
     }
 
     playerPsi.put(player.getUniqueId(), newPsi);
+    int progressStep = Math.max(0, Math.min(10, (int) Math.round(((double) newPsi / MIN_TARGET_PSI) * 10.0)));
+    arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_TIRE_PRESSURE, progressStep, 10);
     buildGui(player.getOpenInventory().getTopInventory(), newPsi);
   }
 

@@ -116,6 +116,8 @@ public class Arena extends PluginArena {
   private final Map<SabotageType, Location> sabotageLocations = new EnumMap<>(SabotageType.class);
   private Location campfireLocation;
   private TextDisplay campfireDisplay;
+  private int tasksPerPlayer = -1;
+  private boolean visualTasksEnabled = true;
 
   public Arena(String id) {
     super(id);
@@ -876,6 +878,29 @@ public class Arena extends PluginArena {
   public void setCampfireLocation(Location campfireLocation) {
     this.campfireLocation = campfireLocation;
     spawnCampfireHologram();
+  }
+
+  public int getTasksPerPlayer() {
+    return tasksPerPlayer;
+  }
+
+  public void setTasksPerPlayer(int tasksPerPlayer) {
+    this.tasksPerPlayer = tasksPerPlayer;
+  }
+
+  public int getEffectiveTasksPerPlayer() {
+    if(tasksPerPlayer > 0) {
+      return tasksPerPlayer;
+    }
+    return Math.max(1, plugin.getConfig().getInt("Tasks.Per-Player", 3));
+  }
+
+  public boolean isVisualTasksEnabled() {
+    return visualTasksEnabled;
+  }
+
+  public void setVisualTasksEnabled(boolean visualTasksEnabled) {
+    this.visualTasksEnabled = visualTasksEnabled;
   }
 
   public void spawnCampfireHologram() {

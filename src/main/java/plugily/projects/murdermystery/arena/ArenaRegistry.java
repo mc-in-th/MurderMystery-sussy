@@ -143,6 +143,14 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
+    int customTasksPerPlayer = section.getInt(id + ".tasksperplayer", -1);
+    if(customTasksPerPlayer > 0) {
+      ((Arena) arena).setTasksPerPlayer(customTasksPerPlayer);
+    }
+    ((Arena) arena).setVisualTasksEnabled(
+      section.getBoolean(id + ".visualtasks", plugin.getConfig().getBoolean("Tasks.Visual-Effects", true))
+    );
+
     List<SpecialBlock> specialBlocks = new ArrayList<>();
     for(String loc : section.getStringList(id + ".mystery-cauldrons")) {
       specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.MYSTERY_CAULDRON));

@@ -43,6 +43,9 @@ public class TaskMinigameManager {
     registerMinigame(new RadiatorWaterMinigame(arena));
     registerMinigame(new EngineOilMinigame(arena));
     registerMinigame(new SteeringFluidMinigame(arena));
+    registerMinigame(new SubmitScanMinigame(arena));
+    registerMinigame(new EmptyGarbageMinigame(arena));
+    registerMinigame(new ClearAsteroidsMinigame(arena));
   }
 
   public void registerMinigame(TaskMinigame minigame) {
@@ -104,6 +107,7 @@ public class TaskMinigameManager {
   }
 
   public void handleClose(Player player, String title) {
+    arena.getTaskManager().getVisualEffectManager().stopVisualSession(player);
     TaskType activeType = activeMinigames.remove(player.getUniqueId());
     if(activeType != null) {
       TaskMinigame m = minigames.get(activeType);
