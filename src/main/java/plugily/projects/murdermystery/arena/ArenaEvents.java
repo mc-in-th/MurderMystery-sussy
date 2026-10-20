@@ -20,22 +20,30 @@ package plugily.projects.murdermystery.arena;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
@@ -57,8 +65,10 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.inventory.XIn
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.api.events.game.MurderGameGetBowEvent;
 import plugily.projects.murdermystery.api.events.game.MurderGameGoldPickupEvent;
+import plugily.projects.murdermystery.arena.corpse.Stand;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
@@ -244,6 +254,11 @@ public class ArenaEvents extends PluginArenaEvents {
     //we are killing player via damage() method so event can be cancelled safely, will work for detective damage murderer and others
     e.setCancelled(true);
 
+    Arena checkArena = plugin.getArenaRegistry().getArena(attacker);
+    if(checkArena != null && checkArena.getVotingManager().isVotingActive()) {
+      return;
+    }
+
     //better check this for future even if anyone else cannot use sword
     if(!Role.isRole(Role.MURDERER, userAttacker)) {
       return;
@@ -330,7 +345,7 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     Arena arena = plugin.getArenaRegistry().getArena(attacker);
-    if (arena == null) {
+    if(arena == null || arena.getVotingManager().isVotingActive()) {
       return;
     }
     //we need to set it before the victim die, because of hero character
@@ -419,6 +434,7 @@ public class ArenaEvents extends PluginArenaEvents {
     player.setAllowFlight(true);
     player.setFlying(true);
     player.getInventory().clear();
+    arena.getTaskManager().removePlayer(player);
     if(plugin.getConfigPreferences().getOption("HIDE_DEATH")) {
       new MessageBuilder(MessageBuilder.ActionType.DEATH).player(player).arena(arena).sendArena();
     }
@@ -482,6 +498,12 @@ public class ArenaEvents extends PluginArenaEvents {
     if(user.isSpectator()) {
       return;
     }
+    if(arena.getVotingManager().isVotingActive()) {
+      if(event.getFrom().getX() != event.getTo().getX() || event.getFrom().getZ() != event.getTo().getZ()) {
+        event.setTo(event.getFrom());
+      }
+      return;
+    }
     if(arena.getArenaState() == IArenaState.IN_GAME) {
       if(Role.isRole(Role.INNOCENT, user, arena)) {
         if(player.getInventory().getItem(ItemPosition.BOW_LOCATOR.getOtherRolesItemPosition()) != null) {
@@ -512,7 +534,8 @@ public class ArenaEvents extends PluginArenaEvents {
 
   @EventHandler
   public void onDrop(PlayerDropItemEvent event) {
-    if(plugin.getArenaRegistry().getArena(event.getPlayer()) != null && plugin.getArenaRegistry().getArena(event.getPlayer()).getArenaState() == IArenaState.IN_GAME) {
+    Arena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
+    if(arena != null && (arena.getArenaState() == IArenaState.IN_GAME || arena.getVotingManager().isVotingActive())) {
       event.setCancelled(true);
     }
   }
@@ -520,9 +543,173 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler
   public void onItemMove(InventoryClickEvent event) {
     if(event.getWhoClicked() instanceof Player && plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
+      Player player = (Player) event.getWhoClicked();
+      Arena arena = plugin.getArenaRegistry().getArena(player);
+      if(arena != null) {
+        String title = XInventoryView.of(event.getView()).getTitle();
+        if(arena.getVotingManager().isVotingGUI(title)) {
+          event.setCancelled(true);
+          arena.getVotingManager().handleVoteClick(player, event.getRawSlot());
+          return;
+        }
+        if(arena.getSabotageManager().isSabotageGUI(title)) {
+          event.setCancelled(true);
+          arena.getSabotageManager().handleSabotageClick(player, event.getRawSlot());
+          return;
+        }
+        if(arena.getSabotageManager().isFixGUI(title)) {
+          event.setCancelled(true);
+          arena.getSabotageManager().handleFixClick(player, event.getRawSlot());
+          return;
+        }
+        if(arena.getTaskManager().getMinigameManager().isMinigameGUI(player, title)) {
+          event.setCancelled(true);
+          arena.getTaskManager().getMinigameManager().handleClick(player, title, event.getRawSlot(), event.getClick());
+          return;
+        }
+      }
       if(XInventoryView.of(event.getView()).getType() == InventoryType.CRAFTING || XInventoryView.of(event.getView()).getType() == InventoryType.PLAYER) {
         event.setResult(Event.Result.DENY);
       }
+    }
+  }
+
+  @EventHandler
+  public void onInventoryClose(InventoryCloseEvent event) {
+    if(event.getPlayer() instanceof Player && plugin.getArenaRegistry().isInArena((Player) event.getPlayer())) {
+      Player player = (Player) event.getPlayer();
+      Arena arena = plugin.getArenaRegistry().getArena(player);
+      if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
+        String title = XInventoryView.of(event.getView()).getTitle();
+        if(arena.getSabotageManager().isFixGUI(title) || arena.getSabotageManager().isSabotageGUI(title)) {
+          arena.getSabotageManager().handleClose(player);
+        }
+        arena.getTaskManager().getMinigameManager().handleClose(player, title);
+      }
+    }
+  }
+
+  @EventHandler
+  public void onCorpseStandInteract(PlayerInteractAtEntityEvent event) {
+    if(event.getHand() == EquipmentSlot.OFF_HAND) {
+      return;
+    }
+    Player player = event.getPlayer();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
+      return;
+    }
+    IUser user = plugin.getUserManager().getUser(player);
+    if(user.isSpectator()) {
+      return;
+    }
+    if(Role.isRole(Role.MURDERER, user, arena) && arena.getSabotageManager().isSabotageRemote(player.getInventory().getItemInMainHand())) {
+      event.setCancelled(true);
+      arena.getSabotageManager().openSabotageGUI(player);
+      return;
+    }
+    if(event.getRightClicked() instanceof ArmorStand) {
+      ArmorStand stand = (ArmorStand) event.getRightClicked();
+      for(Stand corpseStand : arena.getStands()) {
+        if(stand.equals(corpseStand.getStand())) {
+          event.setCancelled(true);
+          arena.getVotingManager().startVoting(player);
+          return;
+        }
+      }
+    }
+    if(event.getRightClicked() instanceof Display) {
+      if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, event.getRightClicked().getLocation())) {
+        event.setCancelled(true);
+        arena.getSabotageManager().openFixGUI(player);
+        return;
+      }
+      if(arena.getVentDisplays().contains(event.getRightClicked()) || arena.getVentBlockDisplays().contains(event.getRightClicked())) {
+        if(Role.isRole(Role.MURDERER, user, arena) && arena.getVentManager() != null) {
+          event.setCancelled(true);
+          for(SpecialBlock sb : arena.getSpecialBlocks()) {
+            if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
+              if(sb.getLocation().getWorld() != null && sb.getLocation().getWorld().equals(player.getWorld()) && sb.getLocation().distanceSquared(player.getLocation()) <= 16.0) {
+                if(arena.getVentManager().isInsideVent(player)) {
+                  arena.getVentManager().exitVent(player);
+                } else {
+                  arena.getVentManager().enterVent(player, sb);
+                }
+                return;
+              }
+            }
+          }
+        }
+        return;
+      }
+
+      if(!Role.isRole(Role.MURDERER, user, arena)) {
+        if(arena.getTaskManager().interactTask(player, event.getRightClicked().getLocation())) {
+          event.setCancelled(true);
+        }
+      } else {
+        event.setCancelled(true);
+        VersionUtils.sendActionBar(player, "§c[คนร้าย] คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้!");
+      }
+    }
+  }
+
+  @EventHandler
+  public void onTaskInteract(PlayerInteractEvent event) {
+    if(event.getHand() == EquipmentSlot.OFF_HAND) {
+      return;
+    }
+    if(event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+      return;
+    }
+    Player player = event.getPlayer();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
+      return;
+    }
+    if(arena.getVotingManager().isVotingActive()) {
+      event.setCancelled(true);
+      return;
+    }
+    IUser user = plugin.getUserManager().getUser(player);
+    if(user.isSpectator()) {
+      return;
+    }
+
+    ItemStack inHand = player.getInventory().getItemInMainHand();
+    if(Role.isRole(Role.MURDERER, user, arena) && arena.getSabotageManager().isSabotageRemote(inHand)) {
+      event.setCancelled(true);
+      arena.getSabotageManager().openSabotageGUI(player);
+      return;
+    }
+
+    Block clickedBlock = event.getClickedBlock();
+    Location targetLoc = clickedBlock != null ? clickedBlock.getLocation() : null;
+
+    if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, targetLoc)) {
+      event.setCancelled(true);
+      arena.getSabotageManager().openFixGUI(player);
+      return;
+    }
+
+    if(Role.isRole(Role.MURDERER, user, arena)) {
+      if(targetLoc != null) {
+        for(Location loc : arena.getAllTaskLocations()) {
+          if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
+            if((targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ())
+              || targetLoc.distanceSquared(loc) <= 4.0) {
+              event.setCancelled(true);
+              VersionUtils.sendActionBar(player, "§c[คนร้าย] คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้! (แอบลงท่อหรือกำจัดผู้โดยสาร)");
+              return;
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    if(arena.getTaskManager().interactTask(player, targetLoc)) {
+      event.setCancelled(true);
     }
   }
 }
