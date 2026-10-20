@@ -223,6 +223,7 @@ public final class HalloweenChat {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static void applyToLanguageConfig(Main plugin) {
     Object languageManager = plugin.getLanguageManager();
     if(languageManager == null) {
@@ -237,79 +238,44 @@ public final class HalloweenChat {
       defField.setAccessible(true);
       FileConfiguration defaultConfig = (FileConfiguration) defField.get(languageManager);
 
+      if(languageConfig != null && defaultConfig != null) {
+        for(String key : defaultConfig.getKeys(true)) {
+          if(defaultConfig.isConfigurationSection(key)) {
+            continue;
+          }
+          if(key.startsWith("Color.")
+              || key.startsWith("Scoreboard.")
+              || key.startsWith("In-Game.Messages.Arena.Playing.Role.")
+              || key.startsWith("In-Game.Messages.Arena.Task.")
+              || key.startsWith("In-Game.Messages.Arena.Voting.")) {
+            languageConfig.set(key, defaultConfig.get(key));
+          }
+        }
+      }
+
       if(languageConfig != null) {
-        upgradeConfigPalette(languageConfig);
+        formatConfigEntries(languageConfig);
       }
       if(defaultConfig != null) {
-        upgradeConfigPalette(defaultConfig);
+        formatConfigEntries(defaultConfig);
+      }
+
+      Object messageManager = plugin.getMessageManager();
+      if(messageManager != null) {
+        Field specialCharsField = messageManager.getClass().getDeclaredField("specialChars");
+        specialCharsField.setAccessible(true);
+        List<String> specialChars = (List<String>) specialCharsField.get(messageManager);
+        if(specialChars != null) {
+          specialChars.clear();
+          specialChars.add("■");
+          specialChars.add("▸");
+        }
       }
     } catch(Exception ignored) {
     }
   }
 
-  private static void upgradeConfigPalette(FileConfiguration config) {
-    config.set("Color.Placeholder.Value", "&#FFB703");
-    config.set("Color.Placeholder.Number", "&#FF7518");
-    config.set("Color.Placeholder.Player", "&#C77DFF");
-    config.set("Color.Placeholder.Other", "&#FFB703");
-    config.set("Color.Chat.Issue", "&#FF3B47");
-    config.set("Color.Chat.Messages", "&#B8B0C8");
-    config.set("Color.Chat.Special-Char.Contains", "■,▸");
-    config.set("Color.Chat.Special-Char.Before", "&#5A4E7C");
-
-    config.set("Scoreboard.Title", "<gradient:#FF5400:#FFB703><bold>MurderMystery</bold></gradient>");
-    config.set("Scoreboard.Roles.Detective", "<gradient:#00B4D8:#72EFDD>นักสืบ</gradient>");
-    config.set("Scoreboard.Roles.Murderer", "<gradient:#D90429:#FF5400>ฆาตกร</gradient>");
-    config.set("Scoreboard.Roles.Innocent", "<gradient:#FF7518:#FFB703>ผู้บริสุทธิ์</gradient>");
-    config.set("Scoreboard.Roles.Dead", "<#5A4E7C>เสียชีวิต");
-
-    config.set("In-Game.Messages.Arena.Playing.Role.Murderer",
-        "5,20,5;<gradient:#D90429:#FF5400><bold>บทบาท | ฆาตกร</bold></gradient>;<#B8B0C8>กำจัดผู้โดยสารทุกคนและใช้ท่อระบายน้ำแฝงตัว!");
-    config.set("In-Game.Messages.Arena.Playing.Role.Detective",
-        "5,20,5;<gradient:#00B4D8:#72EFDD><bold>บทบาท | นักสืบ</bold></gradient>;<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร!");
-    config.set("In-Game.Messages.Arena.Playing.Role.Innocent",
-        "5,20,5;<gradient:#FF7518:#FFB703><bold>บทบาท | ผู้บริสุทธิ์</bold></gradient>;<#B8B0C8>ร่วมมือกันซ่อมรถบัสและเปิดโปงฆาตกร!");
-
-    config.set("In-Game.Messages.Arena.Task.Bossbar",
-        "<gradient:#FF5400:#FFB703><bold>ซ่อมแซมรถบัส:</bold></gradient> <#6EEB83>%number%<#5A4E7C>/<#6EEB83>%value% <#FFB703>(Bus Repair)");
-    config.set("In-Game.Messages.Arena.Task.Completed",
-        "<#6EEB83>สำเร็จภารกิจ: <#FFB703>%value%<#6EEB83>!");
-    config.set("In-Game.Messages.Arena.Task.All-Completed",
-        "<gradient:#38B000:#9EF01A><bold>ซ่อมแซมรถบัสสำเร็จแล้ว! ผู้โดยสารหลบหนีออกจากเมืองได้และคว้าชัยชนะ!</bold></gradient>");
-    config.set("In-Game.Messages.Arena.Task.Win.Title",
-        "<gradient:#38B000:#9EF01A><bold>รถบัสซ่อมแซมสำเร็จ!</bold></gradient>");
-    config.set("In-Game.Messages.Arena.Task.Win.Subtitle",
-        "<gradient:#FF7518:#FFB703>ผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ!</gradient>");
-
-    config.set("In-Game.Messages.Arena.Voting.Cooldown",
-        "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!");
-    config.set("In-Game.Messages.Arena.Voting.Body-Reported",
-        "<gradient:#D90429:#FF5400><bold>[รายงานศพ]</bold></gradient> <#C77DFF>%player% <#FF3B47>พบศพผู้เสียชีวิตและเรียกประชุมด่วนรอบกองไฟ!");
-    config.set("In-Game.Messages.Arena.Voting.Discussion-Start",
-        "<gradient:#FF5400:#FFB703><bold>[ประชุมรอบกองไฟ]</bold></gradient> <#C77DFF>%player% <#FFB703>เรียกประชุมด่วน! เริ่มเวลาปรึกษาหารือ (<#FF3B47>%number% วินาที<#FFB703>)");
-    config.set("In-Game.Messages.Arena.Voting.Vote-Now",
-        "<gradient:#9D4EDD:#FF7518><bold>[เปิดโหวต]</bold></gradient> <#FFB703>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก (<#FF3B47>%number% วินาที<#FFB703>)");
-    config.set("In-Game.Messages.Arena.Voting.Discussion-Timer",
-        "<gradient:#FF5400:#FFB703>เวลาปรึกษาที่เหลือ:</gradient> <#FF3B47>%number% วินาที");
-    config.set("In-Game.Messages.Arena.Voting.Vote-Timer",
-        "<gradient:#D90429:#FF5400>เวลาโหวตที่เหลือ:</gradient> <#FFB703>%number% วินาที");
-    config.set("In-Game.Messages.Arena.Voting.Already-Voted",
-        "%color_chat_issue%คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!");
-    config.set("In-Game.Messages.Arena.Voting.Player-Voted",
-        "<#C77DFF>%player% <#B8B0C8>ได้ยืนยันการลงคะแนนโหวตแล้ว");
-    config.set("In-Game.Messages.Arena.Voting.No-Eject",
-        "<gradient:#FF5400:#FFB703>ไม่มีใครถูกโหวตคัดออกในรอบนี้</gradient> <#B8B0C8>(คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)");
-    config.set("In-Game.Messages.Arena.Voting.No-Eject-Title",
-        "<gradient:#FF5400:#FFB703><bold>ไม่มีใครถูกโหวตออก</bold></gradient>");
-    config.set("In-Game.Messages.Arena.Voting.No-Eject-Subtitle",
-        "<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม");
-    config.set("In-Game.Messages.Arena.Voting.Ejected",
-        "<#C77DFF>%player% <#FF3B47>ถูกโหวตคัดออก %value%");
-    config.set("In-Game.Messages.Arena.Voting.Was-Impostor",
-        "<gradient:#38B000:#9EF01A><bold>(เขาคือฆาตกร!)</bold></gradient>");
-    config.set("In-Game.Messages.Arena.Voting.Was-Not-Impostor",
-        "<gradient:#D90429:#FF5400><bold>(เขาไม่ใช่ฆาตกร...)</bold></gradient>");
-
+  private static void formatConfigEntries(FileConfiguration config) {
     for(String key : config.getKeys(true)) {
       if(config.isConfigurationSection(key) || key.startsWith("Color.") || key.startsWith("Do-Not-Edit.")) {
         continue;
