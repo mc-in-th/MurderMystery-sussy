@@ -38,6 +38,7 @@ import plugily.projects.murdermystery.handlers.setup.SetupCategoryManager;
 import plugily.projects.murdermystery.handlers.skins.sword.SwordSkinManager;
 import plugily.projects.murdermystery.handlers.trails.BowTrailsHandler;
 import plugily.projects.murdermystery.handlers.trails.TrailsManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 /**
  * Created by Tigerpanzer_02 on 13.03.2022
@@ -66,6 +67,7 @@ public class Main extends PluginMain {
     arenaRegistry = new ArenaRegistry(this);
     new PlaceholderInitializer(this);
     messageInitializer.registerMessages();
+    HalloweenChat.applyToLanguageConfig(this);
     new AdditionalValueInitializer(this);
     initializePluginClasses();
 
