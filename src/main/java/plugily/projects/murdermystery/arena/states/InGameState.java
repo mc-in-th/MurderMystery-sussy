@@ -30,12 +30,14 @@ import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginInGameState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
+import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.api.events.game.MurderGameGoldSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
@@ -52,12 +54,31 @@ public class InGameState extends PluginInGameState {
       return;
     }
 
+    if(pluginArena.getVotingManager().isVotingActive()) {
+      pluginArena.getVotingManager().tick();
+      arena.setTimer(arena.getTimer() + 1);
+      return;
+    }
+
     // winner checks
     if(pluginArena.getTimer() <= 0) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
     }
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
+    }
+
+    if(pluginArena.getTaskManager().areAllTasksCompleted()) {
+      new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
+        .asKey().arena(pluginArena).sendArena();
+      for(Player p : pluginArena.getPlayers()) {
+        VersionUtils.sendTitles(p,
+          new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE").asKey().build(),
+          new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
+          10, 60, 10);
+      }
+      ArenaUtils.onMurdererDeath(pluginArena);
+      return;
     }
 
     distributeMurdererSword(pluginArena);
@@ -99,8 +120,15 @@ public class InGameState extends PluginInGameState {
           if(murderer.isSpectator() || !p.isOnline())
             continue;
 
-          p.getInventory().setHeldItemSlot(0);
-          ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, pluginArena.getPlugin().getSwordSkinManager().getRandomSwordSkin(p));
+          ItemStack sword = pluginArena.getPlugin().getSwordSkinManager().getRandomSwordSkin(p);
+          if(pluginArena.getVentManager() != null && pluginArena.getVentManager().isInsideVent(p)) {
+            pluginArena.getVentManager().updateSavedItem(p, ItemPosition.MURDERER_SWORD.getMurdererItemPosition(), sword);
+            pluginArena.getVentManager().updateSavedItem(p, SabotageManager.SABOTAGE_REMOTE_SLOT, pluginArena.getSabotageManager().createSabotageRemoteItem());
+          } else {
+            p.getInventory().setHeldItemSlot(0);
+            ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, sword);
+            pluginArena.getSabotageManager().giveSabotageRemote(p);
+          }
         }
       }
     }
