@@ -128,6 +128,14 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
+    String campfireStr = section.getString(id + ".campfire");
+    if(campfireStr != null && !campfireStr.isEmpty()) {
+      Location campfireLoc = LocationSerializer.getLocation(campfireStr);
+      if(campfireLoc != null) {
+        ((Arena) arena).setCampfireLocation(campfireLoc);
+      }
+    }
+
     List<SpecialBlock> specialBlocks = new ArrayList<>();
     for(String loc : section.getStringList(id + ".mystery-cauldrons")) {
       specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.MYSTERY_CAULDRON));
