@@ -332,19 +332,17 @@ public class TaskAndVentArgument {
             return;
           }
 
-          player.sendMessage("§c================= [ รายการจุด Sabotage: §e" + arenaId + " §c] =================");
+          player.sendMessage("§c================= [ รายการบล็อกแก้ Sabotage: §e" + arenaId + " §c] =================");
           int idx = 1;
           for(SabotageType type : SabotageType.values()) {
-            List<Location> locs = arena.getSabotageLocations(type);
-            if(locs.isEmpty()) {
+            Location l = arena.getSabotageLocation(type);
+            if(l == null) {
               player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
                 + " §7(" + type.getShortId() + "): §cยังไม่ได้ตั้งค่า");
             } else {
               player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
-                + " §7(" + type.getShortId() + "): §a" + locs.size() + " จุด");
-              for(Location l : locs) {
-                player.sendMessage("   §7+- §f" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
-              }
+                + " §7(" + type.getShortId() + "): §a"
+                + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
             }
             idx++;
           }
@@ -589,19 +587,14 @@ public class TaskAndVentArgument {
 
     FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
     String serialized = LocationSerializer.locationToString(loc);
-    List<String> list = config.getStringList("instances." + arenaId + ".sabotages." + type.name());
-    if(!list.contains(serialized)) {
-      list.add(serialized);
-    }
-    config.set("instances." + arenaId + ".sabotages." + type.name(), list);
+    config.set("instances." + arenaId + ".sabotages." + type.name(), serialized);
     ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
 
-    arena.addSabotageLocation(type, loc);
+    arena.setSabotageLocation(type, loc);
 
-    player.sendMessage("§a[+] ตั้งจุด Sabotage §c" + type.getIcon() + " " + type.getDisplayName()
+    player.sendMessage("§a[+] ตั้งบล็อกแก้ Sabotage §c" + type.getIcon() + " " + type.getDisplayName()
       + " §aให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
-      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
-      + " §a(รวมเฉพาะประเภทนี้ §e" + list.size() + " §aจุด)");
+      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
   }
 
   private static void sendTaskTypesHelp(Player player) {
