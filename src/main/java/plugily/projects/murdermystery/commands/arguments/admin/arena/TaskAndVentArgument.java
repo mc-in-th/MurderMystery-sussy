@@ -217,6 +217,9 @@ public class TaskAndVentArgument {
           List<Location> genericLocs = arena.getTaskLocations();
           player.sendMessage("§bจุดภารกิจทั่วไป (Generic Task Points): "
             + (genericLocs.isEmpty() ? "§cไม่มี" : "§a" + genericLocs.size() + " จุด"));
+          Location cf = arena.getCampfireLocation();
+          player.sendMessage("§6 จุดกองไฟประชุมฉุกเฉิน (Campfire): "
+            + (cf == null ? "§cยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "§a" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
           player.sendMessage("§6=============================================================");
         }
       }
@@ -393,6 +396,83 @@ public class TaskAndVentArgument {
             arena.clearSabotageLocations(null);
             player.sendMessage("§c[!] ล้างจุด Sabotage ทั้งหมดของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
           }
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "setcampfire",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma setcampfire <arena>",
+          "/mma setcampfire <arena>",
+          "&7ตั้งจุดกองไฟกลางแมพสำหรับรวมตัวประชุมและโหวตหาคนร้าย\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          Player player = (Player) sender;
+          if(args.length < 2) {
+            player.sendMessage("§cการใช้งาน: /mma setcampfire <ชื่อห้อง/arena>");
+            return;
+          }
+          String arenaId = args[1];
+          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+          if(arena == null) {
+            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            return;
+          }
+
+          Block targetBlock = player.getTargetBlock(null, 5);
+          Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
+            ? targetBlock.getLocation()
+            : player.getLocation().getBlock().getLocation();
+
+          FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+          String serialized = LocationSerializer.locationToString(loc);
+          config.set("instances." + arenaId + ".campfire", serialized);
+          ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+          arena.setCampfireLocation(loc);
+
+          player.sendMessage("§a[+] ตั้งจุดกองไฟประชุมฉุกเฉิน (Campfire) ให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+            + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearcampfire",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearcampfire <arena>",
+          "/mma clearcampfire <arena>",
+          "&7ล้างจุดกองไฟประชุมฉุกเฉินของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          Player player = (Player) sender;
+          if(args.length < 2) {
+            player.sendMessage("§cการใช้งาน: /mma clearcampfire <ชื่อห้อง/arena>");
+            return;
+          }
+          String arenaId = args[1];
+          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+          if(arena == null) {
+            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            return;
+          }
+
+          FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+          config.set("instances." + arenaId + ".campfire", null);
+          ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+          arena.setCampfireLocation(null);
+
+          player.sendMessage("§c[!] ล้างจุดกองไฟประชุมฉุกเฉินของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
         }
       }
     );
