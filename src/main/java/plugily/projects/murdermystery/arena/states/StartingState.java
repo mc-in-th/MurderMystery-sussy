@@ -96,6 +96,7 @@ public class StartingState extends PluginStartingState {
 
       // Load and append special blocks hologram
       pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
+      pluginArena.spawnCampfireHologram();
       pluginArena.updateVentDisplaysVisibility();
 
       List<Player> innocentPlayers = new ArrayList<>();
