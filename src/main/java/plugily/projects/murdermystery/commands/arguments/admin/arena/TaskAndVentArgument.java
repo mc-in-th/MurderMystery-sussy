@@ -30,6 +30,7 @@ import plugily.projects.minigamesbox.classic.commands.arguments.data.LabeledComm
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.commands.arguments.ArgumentsRegistry;
@@ -273,6 +274,132 @@ public class TaskAndVentArgument {
     registry.mapArgument(
       "murdermysteryadmin",
       new LabeledCommandArgument(
+        "setsabotage",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma setsabotage <arena> <sabotageType>",
+          "/mma setsabotage <arena> <sabotageType>",
+          "&7ตั้งจุดแก้ไขก่อวินาศกรรม (Sabotage Point) แยกจากภารกิจทั่วไป (lights, engine, comms)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetSabotage(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "addsabotage",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma addsabotage <arena> <sabotageType>",
+          "/mma addsabotage <arena> <sabotageType>",
+          "&7ตั้งจุดแก้ไขก่อวินาศกรรม (Sabotage Point) แยกจากภารกิจทั่วไป (lights, engine, comms)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetSabotage(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "listsabotages",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma listsabotages <arena>",
+          "/mma listsabotages <arena>",
+          "&7ดูรายการจุดแก้ไขก่อวินาศกรรม (Sabotage) ทั้งหมดของห้อง\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          Player player = (Player) sender;
+          if(args.length < 2) {
+            player.sendMessage("§cการใช้งาน: /mma listsabotages <ชื่อห้อง/arena>");
+            return;
+          }
+          String arenaId = args[1];
+          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+          if(arena == null) {
+            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            return;
+          }
+
+          player.sendMessage("§c================= [ รายการจุด Sabotage: §e" + arenaId + " §c] =================");
+          int idx = 1;
+          for(SabotageType type : SabotageType.values()) {
+            List<Location> locs = arena.getSabotageLocations(type);
+            if(locs.isEmpty()) {
+              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " §7(" + type.getShortId() + "): §cยังไม่ได้ตั้งค่า");
+            } else {
+              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " §7(" + type.getShortId() + "): §a" + locs.size() + " จุด");
+              for(Location l : locs) {
+                player.sendMessage("   §7+- §f" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
+              }
+            }
+            idx++;
+          }
+          player.sendMessage("§c=============================================================");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearsabotages",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearsabotages <arena> [sabotageType]",
+          "/mma clearsabotages <arena> [sabotageType]",
+          "&7ล้างจุดแก้ไขก่อวินาศกรรม (Sabotage) ของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          Player player = (Player) sender;
+          if(args.length < 2) {
+            player.sendMessage("§cการใช้งาน: /mma clearsabotages <ชื่อห้อง/arena> [ประเภท/sabotageType]");
+            return;
+          }
+          String arenaId = args[1];
+          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+          if(arena == null) {
+            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            return;
+          }
+
+          FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+
+          if(args.length >= 3) {
+            SabotageType type = SabotageType.fromInput(args[2]);
+            if(type == null) {
+              player.sendMessage("§cไม่พบประเภท Sabotage: §e" + args[2]);
+              sendSabotageTypesHelp(player);
+              return;
+            }
+            config.set("instances." + arenaId + ".sabotages." + type.name(), null);
+            ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+            arena.clearSabotageLocations(type);
+            player.sendMessage("§c[!] ล้างจุด Sabotage §6" + type.getIcon() + " " + type.getDisplayName() + " §cของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+          } else {
+            config.set("instances." + arenaId + ".sabotages", null);
+            ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+            arena.clearSabotageLocations(null);
+            player.sendMessage("§c[!] ล้างจุด Sabotage ทั้งหมดของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+          }
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
         "addvent",
         "murdermystery.admin.addvent",
         CommandArgument.ExecutorType.PLAYER,
@@ -355,6 +482,48 @@ public class TaskAndVentArgument {
     );
   }
 
+  private static void handleSetSabotage(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 3) {
+      player.sendMessage("§cการใช้งาน: /mma setsabotage <ชื่อห้อง/arena> <ประเภท/sabotageType>");
+      sendSabotageTypesHelp(player);
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    SabotageType type = SabotageType.fromInput(args[2]);
+    if(type == null) {
+      player.sendMessage("§cไม่พบประเภท Sabotage: §e" + args[2]);
+      sendSabotageTypesHelp(player);
+      return;
+    }
+
+    Block targetBlock = player.getTargetBlock(null, 5);
+    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
+      ? targetBlock.getLocation()
+      : player.getLocation().getBlock().getLocation();
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    String serialized = LocationSerializer.locationToString(loc);
+    List<String> list = config.getStringList("instances." + arenaId + ".sabotages." + type.name());
+    if(!list.contains(serialized)) {
+      list.add(serialized);
+    }
+    config.set("instances." + arenaId + ".sabotages." + type.name(), list);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.addSabotageLocation(type, loc);
+
+    player.sendMessage("§a[+] ตั้งจุด Sabotage §c" + type.getIcon() + " " + type.getDisplayName()
+      + " §aให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
+      + " §a(รวมเฉพาะประเภทนี้ §e" + list.size() + " §aจุด)");
+  }
+
   private static void sendTaskTypesHelp(Player player) {
     player.sendMessage("§e=== ประเภทภารกิจที่ใช้ได้ (Available Tasks) ===");
     int i = 1;
@@ -363,5 +532,15 @@ public class TaskAndVentArgument {
       i++;
     }
     player.sendMessage("§7(สามารถระบุเป็นหมายเลข 1-7 หรือชื่อ เช่น diesel, wiring, panel)");
+  }
+
+  private static void sendSabotageTypesHelp(Player player) {
+    player.sendMessage("§c=== ประเภท Sabotage ที่ใช้ได้ (Available Sabotages) ===");
+    int i = 1;
+    for(SabotageType s : SabotageType.values()) {
+      player.sendMessage("§f" + i + ". §c" + s.getShortId() + " §7- " + s.getIcon() + " " + s.getDisplayName());
+      i++;
+    }
+    player.sendMessage("§7(สามารถระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms)");
   }
 }
