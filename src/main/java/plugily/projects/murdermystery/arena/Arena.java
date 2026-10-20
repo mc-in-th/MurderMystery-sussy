@@ -107,7 +107,7 @@ public class Arena extends PluginArena {
   private final SabotageManager sabotageManager;
   private List<Location> taskLocations = new ArrayList<>();
   private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
-  private final Map<SabotageType, List<Location>> sabotageLocations = new EnumMap<>(SabotageType.class);
+  private final Map<SabotageType, Location> sabotageLocations = new EnumMap<>(SabotageType.class);
   private Location campfireLocation;
   private TextDisplay campfireDisplay;
 
@@ -741,16 +741,20 @@ public class Arena extends PluginArena {
     return all;
   }
 
-  public Map<SabotageType, List<Location>> getSabotageLocations() {
+  public Map<SabotageType, Location> getSabotageLocations() {
     return sabotageLocations;
   }
 
-  public List<Location> getSabotageLocations(SabotageType type) {
-    return sabotageLocations.getOrDefault(type, Collections.emptyList());
+  public Location getSabotageLocation(SabotageType type) {
+    return sabotageLocations.get(type);
   }
 
-  public void addSabotageLocation(SabotageType type, Location loc) {
-    sabotageLocations.computeIfAbsent(type, k -> new ArrayList<>()).add(loc);
+  public void setSabotageLocation(SabotageType type, Location loc) {
+    if(loc == null) {
+      sabotageLocations.remove(type);
+    } else {
+      sabotageLocations.put(type, loc);
+    }
   }
 
   public void clearSabotageLocations(SabotageType type) {
@@ -763,11 +767,9 @@ public class Arena extends PluginArena {
 
   public List<Location> getAllSabotageLocations() {
     List<Location> all = new ArrayList<>();
-    for(List<Location> list : sabotageLocations.values()) {
-      for(Location loc : list) {
-        if(!all.contains(loc)) {
-          all.add(loc);
-        }
+    for(Location loc : sabotageLocations.values()) {
+      if(loc != null && !all.contains(loc)) {
+        all.add(loc);
       }
     }
     return all;
