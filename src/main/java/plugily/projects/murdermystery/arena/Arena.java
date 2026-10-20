@@ -310,32 +310,14 @@ public class Arena extends PluginArena {
   private BukkitTask visualTask;
 
   public void startGoldVisuals() {
-    if(visualTask != null) {
-      return;
-    }
-    visualTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-      if(!goldVisuals || !plugin.isEnabled() || goldSpawnPoints.isEmpty() || getArenaState() != IArenaState.WAITING_FOR_PLAYERS) {
-        //we need to cancel it that way as the arena class is an task
-        visualTask.cancel();
-        return;
-      }
-      for(Location goldLocations : goldSpawnPoints) {
-        Location goldLocation = goldLocations.clone();
-        goldLocation.add(0, 0.4, 0);
-        Bukkit.getOnlinePlayers().forEach(player -> VersionUtils.sendParticles("REDSTONE", player, goldLocation, 10));
-      }
-    }, 20L, 20L);
   }
 
   public boolean isGoldVisuals() {
-    return goldVisuals;
+    return false;
   }
 
   public void setGoldVisuals(boolean goldVisuals) {
-    this.goldVisuals = goldVisuals;
-    if(goldVisuals) {
-      startGoldVisuals();
-    }
+    this.goldVisuals = false;
   }
 
   public void loadSpecialBlock(SpecialBlock block) {
@@ -344,16 +326,6 @@ public class Arena extends PluginArena {
     }
 
     switch(block.getSpecialBlockType()) {
-      case MYSTERY_CAULDRON:
-        block.setArmorStandHologram(new ArmorStandHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()), new MessageBuilder(plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Cauldron.Hologram")).build()));
-        break;
-      case PRAISE_DEVELOPER:
-        ArmorStandHologram prayer = new ArmorStandHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()));
-        for(String str : plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Pray.Hologram").split(";")) {
-          prayer.appendLine(new MessageBuilder(str).build());
-        }
-        block.setArmorStandHologram(prayer);
-        break;
       case RAPID_TELEPORTATION:
         Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
         TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>ท่อระบายน้ำ / Sewer Vent</bold></gradient> <#5A4E7C>]\n<#B8B0C8>(กด <#FFB703>SHIFT <#B8B0C8>หรือคลิกขวาเพื่อมุดท่อ)", false);
@@ -366,6 +338,8 @@ public class Arena extends PluginArena {
           ventBlockDisplays.add(bd);
         }
         break;
+      case MYSTERY_CAULDRON:
+      case PRAISE_DEVELOPER:
       case HORSE_PURCHASE:
       default:
         break;

@@ -76,18 +76,9 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
-    ((Arena) arena).setSpawnGoldTime(section.getInt(id + ".spawngoldtime", 5));
     ((Arena) arena).setHideChances(section.getBoolean(id + ".hidechances"));
     arena.setArenaOption("MURDERER_DIVIDER",section.getInt(id + ".playerpermurderer", 5));
-    arena.setArenaOption("DETECTIVE_DIVIDER",section.getInt(id + ".playerperdetective", 7));
-    ((Arena) arena).setGoldVisuals(section.getBoolean(id + ".goldvisuals"));
     ((Arena) arena).setPlayerSpawnPoints(playerSpawnPoints);
-
-    List<Location> goldSpawnPoints = new ArrayList<>();
-    for(String loc : section.getStringList(id + ".goldspawnpoints")) {
-      goldSpawnPoints.add(LocationSerializer.getLocation(loc));
-    }
-    ((Arena) arena).setGoldSpawnPoints(goldSpawnPoints);
 
     List<Location> taskLocations = new ArrayList<>();
     for(String loc : section.getStringList(id + ".tasklocations")) {

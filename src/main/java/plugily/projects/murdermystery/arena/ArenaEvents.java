@@ -142,69 +142,7 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena == null) {
       return;
     }
-    IUser user = plugin.getUserManager().getUser(player);
     e.setCancelled(true);
-
-    if(e.getItem().getItemStack().getType() != Material.GOLD_INGOT) {
-      return;
-    }
-
-    if(user.isSpectator() || arena.getArenaState() != IArenaState.IN_GAME) {
-      return;
-    }
-
-    if(PrayerRegistry.getBan().contains(player)) {
-      e.setCancelled(true);
-      return;
-    }
-
-    int pickedUpAmount = e.getItem().getItemStack().getAmount();
-    if(PrayerRegistry.getRush().contains(player)) {
-      pickedUpAmount = 3 * pickedUpAmount;
-    }
-    MurderGameGoldPickupEvent murderGameGoldPickupEvent = new MurderGameGoldPickupEvent(arena, player, pickedUpAmount);
-    Bukkit.getPluginManager().callEvent(murderGameGoldPickupEvent);
-    if(murderGameGoldPickupEvent.isCancelled()) {
-      return;
-    }
-
-    e.getItem().remove();
-
-    XSound.BLOCK_LAVA_POP.play(player.getLocation(), 1, 1);
-    arena.getGoldSpawned().remove(e.getItem());
-
-    ItemStack stack = new ItemStack(Material.GOLD_INGOT, murderGameGoldPickupEvent.getAmount());
-    ItemPosition.addItem(user, ItemPosition.GOLD_INGOTS, stack);
-    user.adjustStatistic("LOCAL_GOLD", stack.getAmount());
-    ArenaUtils.addScore(user, ArenaUtils.ScoreAction.GOLD_PICKUP, stack.getAmount());
-
-    new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_GOLD").asKey().player(player).arena(arena).sendPlayer();
-    plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("GOLD_PICKUP"));
-
-    if(user.getStatistic("LOCAL_GOLD") >= plugin.getConfig().getInt("Gold.Amount.Bow", 10)) {
-      MurderGameGetBowEvent murderGameGetBowEvent = new MurderGameGetBowEvent(arena, player);
-      Bukkit.getPluginManager().callEvent(murderGameGetBowEvent);
-      if(murderGameGetBowEvent.isCancelled()) {
-        return;
-      }
-
-      user.setStatistic("LOCAL_GOLD", 0);
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_SHOT_TITLE")
-        .asKey()
-        .player(player)
-        .arena(arena)
-        .sendPlayer();
-      ItemPosition.setItem(user, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
-      ItemPosition.addItem(
-        user,
-        ItemPosition.ARROWS,
-        new ItemStack(Material.ARROW, plugin.getConfig().getInt("Bow.Amount.Arrows.Gold", 3)));
-      player
-        .getInventory()
-        .setItem(
-          /* same for all roles */ ItemPosition.GOLD_INGOTS.getOtherRolesItemPosition(),
-          null);
-    }
   }
 
 
@@ -371,7 +309,6 @@ public class ArenaEvents extends PluginArenaEvents {
       player.getInventory().clear();
       player.setFlying(false);
       player.setAllowFlight(false);
-      user.setStatistic("LOCAL_GOLD", 0);
       return;
     }
     if(Role.isRole(Role.MURDERER, user, arena) && arena.lastAliveMurderer()) {
@@ -381,7 +318,6 @@ public class ArenaEvents extends PluginArenaEvents {
     user.setSpectator(true);
     VersionUtils.setCollidable(player, false);
     player.setGameMode(GameMode.SURVIVAL);
-    user.setStatistic("LOCAL_GOLD", 0);
     ArenaUtils.hidePlayer(player, arena);
     player.setAllowFlight(true);
     player.setFlying(true);
@@ -432,7 +368,6 @@ public class ArenaEvents extends PluginArenaEvents {
       VersionUtils.setCollidable(player, false);
       player.setGameMode(GameMode.SURVIVAL);
       player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-      user.setStatistic("LOCAL_GOLD", 0);
       plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("PLAYER_DEATH"));
     }
   }

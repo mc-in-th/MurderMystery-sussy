@@ -18,11 +18,6 @@
 
 package plugily.projects.murdermystery.arena.states;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import plugily.projects.minigamesbox.api.user.IUser;
@@ -31,9 +26,7 @@ import plugily.projects.minigamesbox.classic.arena.states.PluginInGameState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
-import plugily.projects.murdermystery.api.events.game.MurderGameGoldSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
@@ -91,7 +84,6 @@ public class InGameState extends PluginInGameState {
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer() + 1) {
       addMurdererSpeed(pluginArena);
     }
-    spawnGold(pluginArena);
   }
 
   private void addMurdererSpeed(Arena pluginArena) {
@@ -137,16 +129,6 @@ public class InGameState extends PluginInGameState {
     }
   }
 
-  private void spawnGold(Arena pluginArena) {
-    //don't spawn it every time
-    if(pluginArena.getSpawnGoldTimer() == pluginArena.getSpawnGoldTime()) {
-      spawnSomeGold(pluginArena);
-      pluginArena.setSpawnGoldTimer(0);
-    } else {
-      pluginArena.setSpawnGoldTimer(pluginArena.getSpawnGoldTimer() + 1);
-    }
-  }
-
   private void givePlayerSurviveReward(Arena pluginArena) {
     if(pluginArena.getTimer() % 30 == 0) {
       new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").arena(pluginArena).sendArena();
@@ -165,48 +147,5 @@ public class InGameState extends PluginInGameState {
         ArenaUtils.updateInnocentLocator(pluginArena);
       }
     }
-  }
-
-  private void spawnSomeGold(Arena arena) {
-    int spawnPointsSize = arena.getGoldSpawnPoints().size();
-
-    if(spawnPointsSize == 0) {
-      return;
-    }
-    //may users want to disable it and want much gold on their map xD
-    if(!getPlugin().getConfigPreferences().getOption("GOLD_LIMITER")) {
-      //do not exceed amount of gold per spawn
-      if(arena.getGoldSpawned().size() >= spawnPointsSize) {
-        return;
-      }
-    }
-    if(getPlugin().getConfigPreferences().getOption("GOLD_SPAWNER_MODE_ALL")) {
-      for(Location location : arena.getGoldSpawnPoints()) {
-        dropGold(arena, location);
-      }
-    } else {
-      Location loc = arena.getGoldSpawnPoints().get(getPlugin().getRandom().nextInt(spawnPointsSize));
-      dropGold(arena, loc);
-    }
-  }
-
-  private void dropGold(Arena arena, Location location) {
-    //spawn maximum 1 gold per spawner
-    if(!getPlugin().getConfigPreferences().getOption("GOLD_MULTIPLE")) {
-      for(Entity entity : location.getWorld().getNearbyEntities(location, 2, 2, 2)) {
-        if(entity instanceof Item && XMaterial.GOLD_INGOT.isSimilar(((Item) entity).getItemStack())) {
-          return;
-        }
-      }
-    }
-    MurderGameGoldSpawnEvent murderGameGoldSpawnEvent = new MurderGameGoldSpawnEvent(arena, location.clone());
-    Bukkit.getPluginManager().callEvent(murderGameGoldSpawnEvent);
-    if(murderGameGoldSpawnEvent.isCancelled()) {
-      return;
-    }
-
-    Location dropLocation = murderGameGoldSpawnEvent.getLocation();
-    arena.getGoldSpawned().add(dropLocation.getWorld().dropItem(dropLocation, new ItemStack(Material.GOLD_INGOT, 1)));
-    getPlugin().getPowerupRegistry().spawnPowerup(dropLocation, arena);
   }
 }

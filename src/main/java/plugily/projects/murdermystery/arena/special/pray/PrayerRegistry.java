@@ -56,14 +56,11 @@ public class PrayerRegistry {
   public static void init(Main plugin) {
     PrayerRegistry.plugin = plugin;
     //good prayers
-    prayers.add(new Prayer(Prayer.PrayerType.GOLD_RUSH, true, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_GIFTS_GOLD_RUSH").asKey().build()));
-    prayers.add(new Prayer(Prayer.PrayerType.SINGLE_COMPENSATION, true, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_GIFTS_SINGLE_COMPENSATION").asKey().build()));
     prayers.add(new Prayer(Prayer.PrayerType.BOW_TIME, true, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_GIFTS_BOW").asKey().build()));
 
     //bad prayers
     prayers.add(new Prayer(Prayer.PrayerType.SLOWNESS_CURSE, false, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_CURSES_SLOWNESS").asKey().build()));
     prayers.add(new Prayer(Prayer.PrayerType.BLINDNESS_CURSE, false, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_CURSES_BLINDNESS").asKey().build()));
-    prayers.add(new Prayer(Prayer.PrayerType.GOLD_BAN, false, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_CURSES_GOLD").asKey().build()));
     prayers.add(new Prayer(Prayer.PrayerType.INCOMING_DEATH, false, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_PRAY_PRAISE_CURSES_DEATH").asKey().build()));
   }
 

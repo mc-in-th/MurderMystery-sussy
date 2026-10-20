@@ -98,7 +98,6 @@ public class ArenaMinimap {
       allLocs.add(arena.getCampfireLocation());
     }
     allLocs.addAll(arena.getPlayerSpawnPoints());
-    allLocs.addAll(arena.getGoldSpawnPoints());
     for(SpecialBlock sb : arena.getSpecialBlocks()) {
       if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
         allLocs.add(sb.getLocation());
