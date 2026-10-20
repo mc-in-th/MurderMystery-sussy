@@ -36,26 +36,23 @@ public class MessageInitializer {
   }
 
   public void registerMessages() {
-    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_ALIVE", new Message("Scoreboard.Detective.Alive", ""));
-    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_BOW_DROPPED", new Message("Scoreboard.Detective.Bow-Dropped", ""));
-    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_BOW_PICKED", new Message("Scoreboard.Detective.Bow-Picked", ""));
+    getMessageManager().registerMessage("", new Message("", ""));
     getMessageManager().registerMessage("SCOREBOARD_ROLES_DETECTIVE", new Message("Scoreboard.Roles.Detective", ""));
     getMessageManager().registerMessage("SCOREBOARD_ROLES_MURDERER", new Message("Scoreboard.Roles.Murderer", ""));
     getMessageManager().registerMessage("SCOREBOARD_ROLES_INNOCENT", new Message("Scoreboard.Roles.Innocent", ""));
     getMessageManager().registerMessage("SCOREBOARD_ROLES_DEAD", new Message("Scoreboard.Roles.Dead", ""));
-    getMessageManager().registerMessage("BOSSBAR_WAITING_FOR_PLAYERS", new Message("Bossbar.Waiting-For-Players", ""));
-    getMessageManager().registerMessage("BOSSBAR_STARTING_IN", new Message("Bossbar.Starting-In", ""));
-    getMessageManager().registerMessage("BOSSBAR_IN_GAME_INFO", new Message("Bossbar.In-Game-Info", ""));
-    getMessageManager().registerMessage("BOSSBAR_IN_GAME_RUSH", new Message("Bossbar.In-Game-Rush", ""));
-    getMessageManager().registerMessage("BOSSBAR_GAME_ENDED", new Message("Bossbar.Game-Ended", ""));
-    getMessageManager().registerMessage("BOSSBAR_RESTARTING", new Message("Bossbar.Restarting", ""));
-    getMessageManager().registerMessage("IN_GAME_SPECTATOR_TARGET_PLAYER_HEALTH", new Message("In-Game.Spectator.Target-Player-Health", ""));
-    getMessageManager().registerMessage("IN_GAME_GAME_END_PLACEHOLDERS_MURDERER_STOPPED", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Stopped", ""));
-    getMessageManager().registerMessage("IN_GAME_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Killed.You", ""));
-    getMessageManager().registerMessage("IN_GAME_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Killed.All", ""));
-    getMessageManager().registerMessage("IN_GAME_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU", new Message("In-Game.Messages.Game-End.Placeholders.Innocent.Killed.You", ""));
-    getMessageManager().registerMessage("IN_GAME_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY", new Message("In-Game.Messages.Game-End.Placeholders.Innocent.Killed.Wrongly", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_CHANCES_ACTION_BAR", new Message("In-Game.Messages.Arena.Chances.Action-Bar", ""));
+    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_ALIVE", new Message("Scoreboard.Detective.Alive", ""));
+    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_BOW_DROPPED", new Message("Scoreboard.Detective.Bow.Dropped", ""));
+    getMessageManager().registerMessage("SCOREBOARD_DETECTIVE_BOW_PICKED", new Message("Scoreboard.Detective.Bow.Picked", ""));
+
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Stopped", ""));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Killed.You", ""));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL", new Message("In-Game.Messages.Game-End.Placeholders.Murderer.Killed.All", ""));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU", new Message("In-Game.Messages.Game-End.Placeholders.Innocent.Killed.You", ""));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY", new Message("In-Game.Messages.Game-End.Placeholders.Innocent.Killed.Wrongly", ""));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_NOBODY", new Message("In-Game.Messages.Game-End.Placeholders.Nobody", ""));
+
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_ROLE_CHANCES_ACTION_BAR", new Message("In-Game.Messages.Arena.Chances.Action-Bar", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_COOLDOWN", new Message("In-Game.Messages.Arena.Cooldown", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW", new Message("In-Game.Messages.Arena.Locator.Bow", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT", new Message("In-Game.Messages.Arena.Locator.Innocent", ""));
