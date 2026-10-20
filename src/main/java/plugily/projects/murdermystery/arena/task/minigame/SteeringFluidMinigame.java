@@ -30,8 +30,8 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.TaskType;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,7 +40,7 @@ import java.util.UUID;
 
 public class SteeringFluidMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = "§8[ §6 เช็คน้ำมันพวงมาลัยเพาเวอร์ §8]";
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เช็คน้ำมันพวงมาลัยเพาเวอร์</bold></gradient> <#5A4E7C>]");
 
   private static class SteeringSession {
     int angle;
@@ -77,7 +77,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && (title.contains("พวงมาลัย") || title.contains("Steering"));
+    if(title == null) {
+      return false;
+    }
+    String plain = HalloweenChat.strip(title);
+    return plain.contains("พวงมาลัย") || plain.contains("Steering");
   }
 
   @Override
@@ -91,15 +95,15 @@ public class SteeringFluidMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, "§e[น้ำมันพวงมาลัย] กดหมุนซ้าย/ขวา เพื่อตั้งศูนย์พวงมาลัยให้ตรง [ 0 ]!");
-    player.sendMessage("§6[ภารกิจน้ำมันพวงมาลัย] §eกดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] สีเขียว -> กดล็อคด้านล่าง");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[น้ำมันพวงมาลัย]</bold></gradient> <#FFB703>กดหมุนซ้าย/ขวา เพื่อตั้งศูนย์พวงมาลัยให้ตรง [ 0 ]!"));
+    player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจน้ำมันพวงมาลัย]</bold></gradient> <#FFB703>กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] สีเขียว -> กดล็อคด้านล่าง"));
   }
 
   private void buildGui(Inventory inv, SteeringSession session) {
-    ItemStack bg = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName("§7 ");
+      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 27; i++) {
@@ -109,12 +113,12 @@ public class SteeringFluidMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName("§e§l วิธีทำภารกิจ: น้ำมันพวงมาลัยเพาเวอร์ (Instructions)");
-      iMeta.setLore(Arrays.asList(
-        "§fขั้นตอนการทำภารกิจ:",
-        "§71. คลิกปุ่ม §e[< หมุนซ้าย] §7หรือ §e[หมุนขวา >]",
-        "§72. ปรับให้เข็มชี้ตรงที่ §a[ 0 ] ศูนย์ตรงกลาง (สีเขียว)",
-        "§73. เมื่อตรงศูนย์แล้ว ให้คลิก §a[ ล็อคระบบพวงมาลัย] §7ด้านล่างเพื่อจบภารกิจ!"
+      iMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ: น้ำมันพวงมาลัยเพาเวอร์ (Instructions)</bold></gradient>"));
+      iMeta.setLore(HalloweenChat.colorLines(
+        "<#F4F1DE>ขั้นตอนการทำภารกิจ:",
+        "<#B8B0C8>1. คลิกปุ่ม <#FFB703>[< หมุนซ้าย] <#B8B0C8>หรือ <#FFB703>[หมุนขวา >]",
+        "<#B8B0C8>2. ปรับให้เข็มชี้ตรงที่ <#6EEB83>[ 0 ] ศูนย์ตรงกลาง (สีเขียว)",
+        "<#B8B0C8>3. เมื่อตรงศูนย์แล้ว ให้คลิก <#6EEB83>[ล็อคระบบพวงมาลัย] <#B8B0C8>ด้านล่างเพื่อจบภารกิจ!"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -136,11 +140,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
       ItemMeta lMeta = led.getItemMeta();
       if(lMeta != null) {
         if(slotAngle == 0) {
-          lMeta.setDisplayName("§a* [ 0 ] ศูนย์ตรงกลาง (CENTER) [/]");
+          lMeta.setDisplayName(HalloweenChat.color("<#6EEB83>* [ 0 ] ศูนย์ตรงกลาง (CENTER) [/]"));
         } else if(slotAngle < 0) {
-          lMeta.setDisplayName("§c* [ " + slotAngle + " ] เอียงซ้าย");
+          lMeta.setDisplayName(HalloweenChat.color("<#FF3B47>* [ " + slotAngle + " ] เอียงซ้าย"));
         } else {
-          lMeta.setDisplayName("§c* [ +" + slotAngle + " ] เอียงขวา");
+          lMeta.setDisplayName(HalloweenChat.color("<#FF3B47>* [ +" + slotAngle + " ] เอียงขวา"));
         }
         led.setItemMeta(lMeta);
       }
@@ -150,10 +154,10 @@ public class SteeringFluidMinigame implements TaskMinigame {
     ItemStack turnLeft = XMaterial.ARROW.parseItem();
     ItemMeta tlMeta = turnLeft.getItemMeta();
     if(tlMeta != null) {
-      tlMeta.setDisplayName("§e§l[ < หมุนพวงมาลัยไปทางซ้าย ]");
-      tlMeta.setLore(Arrays.asList(
-        "§7ปรับองศาพวงมาลัยไปทางซ้าย",
-        "§e> คลิกเพื่อหมุนซ้าย"
+      tlMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>< หมุนพวงมาลัยไปทางซ้าย</bold></gradient> <#5A4E7C>]"));
+      tlMeta.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>ปรับองศาพวงมาลัยไปทางซ้าย",
+        "<#FFB703>> คลิกเพื่อหมุนซ้าย"
       ));
       turnLeft.setItemMeta(tlMeta);
     }
@@ -163,16 +167,16 @@ public class SteeringFluidMinigame implements TaskMinigame {
     ItemMeta rMeta = wheel.getItemMeta();
     if(rMeta != null) {
       if(session.angle == 0) {
-        rMeta.setDisplayName("§a§l[/] พวงมาลัยตรงศูนย์แล้ว!");
-        rMeta.setLore(Arrays.asList(
-          "§7ตำแหน่งศูนย์ตรง [ 0 ] ถูกต้องแล้ว",
-          "§a> คลิกปุ่มล็อคด้านล่างเพื่อจบภารกิจ!"
+        rMeta.setDisplayName(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] พวงมาลัยตรงศูนย์แล้ว!</bold></gradient>"));
+        rMeta.setLore(HalloweenChat.colorLines(
+          "<#B8B0C8>ตำแหน่งศูนย์ตรง [ 0 ] ถูกต้องแล้ว",
+          "<#6EEB83>> คลิกปุ่มล็อคด้านล่างเพื่อจบภารกิจ!"
         ));
       } else {
-        rMeta.setDisplayName("§c§l[ พวงมาลัยยังไม่ตรงศูนย์ ]");
-        rMeta.setLore(Arrays.asList(
-          "§7ปัจจุบัน: " + (session.angle < 0 ? "§cเอียงซ้าย " + session.angle : "§cเอียงขวา +" + session.angle),
-          "§e> คลิกปุ่มลูกศรเพื่อปรับให้ตรง [ 0 ] ตรงกลาง"
+        rMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>พวงมาลัยยังไม่ตรงศูนย์</bold></gradient> <#5A4E7C>]"));
+        rMeta.setLore(HalloweenChat.colorLines(
+          "<#B8B0C8>ปัจจุบัน: " + (session.angle < 0 ? "<#FF3B47>เอียงซ้าย " + session.angle : "<#FF3B47>เอียงขวา +" + session.angle),
+          "<#FFB703>> คลิกปุ่มลูกศรเพื่อปรับให้ตรง [ 0 ] ตรงกลาง"
         ));
       }
       wheel.setItemMeta(rMeta);
@@ -182,10 +186,10 @@ public class SteeringFluidMinigame implements TaskMinigame {
     ItemStack turnRight = XMaterial.ARROW.parseItem();
     ItemMeta trMeta = turnRight.getItemMeta();
     if(trMeta != null) {
-      trMeta.setDisplayName("§e§l[ หมุนพวงมาลัยไปทางขวา > ]");
-      trMeta.setLore(Arrays.asList(
-        "§7ปรับองศาพวงมาลัยไปทางขวา",
-        "§e> คลิกเพื่อหมุนขวา"
+      trMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>หมุนพวงมาลัยไปทางขวา ></bold></gradient> <#5A4E7C>]"));
+      trMeta.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>ปรับองศาพวงมาลัยไปทางขวา",
+        "<#FFB703>> คลิกเพื่อหมุนขวา"
       ));
       turnRight.setItemMeta(trMeta);
     }
@@ -196,10 +200,10 @@ public class SteeringFluidMinigame implements TaskMinigame {
       actionBtn = XMaterial.EMERALD_BLOCK.parseItem();
       ItemMeta aMeta = actionBtn.getItemMeta();
       if(aMeta != null) {
-        aMeta.setDisplayName("§a§l[ ล็อคระบบพวงมาลัยเพาเวอร์ (เสร็จสิ้น) ] [/]");
-        aMeta.setLore(Arrays.asList(
-          "§7ตั้งศูนย์พวงมาลัยและตรวจเช็คสมบูรณ์",
-          "§a> คลิกเพื่อจบภารกิจ!"
+        aMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>ล็อคระบบพวงมาลัยเพาเวอร์ (เสร็จสิ้น) [/]</bold></gradient> <#5A4E7C>]"));
+        aMeta.setLore(HalloweenChat.colorLines(
+          "<#B8B0C8>ตั้งศูนย์พวงมาลัยและตรวจเช็คสมบูรณ์",
+          "<#6EEB83>> คลิกเพื่อจบภารกิจ!"
         ));
         actionBtn.setItemMeta(aMeta);
       }
@@ -207,8 +211,8 @@ public class SteeringFluidMinigame implements TaskMinigame {
       actionBtn = XMaterial.IRON_BARS.parseItem();
       ItemMeta aMeta = actionBtn.getItemMeta();
       if(aMeta != null) {
-        aMeta.setDisplayName("§7[ ล็อคระบบพวงมาลัย (ยังไม่พร้อม) ]");
-        aMeta.setLore(Arrays.asList("§cต้องตั้งศูนย์พวงมาลัยให้ตรง [ 0 ] ก่อน!"));
+        aMeta.setDisplayName(HalloweenChat.color("<#B8B0C8>[ ล็อคระบบพวงมาลัย (ยังไม่พร้อม) ]"));
+        aMeta.setLore(HalloweenChat.colorLines("<#FF3B47>ต้องตั้งศูนย์พวงมาลัยให้ตรง [ 0 ] ก่อน!"));
         actionBtn.setItemMeta(aMeta);
       }
     }
@@ -228,7 +232,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
     if(rawSlot == INSTRUCTION_SLOT) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, "§e กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] -> กดล็อคด้านล่าง!");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] -> กดล็อคด้านล่าง!"));
       return true;
     }
 
@@ -242,7 +246,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         buildGui(topInv, session);
       } else {
         XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
-        VersionUtils.sendActionBar(player, "§cสุดระยะการหมุนซ้ายแล้ว!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนซ้ายแล้ว!"));
       }
       return true;
     }
@@ -255,7 +259,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         buildGui(topInv, session);
       } else {
         XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
-        VersionUtils.sendActionBar(player, "§cสุดระยะการหมุนขวาแล้ว!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนขวาแล้ว!"));
       }
       return true;
     }
@@ -267,7 +271,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        VersionUtils.sendActionBar(player, "§a§l[/] ตั้งศูนย์และเช็คน้ำมันพวงมาลัยเพาเวอร์เสร็จสิ้น!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ตั้งศูนย์และเช็คน้ำมันพวงมาลัยเพาเวอร์เสร็จสิ้น!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -277,7 +281,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         }, 10L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-        VersionUtils.sendActionBar(player, "§c[ยังไม่พร้อม] กรุณาตั้งศูนย์พวงมาลัยให้ตรงที่ [ 0 ] ก่อน!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่พร้อม] กรุณาตั้งศูนย์พวงมาลัยให้ตรงที่ [ 0 ] ก่อน!"));
       }
       return true;
     }
@@ -288,11 +292,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
   private void checkAngleFeedback(Player player, SteeringSession session) {
     if(session.angle == 0) {
       XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-      VersionUtils.sendActionBar(player, "§a[/] พวงมาลัยตรงศูนย์ [ 0 ] แล้ว! -> คลิก [ ล็อคระบบพวงมาลัย] ด้านล่าง!");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] พวงมาลัยตรงศูนย์ [ 0 ] แล้ว! -> คลิก [ล็อคระบบพวงมาลัย] ด้านล่าง!"));
     } else if(session.angle < 0) {
-      VersionUtils.sendActionBar(player, "§eพวงมาลัยเอียงซ้าย [ " + session.angle + " ] -> คลิกหมุนขวา >");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงซ้าย [ " + session.angle + " ] -> คลิกหมุนขวา >"));
     } else {
-      VersionUtils.sendActionBar(player, "§eพวงมาลัยเอียงขวา [ +" + session.angle + " ] -> คลิกหมุนซ้าย <");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงขวา [ +" + session.angle + " ] -> คลิกหมุนซ้าย <"));
     }
   }
 

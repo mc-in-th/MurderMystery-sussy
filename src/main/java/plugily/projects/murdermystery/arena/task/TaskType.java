@@ -19,6 +19,7 @@
 package plugily.projects.murdermystery.arena.task;
 
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 public enum TaskType {
 
@@ -62,7 +63,10 @@ public enum TaskType {
     try {
       String msg = new MessageBuilder(messageKey).asKey().build();
       if(msg != null && !msg.isEmpty() && !msg.contains("ERR_MESSAGE_")) {
-        return msg;
+        String plain = HalloweenChat.strip(msg).trim();
+        if(!plain.isEmpty()) {
+          return plain;
+        }
       }
     } catch(Exception ignored) {
     }
@@ -70,7 +74,7 @@ public enum TaskType {
   }
 
   public String getHologramTitle() {
-    return "&6&l[ " + getDisplayName() + " ]";
+    return "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>" + getDisplayName() + "</bold></gradient> <#5A4E7C>]";
   }
 
   public static TaskType fromInput(String input) {

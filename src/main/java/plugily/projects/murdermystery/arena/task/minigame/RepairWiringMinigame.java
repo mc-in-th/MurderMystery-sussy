@@ -30,6 +30,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.TaskType;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,13 +44,13 @@ import java.util.UUID;
 
 public class RepairWiringMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = "§8[ §6 ซ่อมสายไฟเครื่องยนต์ §8]";
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>ซ่อมสายไฟเครื่องยนต์</bold></gradient> <#5A4E7C>]");
 
   public enum WireColor {
-    RED("สีแดง (Red)", XMaterial.RED_WOOL, XMaterial.RED_STAINED_GLASS_PANE, "§c"),
-    BLUE("สีน้ำเงิน (Blue)", XMaterial.BLUE_WOOL, XMaterial.BLUE_STAINED_GLASS_PANE, "§9"),
-    YELLOW("สีเหลือง (Yellow)", XMaterial.YELLOW_WOOL, XMaterial.YELLOW_STAINED_GLASS_PANE, "§e"),
-    MAGENTA("สีชมพู (Magenta)", XMaterial.MAGENTA_WOOL, XMaterial.MAGENTA_STAINED_GLASS_PANE, "§d");
+    RED("สีแดง (Red)", XMaterial.RED_WOOL, XMaterial.RED_STAINED_GLASS_PANE, "<#FF3B47>"),
+    BLUE("สีน้ำเงิน (Blue)", XMaterial.BLUE_WOOL, XMaterial.BLUE_STAINED_GLASS_PANE, "<#72EFDD>"),
+    YELLOW("สีเหลือง (Yellow)", XMaterial.YELLOW_WOOL, XMaterial.YELLOW_STAINED_GLASS_PANE, "<#FFB703>"),
+    MAGENTA("สีชมพู (Magenta)", XMaterial.MAGENTA_WOOL, XMaterial.MAGENTA_STAINED_GLASS_PANE, "<#C77DFF>");
 
     final String name;
     final XMaterial wool;
@@ -103,7 +104,7 @@ public class RepairWiringMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && title.contains("ซ่อมสายไฟเครื่องยนต์");
+    return title != null && HalloweenChat.strip(title).contains("ซ่อมสายไฟเครื่องยนต์");
   }
 
   @Override
@@ -117,15 +118,15 @@ public class RepairWiringMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, "§e[ซ่อมสายไฟ] คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!");
-    player.sendMessage("§6[ภารกิจซ่อมสายไฟ] §eคลิกเลือกสายไฟฝั่งซ้าย แล้วต่อกับสีเดียวกันฝั่งขวาให้ครบ 4 เส้น (ดูวิธีทำที่หนังสือช่องบน)");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ซ่อมสายไฟ]</bold></gradient> <#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
+    player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจซ่อมสายไฟ]</bold></gradient> <#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วต่อกับสีเดียวกันฝั่งขวาให้ครบ 4 เส้น (ดูวิธีทำที่หนังสือช่องบน)"));
   }
 
   private void buildGui(Inventory inv, WiringSession session) {
-    ItemStack bg = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName("§7 ");
+      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 54; i++) {
@@ -135,13 +136,13 @@ public class RepairWiringMinigame implements TaskMinigame {
     ItemStack banner = new ItemStack(Material.BOOK);
     ItemMeta bannerMeta = banner.getItemMeta();
     if(bannerMeta != null) {
-      bannerMeta.setDisplayName("§e§l วิธีทำภารกิจ: ซ่อมสายไฟเครื่องยนต์ (Instructions)");
-      bannerMeta.setLore(Arrays.asList(
-        "§fขั้นตอนการทำภารกิจ:",
-        "§71. คลิกเลือกสายไฟสีใดก็ได้ทาง §fฝั่งซ้าย (Left)",
-        "§72. คลิกปลายสายที่มีสีเดียวกันทาง §fฝั่งขวา (Right)",
-        "§73. เชื่อมต่อให้ตรงสีครบทั้ง 4 เส้นเพื่อเปิดเครื่องยนต์",
-        "§c[!] ระวัง: หากต่อผิดสี จะเกิดประกายไฟช็อตและต้องต่อใหม่!"
+      bannerMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ: ซ่อมสายไฟเครื่องยนต์ (Instructions)</bold></gradient>"));
+      bannerMeta.setLore(HalloweenChat.colorLines(
+        "<#F4F1DE>ขั้นตอนการทำภารกิจ:",
+        "<#B8B0C8>1. คลิกเลือกสายไฟสีใดก็ได้ทาง <#F4F1DE>ฝั่งซ้าย (Left)",
+        "<#B8B0C8>2. คลิกปลายสายที่มีสีเดียวกันทาง <#F4F1DE>ฝั่งขวา (Right)",
+        "<#B8B0C8>3. เชื่อมต่อให้ตรงสีครบทั้ง 4 เส้นเพื่อเปิดเครื่องยนต์",
+        "<#FF3B47>[!] ระวัง: หากต่อผิดสี จะเกิดประกายไฟช็อตและต้องต่อใหม่!"
       ));
       banner.setItemMeta(bannerMeta);
     }
@@ -156,14 +157,14 @@ public class RepairWiringMinigame implements TaskMinigame {
       ItemMeta leftMeta = leftItem.getItemMeta();
       if(leftMeta != null) {
         if(isConnected) {
-          leftMeta.setDisplayName(leftColor.colorCode + "* สายไฟ" + leftColor.name + " §a[เชื่อมแล้ว [/]]");
-          leftMeta.setLore(Arrays.asList("§aสายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว"));
+          leftMeta.setDisplayName(HalloweenChat.color(leftColor.colorCode + "* สายไฟ" + leftColor.name + " <#6EEB83>[เชื่อมแล้ว [/]]"));
+          leftMeta.setLore(HalloweenChat.colorLines("<#6EEB83>สายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว"));
         } else if(isSelected) {
-          leftMeta.setDisplayName(leftColor.colorCode + ">> [ กำลังเลือก: " + leftColor.name + " ]");
-          leftMeta.setLore(Arrays.asList("§e> คลิกที่ปลายสายสีเดียวกันทางฝั่งขวาเพื่อเชื่อมต่อ!"));
+          leftMeta.setDisplayName(HalloweenChat.color(leftColor.colorCode + ">> [ กำลังเลือก: " + leftColor.name + " ]"));
+          leftMeta.setLore(HalloweenChat.colorLines("<#FFB703>> คลิกที่ปลายสายสีเดียวกันทางฝั่งขวาเพื่อเชื่อมต่อ!"));
         } else {
-          leftMeta.setDisplayName(leftColor.colorCode + "* ปลายสาย" + leftColor.name);
-          leftMeta.setLore(Arrays.asList("§e> คลิกเพื่อเลือกสายไฟเส้นนี้"));
+          leftMeta.setDisplayName(HalloweenChat.color(leftColor.colorCode + "* ปลายสาย" + leftColor.name));
+          leftMeta.setLore(HalloweenChat.colorLines("<#FFB703>> คลิกเพื่อเลือกสายไฟเส้นนี้"));
         }
         leftItem.setItemMeta(leftMeta);
       }
@@ -182,10 +183,10 @@ public class RepairWiringMinigame implements TaskMinigame {
       ItemMeta rightMeta = rightItem.getItemMeta();
       if(rightMeta != null) {
         if(rightConnected) {
-          rightMeta.setDisplayName(rightColor.colorCode + "* ปลายสาย" + rightColor.name + " §a[เชื่อมแล้ว [/]]");
+          rightMeta.setDisplayName(HalloweenChat.color(rightColor.colorCode + "* ปลายสาย" + rightColor.name + " <#6EEB83>[เชื่อมแล้ว [/]]"));
         } else {
-          rightMeta.setDisplayName(rightColor.colorCode + "* ปลายสาย" + rightColor.name);
-          rightMeta.setLore(Arrays.asList("§e> คลิกเพื่อเชื่อมต่อ"));
+          rightMeta.setDisplayName(HalloweenChat.color(rightColor.colorCode + "* ปลายสาย" + rightColor.name));
+          rightMeta.setLore(HalloweenChat.colorLines("<#FFB703>> คลิกเพื่อเชื่อมต่อ"));
         }
         rightItem.setItemMeta(rightMeta);
       }
@@ -199,14 +200,14 @@ public class RepairWiringMinigame implements TaskMinigame {
         wireLine = leftColor.glass.parseItem();
         ItemMeta wlMeta = wireLine.getItemMeta();
         if(wlMeta != null) {
-          wlMeta.setDisplayName(leftColor.colorCode + "=== กระแสไฟวิ่งปกติ ===");
+          wlMeta.setDisplayName(HalloweenChat.color(leftColor.colorCode + "=== กระแสไฟวิ่งปกติ ==="));
           wireLine.setItemMeta(wlMeta);
         }
       } else {
         wireLine = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
         ItemMeta wlMeta = wireLine.getItemMeta();
         if(wlMeta != null) {
-          wlMeta.setDisplayName("§8--- สายไฟขาด ---");
+          wlMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>--- สายไฟขาด ---"));
           wireLine.setItemMeta(wlMeta);
         }
       }
@@ -225,8 +226,10 @@ public class RepairWiringMinigame implements TaskMinigame {
     ItemStack status = new ItemStack(doneCount == 4 ? Material.EMERALD : Material.REDSTONE);
     ItemMeta stMeta = status.getItemMeta();
     if(stMeta != null) {
-      stMeta.setDisplayName(doneCount == 4 ? "§a§l[/] เชื่อมต่อสายไฟครบทั้งหมดแล้ว!" : "§6ความคืบหน้า: §e" + doneCount + " §7/ §e4 เส้น");
-      stMeta.setLore(Arrays.asList("§7ต่อสายไฟให้ตรงสีกันทุกเส้น"));
+      stMeta.setDisplayName(HalloweenChat.color(doneCount == 4
+        ? "<gradient:#38B000:#9EF01A><bold>[/] เชื่อมต่อสายไฟครบทั้งหมดแล้ว!</bold></gradient>"
+        : "<#FF7518>ความคืบหน้า: <#FFB703>" + doneCount + " <#5A4E7C>/ <#FFB703>4 เส้น"));
+      stMeta.setLore(HalloweenChat.colorLines("<#B8B0C8>ต่อสายไฟให้ตรงสีกันทุกเส้น"));
       status.setItemMeta(stMeta);
     }
     inv.setItem(49, status);
@@ -245,7 +248,7 @@ public class RepairWiringMinigame implements TaskMinigame {
 
     if(rawSlot == 4) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, "§e คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
       return true;
     }
 
@@ -253,14 +256,14 @@ public class RepairWiringMinigame implements TaskMinigame {
       if(LEFT_SLOTS[i] == rawSlot) {
         if(session.connected[i]) {
           XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1F);
-          VersionUtils.sendActionBar(player, "§aสายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว!");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>สายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว!"));
           return true;
         }
 
         session.selectedLeft = i;
         WireColor color = session.leftWires[i];
         XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.2F);
-        VersionUtils.sendActionBar(player, "§eเลือกสายไฟ" + color.name + " แล้ว! -> คลิกปลายสายสีเดียวกันทางขวา!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>เลือกสายไฟ" + color.name + " แล้ว! -> คลิกปลายสายสีเดียวกันทางขวา!"));
         buildGui(player.getOpenInventory().getTopInventory(), session);
         return true;
       }
@@ -270,7 +273,7 @@ public class RepairWiringMinigame implements TaskMinigame {
       if(RIGHT_SLOTS[j] == rawSlot) {
         if(session.selectedLeft == -1) {
           XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.2F);
-          VersionUtils.sendActionBar(player, "§cกรุณาคลิกเลือกสายไฟทางฝั่งซ้ายก่อน!");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>กรุณาคลิกเลือกสายไฟทางฝั่งซ้ายก่อน!"));
           return true;
         }
 
@@ -299,7 +302,7 @@ public class RepairWiringMinigame implements TaskMinigame {
             sessions.remove(player.getUniqueId());
 
             XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-            VersionUtils.sendActionBar(player, "§a§l[/] ซ่อมสายไฟเครื่องยนต์สำเร็จ! ระบบไฟเชื่อมต่อสมบูรณ์!");
+            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ซ่อมสายไฟเครื่องยนต์สำเร็จ! ระบบไฟเชื่อมต่อสมบูรณ์!</bold></gradient>"));
 
             Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
               if(player.isOnline()) {
@@ -308,13 +311,13 @@ public class RepairWiringMinigame implements TaskMinigame {
               }
             }, 10L);
           } else {
-            VersionUtils.sendActionBar(player, "§a[/] เชื่อมต่อสายไฟ" + selectedColor.name + " สำเร็จ!");
+            VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เชื่อมต่อสายไฟ" + selectedColor.name + " สำเร็จ!"));
           }
         } else {
           XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 0.8F);
           XSound.ENTITY_CREEPER_PRIMED.play(player.getLocation(), 0.7F, 1.8F);
 
-          VersionUtils.sendActionBar(player, "§c[x] สีไม่ตรงกัน! (" + selectedColor.name + " != " + clickedRightColor.name + ") ลองใหม่อีกครั้ง!");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[x] สีไม่ตรงกัน! (" + selectedColor.name + " != " + clickedRightColor.name + ") ลองใหม่อีกครั้ง!"));
           session.selectedLeft = -1;
           buildGui(player.getOpenInventory().getTopInventory(), session);
         }

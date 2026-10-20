@@ -30,6 +30,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.TaskType;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +44,7 @@ import java.util.UUID;
 
 public class ControlPanelMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = "§8[ §6 แผงควบคุมระบบไฟ §8]";
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>แผงควบคุมระบบไฟ</bold></gradient> <#5A4E7C>]");
 
   private static class PanelSession {
     final List<Integer> requiredSequence;
@@ -64,11 +65,11 @@ public class ControlPanelMinigame implements TaskMinigame {
   private static final int[] SWITCH_SLOTS = {11, 12, 13, 14, 15};
   private static final int[] LIGHT_SLOTS = {2, 3, 4, 5, 6};
   private static final String[] SWITCH_LABELS = {
-    "§e[1] ไฟหน้ารถ (Headlights)",
-    "§e[2] ปั๊มน้ำมัน (Fuel Pump)",
-    "§e[3] พัดลมหม้อน้ำ (Radiator Fan)",
-    "§e[4] ระบบสตาร์ท (Ignition)",
-    "§e[5] คัตเอาท์แอร์ (AC Unit)"
+    "<#FFB703>[1] ไฟหน้ารถ (Headlights)",
+    "<#FFB703>[2] ปั๊มน้ำมัน (Fuel Pump)",
+    "<#FFB703>[3] พัดลมหม้อน้ำ (Radiator Fan)",
+    "<#FFB703>[4] ระบบสตาร์ท (Ignition)",
+    "<#FFB703>[5] คัตเอาท์แอร์ (AC Unit)"
   };
 
   public ControlPanelMinigame(Arena arena) {
@@ -87,7 +88,7 @@ public class ControlPanelMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && title.contains("แผงควบคุมระบบไฟ");
+    return title != null && HalloweenChat.strip(title).contains("แผงควบคุมระบบไฟ");
   }
 
   @Override
@@ -101,15 +102,15 @@ public class ControlPanelMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, "§e[แผงควบคุม] อ่านลำดับขั้นตอนด้านบน แล้วสับสวิตช์ตามลำดับที่ถูกต้อง!");
-    player.sendMessage("§6[ภารกิจแผงควบคุม] §eสับสวิตช์ 5 ตัวตามลำดับไฟสีเหลือง (ดูวิธีทำได้ที่ไอคอนหนังสือช่อง 1)");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[แผงควบคุม]</bold></gradient> <#FFB703>อ่านลำดับขั้นตอนด้านบน แล้วสับสวิตช์ตามลำดับที่ถูกต้อง!"));
+    player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจแผงควบคุม]</bold></gradient> <#FFB703>สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลือง (ดูวิธีทำได้ที่ไอคอนหนังสือช่อง 1)"));
   }
 
   private void buildGui(Inventory inv, PanelSession session) {
-    ItemStack bg = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName("§7 ");
+      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 27; i++) {
@@ -119,13 +120,13 @@ public class ControlPanelMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName("§e§l วิธีทำภารกิจ: แผงควบคุมระบบไฟ (Instructions)");
-      iMeta.setLore(Arrays.asList(
-        "§fขั้นตอนการทำภารกิจ:",
-        "§71. สังเกตไฟสัญญาณด้านบน (ไฟสีเหลืองคือสวิตช์ตัวถัดไป)",
-        "§72. คลิกสับสวิตช์แถวกลางตามลำดับให้ถูกต้อง",
-        "§73. สับสวิตช์ให้ครบทั้ง 5 ตัวเพื่อเปิดระบบไฟสำเร็จ",
-        "§c[!] ระวัง: หากสับผิดตัว เบรกเกอร์จะระเบิดและรีเซ็ตใหม่ทั้งหมด!"
+      iMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ: แผงควบคุมระบบไฟ (Instructions)</bold></gradient>"));
+      iMeta.setLore(HalloweenChat.colorLines(
+        "<#F4F1DE>ขั้นตอนการทำภารกิจ:",
+        "<#B8B0C8>1. สังเกตไฟสัญญาณด้านบน (ไฟสีเหลืองคือสวิตช์ตัวถัดไป)",
+        "<#B8B0C8>2. คลิกสับสวิตช์แถวกลางตามลำดับให้ถูกต้อง",
+        "<#B8B0C8>3. สับสวิตช์ให้ครบทั้ง 5 ตัวเพื่อเปิดระบบไฟสำเร็จ",
+        "<#FF3B47>[!] ระวัง: หากสับผิดตัว เบรกเกอร์จะระเบิดและรีเซ็ตใหม่ทั้งหมด!"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -134,27 +135,27 @@ public class ControlPanelMinigame implements TaskMinigame {
     ItemStack monitor = new ItemStack(Material.KNOWLEDGE_BOOK);
     ItemMeta monMeta = monitor.getItemMeta();
     if(monMeta != null) {
-      monMeta.setDisplayName("§6§l[ ลำดับขั้นตอนเปิดระบบความปลอดภัย ]");
+      monMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>ลำดับขั้นตอนเปิดระบบความปลอดภัย</bold></gradient> <#5A4E7C>]"));
       List<String> lore = new ArrayList<>();
-      lore.add("§fต้องสับสวิตช์ตามลำดับนี้เท่านั้น:");
-      StringBuilder sb = new StringBuilder("§e");
+      lore.add("<#F4F1DE>ต้องสับสวิตช์ตามลำดับนี้เท่านั้น:");
+      StringBuilder sb = new StringBuilder();
       for(int i = 0; i < session.requiredSequence.size(); i++) {
         int swIdx = session.requiredSequence.get(i);
         if(i > 0) {
-          sb.append(" §7-> §e");
+          sb.append(" <#5A4E7C>-> ");
         }
         if(i < session.currentStep) {
-          sb.append("§a§m[").append(swIdx + 1).append("]§r");
+          sb.append("<#6EEB83><strikethrough>[").append(swIdx + 1).append("]</strikethrough><reset>");
         } else if(i == session.currentStep) {
-          sb.append("§6§l[").append(swIdx + 1).append("]");
+          sb.append("<#FF7518><bold>[").append(swIdx + 1).append("]</bold><reset>");
         } else {
-          sb.append("§e[").append(swIdx + 1).append("]");
+          sb.append("<#FFB703>[").append(swIdx + 1).append("]");
         }
       }
       lore.add(sb.toString());
       lore.add(" ");
-      lore.add("§7ขั้นตอนปัจจุบัน: §aขั้นตอนที่ " + (session.currentStep + 1) + " / 5");
-      monMeta.setLore(lore);
+      lore.add("<#B8B0C8>ขั้นตอนปัจจุบัน: <#6EEB83>ขั้นตอนที่ " + (session.currentStep + 1) + " / 5");
+      monMeta.setLore(HalloweenChat.colorList(lore));
       monitor.setItemMeta(monMeta);
     }
     inv.setItem(8, monitor);
@@ -176,11 +177,11 @@ public class ControlPanelMinigame implements TaskMinigame {
       ItemMeta lMeta = light.getItemMeta();
       if(lMeta != null) {
         if(isOn) {
-          lMeta.setDisplayName("§a* สวิตช์ " + (i + 1) + " [เปิดแล้ว [/]]");
+          lMeta.setDisplayName(HalloweenChat.color("<#6EEB83>* สวิตช์ " + (i + 1) + " [เปิดแล้ว [/]]"));
         } else if(isNext) {
-          lMeta.setDisplayName("§e* สวิตช์ " + (i + 1) + " [เปิดตัวนี้เป็นลำดับถัดไป!]");
+          lMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>* สวิตช์ " + (i + 1) + " [เปิดตัวนี้เป็นลำดับถัดไป!]</bold></gradient>"));
         } else {
-          lMeta.setDisplayName("§c* สวิตช์ " + (i + 1) + " [ปิดอยู่]");
+          lMeta.setDisplayName(HalloweenChat.color("<#FF3B47>* สวิตช์ " + (i + 1) + " [ปิดอยู่]"));
         }
         light.setItemMeta(lMeta);
       }
@@ -201,21 +202,21 @@ public class ControlPanelMinigame implements TaskMinigame {
       }
       ItemMeta swMeta = sw.getItemMeta();
       if(swMeta != null) {
-        swMeta.setDisplayName(SWITCH_LABELS[i]);
+        swMeta.setDisplayName(HalloweenChat.color(SWITCH_LABELS[i]));
         if(isOn) {
-          swMeta.setLore(Arrays.asList(
-            "§a[ สถานะ: ON เปิดใช้งานแล้ว [/] ]",
-            "§7(เปิดตามลำดับถูกต้องแล้ว)"
+          swMeta.setLore(HalloweenChat.colorLines(
+            "<#6EEB83>[ สถานะ: ON เปิดใช้งานแล้ว [/] ]",
+            "<#B8B0C8>(เปิดตามลำดับถูกต้องแล้ว)"
           ));
         } else if(isNext) {
-          swMeta.setLore(Arrays.asList(
-            "§e§l[ * สับสวิตช์ตัวนี้เป็นลำดับถัดไป! ]",
-            "§e> คลิกที่นี่เพื่อสับสวิตช์นี้!"
+          swMeta.setLore(HalloweenChat.colorLines(
+            "<gradient:#FF5400:#FFB703><bold>[ * สับสวิตช์ตัวนี้เป็นลำดับถัดไป! ]</bold></gradient>",
+            "<#FFB703>> คลิกที่นี่เพื่อสับสวิตช์นี้!"
           ));
         } else {
-          swMeta.setLore(Arrays.asList(
-            "§c[ สถานะ: OFF ปิดอยู่ ]",
-            "§7(ยังไม่ถึงคิวสับตัวนี้)"
+          swMeta.setLore(HalloweenChat.colorLines(
+            "<#FF3B47>[ สถานะ: OFF ปิดอยู่ ]",
+            "<#B8B0C8>(ยังไม่ถึงคิวสับตัวนี้)"
           ));
         }
         sw.setItemMeta(swMeta);
@@ -226,10 +227,12 @@ public class ControlPanelMinigame implements TaskMinigame {
     ItemStack status = new ItemStack(session.currentStep == 5 ? Material.EMERALD : Material.COMPASS);
     ItemMeta stMeta = status.getItemMeta();
     if(stMeta != null) {
-      stMeta.setDisplayName(session.currentStep == 5 ? "§a§l[/] ทุกระบบเชื่อมต่อสมบูรณ์!" : "§6ความคืบหน้า: §e" + session.currentStep + " §7/ §e5 สวิตช์");
-      stMeta.setLore(Arrays.asList(
-        "§7สับสวิตช์ตามลำดับที่มอนิเตอร์กำหนดให้ครบ",
-        "§7เพื่อจ่ายกระแสไฟเข้าแผงควบคุมรถบัส"
+      stMeta.setDisplayName(HalloweenChat.color(session.currentStep == 5
+        ? "<gradient:#38B000:#9EF01A><bold>[/] ทุกระบบเชื่อมต่อสมบูรณ์!</bold></gradient>"
+        : "<#FF7518>ความคืบหน้า: <#FFB703>" + session.currentStep + " <#5A4E7C>/ <#FFB703>5 สวิตช์"));
+      stMeta.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>สับสวิตช์ตามลำดับที่มอนิเตอร์กำหนดให้ครบ",
+        "<#B8B0C8>เพื่อจ่ายกระแสไฟเข้าแผงควบคุมรถบัส"
       ));
       status.setItemMeta(stMeta);
     }
@@ -249,7 +252,7 @@ public class ControlPanelMinigame implements TaskMinigame {
 
     if(rawSlot == 0 || rawSlot == 8) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, "§e สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลืองด้านบน!");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลืองด้านบน!"));
       return true;
     }
 
@@ -282,7 +285,7 @@ public class ControlPanelMinigame implements TaskMinigame {
           sessions.remove(player.getUniqueId());
 
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-          VersionUtils.sendActionBar(player, "§a§l[/] แผงควบคุมระบบไฟสตาร์ทสำเร็จ! รถบัสพร้อมทำงาน!");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] แผงควบคุมระบบไฟสตาร์ทสำเร็จ! รถบัสพร้อมทำงาน!</bold></gradient>"));
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
             if(player.isOnline()) {
@@ -291,13 +294,13 @@ public class ControlPanelMinigame implements TaskMinigame {
             }
           }, 10L);
         } else {
-          VersionUtils.sendActionBar(player, "§a[/] ถูกต้อง! ขั้นตอนที่ " + session.currentStep + "/5 สำเร็จแล้ว");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] ถูกต้อง! ขั้นตอนที่ " + session.currentStep + "/5 สำเร็จแล้ว"));
         }
       } else {
         XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.7F, 1.8F);
         XSound.BLOCK_ANVIL_LAND.play(player.getLocation(), 0.6F, 0.6F);
 
-        VersionUtils.sendActionBar(player, "§c ไฟฟ้าลัดวงจร! สับสวิตช์ผิดลำดับ เบรกเกอร์ตัดวงจรทั้งหมด!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>ไฟฟ้าลัดวงจร! สับสวิตช์ผิดลำดับ เบรกเกอร์ตัดวงจรทั้งหมด!</bold></gradient>"));
 
         PanelSession fresh = new PanelSession();
         sessions.put(player.getUniqueId(), fresh);

@@ -39,6 +39,7 @@ import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.minigame.TaskMinigameManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -222,34 +223,34 @@ public class TaskManager {
       String activeText;
       String completedText;
       if(types.isEmpty()) {
-        activeText = "&e&lv จุดทำภารกิจ (TASK POINT) v\n&fคลิกขวาเพื่อเริ่มทำภารกิจ";
-        completedText = "&a&l[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]\n&7(ทำภารกิจจุดนี้เรียบร้อยแล้ว)";
+        activeText = "<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK POINT) v</bold></gradient>\n<#F4F1DE>คลิกขวาเพื่อเริ่มทำภารกิจ";
+        completedText = "<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#B8B0C8>(ทำภารกิจจุดนี้เรียบร้อยแล้ว)";
       } else if(types.size() == 1) {
         TaskType t = types.iterator().next();
-        activeText = "&e&lv จุดทำภารกิจ (TASK) v\n" + t.getHologramTitle() + "\n&f(คลิกขวาเพื่อทำภารกิจ)";
-        completedText = "&a&l[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]\n&7[ &a" + t.getIcon() + " " + t.getDisplayName() + " &7]\n&a[/] สำเร็จเรียบร้อยแล้ว (Done)";
+        activeText = "<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK) v</bold></gradient>\n" + t.getHologramTitle() + "\n<#F4F1DE>(คลิกขวาเพื่อทำภารกิจ)";
+        completedText = "<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#5A4E7C>[ <#6EEB83>" + t.getIcon() + " " + t.getDisplayName() + " <#5A4E7C>]\n<#6EEB83>[/] สำเร็จเรียบร้อยแล้ว (Done)";
       } else {
-        StringBuilder sbActive = new StringBuilder("&e&lv จุดทำภารกิจ (TASK STATION) v\n");
-        StringBuilder sbDone = new StringBuilder("&a&l[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]\n&7[ ");
+        StringBuilder sbActive = new StringBuilder("<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK STATION) v</bold></gradient>\n");
+        StringBuilder sbDone = new StringBuilder("<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#5A4E7C>[ ");
         int count = 0;
         for(TaskType t : types) {
           if(count > 0) {
-            sbActive.append(" &7| ");
-            sbDone.append(" &7| ");
+            sbActive.append(" <#5A4E7C>| ");
+            sbDone.append(" <#5A4E7C>| ");
           }
-          sbActive.append("&6&l").append(t.getIcon()).append(" ").append(t.getDisplayName());
-          sbDone.append("&a").append(t.getIcon()).append(" ").append(t.getDisplayName());
+          sbActive.append("<#FF7518><bold>").append(t.getIcon()).append(" ").append(t.getDisplayName()).append("</bold>");
+          sbDone.append("<#6EEB83>").append(t.getIcon()).append(" ").append(t.getDisplayName());
           count++;
         }
-        sbActive.append("\n&f(คลิกขวาเพื่อทำภารกิจ)");
-        sbDone.append(" &7]\n&a[/] สำเร็จเรียบร้อยแล้ว (Done)");
+        sbActive.append("\n<#F4F1DE>(คลิกขวาเพื่อทำภารกิจ)");
+        sbDone.append(" <#5A4E7C>]\n<#6EEB83>[/] สำเร็จเรียบร้อยแล้ว (Done)");
         activeText = sbActive.toString();
         completedText = sbDone.toString();
       }
 
       TextDisplay activeHologram = arena.spawnTextDisplay(displayLoc, activeText, false);
       TextDisplay completedHologram = arena.spawnTextDisplay(displayLoc, completedText, false);
-      BlockDisplay glowingBlock = arena.spawnBlockDisplay(loc, null, ChatColor.YELLOW);
+      BlockDisplay glowingBlock = arena.spawnBlockDisplay(loc, null, ChatColor.GOLD);
 
       stationDisplays.add(new TaskStationDisplay(loc, types, activeHologram, completedHologram, glowingBlock));
     }
@@ -265,11 +266,11 @@ public class TaskManager {
       ItemStack compass = new ItemStack(Material.COMPASS);
       ItemMeta meta = compass.getItemMeta();
       if(meta != null) {
-        meta.setDisplayName("§e§lเข็มทิศนำทางภารกิจ (Task Pointer)");
+        meta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>เข็มทิศนำทางภารกิจ (Task Pointer)</bold></gradient>"));
         meta.setLore(Arrays.asList(
-          "§7ชี้ตรงไปยังจุดทำภารกิจถัดไปของคุณ",
-          "§7เดินตามลูกศรเพื่อไปยังจุดทำภารกิจ",
-          "§e> เมื่อถึงจุด ให้คลิกขวาที่บล็อกเพื่อเปิดมินิเกม"
+          HalloweenChat.color("<#B8B0C8>ชี้ตรงไปยังจุดทำภารกิจถัดไปของคุณ"),
+          HalloweenChat.color("<#B8B0C8>เดินตามลูกศรเพื่อไปยังจุดทำภารกิจ"),
+          HalloweenChat.color("<#FFB703>> เมื่อถึงจุด ให้คลิกขวาที่บล็อกเพื่อเปิดมินิเกม")
         ));
         compass.setItemMeta(meta);
       }
@@ -284,22 +285,27 @@ public class TaskManager {
       return;
     }
 
+    String border = HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>========================================</bold></gradient>");
     player.sendMessage(" ");
-    player.sendMessage("§6§l========================================");
-    player.sendMessage("§6§l ภารกิจซ่อมรถบัสของคุณ (YOUR TASKS)       ");
-    player.sendMessage("§6§l========================================");
+    player.sendMessage(border);
+    player.sendMessage(HalloweenChat.color(" <gradient:#FF5400:#FFB703><bold>ภารกิจซ่อมรถบัสของคุณ (YOUR TASKS)</bold></gradient>"));
+    player.sendMessage(border);
     for(GameTask task : tasks) {
       String taskName = task.getTaskType().getDisplayName();
-      player.sendMessage("§e > " + (task.isCompleted() ? "§a§m" : "§f") + taskName + (task.isCompleted() ? " §a[/] (เสร็จสิ้น)" : ""));
+      if(task.isCompleted()) {
+        player.sendMessage(HalloweenChat.color("<#FFB703> > <#6EEB83><strikethrough>" + taskName + "</strikethrough> <#6EEB83>[/] (เสร็จสิ้น)"));
+      } else {
+        player.sendMessage(HalloweenChat.color("<#FFB703> > <#F4F1DE>" + taskName));
+      }
     }
-    player.sendMessage("§7----------------------------------------");
-    player.sendMessage("§e §lวิธีทำภารกิจ (How to play):");
-    player.sendMessage("§f 1. ดูตำแหน่งภารกิจ §e[!] §fบนแผนที่ย่อในมือซ้าย หรือเดินตามเข็มทิศ");
-    player.sendMessage("§f 2. จุดทำภารกิจจะมีบล็อกเรืองแสงสีเหลืองและป้ายชื่อลอยอยู่");
-    player.sendMessage("§f 3. เดินเข้าไปใกล้ๆ แล้ว §eคลิกขวาที่บล็อก §fเพื่อเปิดมินิเกม");
-    player.sendMessage("§f 4. อ่านวิธีเล่นที่ §eไอคอนหนังสือ  §fภายในแต่ละมินิเกม");
-    player.sendMessage("§a* ผู้โดยสารทุกคนต้องช่วยกันซ่อมรถบัสให้ครบ 100% เพื่อชนะเกม!");
-    player.sendMessage("§6§l========================================");
+    player.sendMessage(HalloweenChat.color("<#5A4E7C>----------------------------------------"));
+    player.sendMessage(HalloweenChat.color(" <gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ (How to play):</bold></gradient>"));
+    player.sendMessage(HalloweenChat.color("<#F4F1DE> 1. ดูตำแหน่งภารกิจ <#FFB703>[!] <#F4F1DE>บนแผนที่ย่อในมือซ้าย หรือเดินตามเข็มทิศ"));
+    player.sendMessage(HalloweenChat.color("<#F4F1DE> 2. จุดทำภารกิจจะมีบล็อกเรืองแสงและป้ายชื่อลอยอยู่"));
+    player.sendMessage(HalloweenChat.color("<#F4F1DE> 3. เดินเข้าไปใกล้ๆ แล้ว <#FFB703>คลิกขวาที่บล็อก <#F4F1DE>เพื่อเปิดมินิเกม"));
+    player.sendMessage(HalloweenChat.color("<#F4F1DE> 4. อ่านวิธีเล่นที่ <#FFB703>ไอคอนหนังสือ <#F4F1DE>ภายในแต่ละมินิเกม"));
+    player.sendMessage(HalloweenChat.color("<#6EEB83>* ผู้โดยสารทุกคนต้องช่วยกันซ่อมรถบัสให้ครบ 100% เพื่อชนะเกม!"));
+    player.sendMessage(border);
     player.sendMessage(" ");
   }
 
@@ -326,15 +332,15 @@ public class TaskManager {
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage("§7ภารกิจของคุณเหลืออีก §e" + remaining + " §7อย่างที่ต้องทำ!");
+          player.sendMessage(HalloweenChat.color("<#B8B0C8>ภารกิจของคุณเหลืออีก <#FFB703>" + remaining + " <#B8B0C8>อย่างที่ต้องทำ!"));
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            VersionUtils.sendActionBar(player, "§eภารกิจถัดไป: §a" + nextName);
+            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
           }
         } else {
-          player.sendMessage("§a§lคุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว! (รอเพื่อนร่วมทีมทำภารกิจให้ครบ)");
-          VersionUtils.sendActionBar(player, "§a§lภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!");
+          player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
         }
 
         updatePlayerStationVisibility(player);
@@ -349,7 +355,7 @@ public class TaskManager {
 
     for(Location loc : arena.getAllTaskLocations()) {
       if(player.getWorld().equals(loc.getWorld()) && player.getLocation().distanceSquared(loc) <= (range * range)) {
-        VersionUtils.sendActionBar(player, "§7[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ หรือทำเสร็จไปแล้ว! (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ หรือทำเสร็จไปแล้ว! (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
         break;
       }
     }
@@ -428,9 +434,9 @@ public class TaskManager {
           }
         }
         if(wasCompletedHere) {
-          VersionUtils.sendActionBar(player, "§a[/] คุณทำภารกิจจุดนี้เสร็จสิ้นแล้ว! (Completed)");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] คุณทำภารกิจจุดนี้เสร็จสิ้นแล้ว! (Completed)"));
         } else {
-          VersionUtils.sendActionBar(player, "§7[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)");
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
         }
         return true;
       }
@@ -462,15 +468,15 @@ public class TaskManager {
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage("§7ภารกิจของคุณเหลืออีก §e" + remaining + " §7อย่างที่ต้องทำ!");
+          player.sendMessage(HalloweenChat.color("<#B8B0C8>ภารกิจของคุณเหลืออีก <#FFB703>" + remaining + " <#B8B0C8>อย่างที่ต้องทำ!"));
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            VersionUtils.sendActionBar(player, "§eภารกิจถัดไป: §a" + nextName);
+            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
           }
         } else {
-          player.sendMessage("§a§lคุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว! (รอเพื่อนร่วมทีมทำภารกิจให้ครบ)");
-          VersionUtils.sendActionBar(player, "§a§lภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!");
+          player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
+          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
         }
 
         updatePlayerStationVisibility(player);
@@ -539,7 +545,7 @@ public class TaskManager {
       .integer(completedTasks)
       .value(String.valueOf(totalTasks))
       .build();
-    taskBossBar = Bukkit.createBossBar(title, BarColor.GREEN, BarStyle.SEGMENTED_10);
+    taskBossBar = Bukkit.createBossBar(HalloweenChat.color(title), BarColor.YELLOW, BarStyle.SEGMENTED_10);
     taskBossBar.setProgress(0.0);
 
     for(Player player : arena.getPlayers()) {
@@ -556,7 +562,7 @@ public class TaskManager {
       .integer(completedTasks)
       .value(String.valueOf(totalTasks))
       .build();
-    taskBossBar.setTitle(title);
+    taskBossBar.setTitle(HalloweenChat.color(title));
     taskBossBar.setProgress(Math.min(1.0, (double) completedTasks / totalTasks));
 
     double progress = (double) completedTasks / totalTasks;
@@ -565,7 +571,7 @@ public class TaskManager {
     } else if(progress >= 0.5) {
       taskBossBar.setColor(BarColor.YELLOW);
     } else {
-      taskBossBar.setColor(BarColor.RED);
+      taskBossBar.setColor(BarColor.PURPLE);
     }
   }
 
@@ -638,9 +644,9 @@ public class TaskManager {
           Location p1 = eye.clone().add(dir.clone().multiply(1.2));
           Location p2 = eye.clone().add(dir.clone().multiply(1.8));
           try {
-            Particle.DustOptions yellow = new Particle.DustOptions(Color.fromRGB(255, 230, 0), 1.2F);
-            player.spawnParticle(dustParticle, p1, 1, 0, 0, 0, 0, yellow);
-            player.spawnParticle(dustParticle, p2, 1, 0, 0, 0, 0, yellow);
+            Particle.DustOptions pumpkin = new Particle.DustOptions(Color.fromRGB(255, 117, 24), 1.2F);
+            player.spawnParticle(dustParticle, p1, 1, 0, 0, 0, 0, pumpkin);
+            player.spawnParticle(dustParticle, p2, 1, 0, 0, 0, 0, pumpkin);
           } catch(Exception ignored) {
           }
         }
@@ -648,8 +654,8 @@ public class TaskManager {
         if(dustParticle != null) {
           try {
             Location blockTop = target.clone().add(0.5, 1.2, 0.5);
-            Particle.DustOptions brightYellow = new Particle.DustOptions(Color.fromRGB(255, 255, 0), 1.4F);
-            player.spawnParticle(dustParticle, blockTop, 2, 0.1, 0.2, 0.1, 0, brightYellow);
+            Particle.DustOptions amber = new Particle.DustOptions(Color.fromRGB(255, 183, 3), 1.4F);
+            player.spawnParticle(dustParticle, blockTop, 2, 0.1, 0.2, 0.1, 0, amber);
           } catch(Exception ignored) {
           }
         }
@@ -749,7 +755,7 @@ public class TaskManager {
           }
           if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
             try {
-              arena.setEntityGlowColor(station.getGlowingBlock(), ChatColor.YELLOW);
+              arena.setEntityGlowColor(station.getGlowingBlock(), ChatColor.GOLD);
               player.showEntity(arena.getPlugin(), station.getGlowingBlock());
             } catch(Throwable ignored) {
             }
