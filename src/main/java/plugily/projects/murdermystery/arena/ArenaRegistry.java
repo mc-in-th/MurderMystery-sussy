@@ -118,10 +118,17 @@ public class ArenaRegistry extends PluginArenaRegistry {
       for(String key : sabotageSec.getKeys(false)) {
         SabotageType type = SabotageType.fromInput(key);
         if(type != null) {
-          for(String locStr : sabotageSec.getStringList(key)) {
+          String locStr = sabotageSec.getString(key);
+          if(locStr == null || locStr.isEmpty()) {
+            List<String> legacyList = sabotageSec.getStringList(key);
+            if(!legacyList.isEmpty()) {
+              locStr = legacyList.get(0);
+            }
+          }
+          if(locStr != null && !locStr.isEmpty()) {
             Location l = LocationSerializer.getLocation(locStr);
             if(l != null) {
-              ((Arena) arena).addSabotageLocation(type, l);
+              ((Arena) arena).setSabotageLocation(type, l);
             }
           }
         }
