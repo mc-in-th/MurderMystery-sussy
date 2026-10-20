@@ -32,6 +32,8 @@ import org.golde.bukkit.corpsereborn.CorpseAPI.events.CorpseClickEvent;
 import org.golde.bukkit.corpsereborn.CorpseAPI.events.CorpseSpawnEvent;
 import org.golde.bukkit.corpsereborn.nms.Corpses;
 
+import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
@@ -105,6 +107,7 @@ public class CorpseHandler implements Listener {
       plugin.getHologramManager().getArmorStands().add(stand);
       ArmorStandHologram hologram = getLastWordsHologram(player);
       arena.addHead(new Stand(hologram, stand));
+      arena.spawnTextDisplay(player.getLocation().clone().add(0, 0.9, 0), "&c&l ร่างผู้เสียชีวิต (DEAD BODY) \n&e[คลิกขวาเพื่อรายงานศพ / Report]");
       Bukkit.getScheduler().runTaskLater(plugin, () -> {
         hologram.delete();
         plugin.getHologramManager().getArmorStands().remove(stand);
@@ -117,6 +120,7 @@ public class CorpseHandler implements Listener {
     lastSpawnedCorpse = corpse;
     //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
     arena.addCorpse(new Corpse(hologram, corpse));
+    arena.spawnTextDisplay(player.getLocation().clone().add(0, 0.9, 0), "&c&l ร่างผู้เสียชีวิต (DEAD BODY) \n&e[คลิกขวาเพื่อรายงานศพ / Report]");
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       hologram.delete();
       Bukkit.getScheduler().runTaskLater(plugin, corpse::destroyCorpseFromEveryone, 20 * 20);
@@ -145,6 +149,14 @@ public class CorpseHandler implements Listener {
     if(plugin.getArenaRegistry().isInArena(e.getClicker())) {
       e.setCancelled(true);
       e.getClicker().closeInventory();
+
+      Arena arena = plugin.getArenaRegistry().getArena(e.getClicker());
+      if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
+        IUser user = plugin.getUserManager().getUser(e.getClicker());
+        if(!user.isSpectator()) {
+          arena.getVotingManager().startVoting(e.getClicker());
+        }
+      }
     }
   }
 
