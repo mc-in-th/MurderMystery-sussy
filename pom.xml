@@ -80,6 +80,12 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>net.raphimc</groupId>
+            <artifactId>NoteBlockLib</artifactId>
+            <version>3.3.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.golde</groupId>
             <artifactId>corpsereborn</artifactId>
             <version>2.14.0</version>
@@ -159,6 +165,10 @@
                                 <relocation>
                                     <pattern>plugily.projects.minigamesbox</pattern>
                                     <shadedPattern>plugily.projects.murdermystery.minigamesbox</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.raphimc.noteblocklib</pattern>
+                                    <shadedPattern>plugily.projects.murdermystery.noteblocklib</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
