@@ -18,14 +18,13 @@
 
 package plugily.projects.murdermystery.handlers.voicechat;
 
-import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.Main;
 
 public class VoiceChatManager {
 
   private final Main plugin;
-  private MurderMysteryVoiceChatPlugin voiceChatPlugin;
+  private Object voiceChatPlugin;
 
   public VoiceChatManager(Main plugin) {
     this.plugin = plugin;
@@ -36,17 +35,18 @@ public class VoiceChatManager {
     if(plugin.getHookManager() == null || !plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.VOICE_CHAT)) {
       return;
     }
-    BukkitVoicechatService service = plugin.getServer().getServicesManager().load(BukkitVoicechatService.class);
-    if(service != null) {
-      voiceChatPlugin = new MurderMysteryVoiceChatPlugin(plugin);
-      service.registerPlugin(voiceChatPlugin);
-      plugin.getLogger().info("Successfully hooked into Simple Voice Chat for spectator voice isolation.");
+    try {
+      voiceChatPlugin = MurderMysteryVoiceChatPlugin.register(plugin);
+    } catch(Throwable ignored) {
     }
   }
 
   public void unregister() {
     if(voiceChatPlugin != null) {
-      plugin.getServer().getServicesManager().unregister(voiceChatPlugin);
+      try {
+        plugin.getServer().getServicesManager().unregister(voiceChatPlugin);
+      } catch(Throwable ignored) {
+      }
       voiceChatPlugin = null;
     }
   }

@@ -18,6 +18,7 @@
 
 package plugily.projects.murdermystery.handlers.voicechat;
 
+import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
@@ -40,6 +41,17 @@ public class MurderMysteryVoiceChatPlugin implements VoicechatPlugin {
 
   public MurderMysteryVoiceChatPlugin(Main plugin) {
     this.plugin = plugin;
+  }
+
+  public static Object register(Main plugin) {
+    BukkitVoicechatService service = plugin.getServer().getServicesManager().load(BukkitVoicechatService.class);
+    if(service != null) {
+      MurderMysteryVoiceChatPlugin instance = new MurderMysteryVoiceChatPlugin(plugin);
+      service.registerPlugin(instance);
+      plugin.getLogger().info("Successfully hooked into Simple Voice Chat for spectator voice isolation.");
+      return instance;
+    }
+    return null;
   }
 
   @Override
