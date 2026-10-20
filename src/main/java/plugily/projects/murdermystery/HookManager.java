@@ -19,8 +19,6 @@
 package plugily.projects.murdermystery;
 
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-import plugily.projects.murdermystery.Main;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -64,7 +62,8 @@ public class HookManager {
   }
 
   public enum HookFeature {
-    CORPSES(Hook.CORPSE_REBORN);
+    CORPSES(Hook.CORPSE_REBORN),
+    VOICE_CHAT(Hook.SIMPLE_VOICE_CHAT);
 
     private final Hook[] requiredHooks;
 
@@ -78,7 +77,8 @@ public class HookManager {
   }
 
   public enum Hook {
-    CORPSE_REBORN("CorpseReborn");
+    CORPSE_REBORN("CorpseReborn"),
+    SIMPLE_VOICE_CHAT("voicechat");
 
     private final String pluginName;
 
