@@ -54,6 +54,7 @@ import plugily.projects.murdermystery.arena.managers.ScoreboardManager;
 import plugily.projects.murdermystery.arena.map.ArenaMinimap;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
+import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.special.VentManager;
 import plugily.projects.murdermystery.arena.states.InGameState;
@@ -106,6 +107,7 @@ public class Arena extends PluginArena {
   private final SabotageManager sabotageManager;
   private List<Location> taskLocations = new ArrayList<>();
   private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
+  private final Map<SabotageType, List<Location>> sabotageLocations = new EnumMap<>(SabotageType.class);
 
   public Arena(String id) {
     super(id);
@@ -727,6 +729,38 @@ public class Arena extends PluginArena {
   public List<Location> getAllTaskLocations() {
     List<Location> all = new ArrayList<>(taskLocations);
     for(List<Location> list : specificTaskLocations.values()) {
+      for(Location loc : list) {
+        if(!all.contains(loc)) {
+          all.add(loc);
+        }
+      }
+    }
+    return all;
+  }
+
+  public Map<SabotageType, List<Location>> getSabotageLocations() {
+    return sabotageLocations;
+  }
+
+  public List<Location> getSabotageLocations(SabotageType type) {
+    return sabotageLocations.getOrDefault(type, Collections.emptyList());
+  }
+
+  public void addSabotageLocation(SabotageType type, Location loc) {
+    sabotageLocations.computeIfAbsent(type, k -> new ArrayList<>()).add(loc);
+  }
+
+  public void clearSabotageLocations(SabotageType type) {
+    if(type == null) {
+      sabotageLocations.clear();
+    } else {
+      sabotageLocations.remove(type);
+    }
+  }
+
+  public List<Location> getAllSabotageLocations() {
+    List<Location> all = new ArrayList<>();
+    for(List<Location> list : sabotageLocations.values()) {
       for(Location loc : list) {
         if(!all.contains(loc)) {
           all.add(loc);
