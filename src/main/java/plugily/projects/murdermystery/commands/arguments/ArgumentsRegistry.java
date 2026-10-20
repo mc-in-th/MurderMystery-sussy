@@ -22,6 +22,7 @@ import plugily.projects.minigamesbox.classic.commands.arguments.PluginArgumentsR
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.commands.arguments.admin.RolePassArgument;
 import plugily.projects.murdermystery.commands.arguments.admin.arena.SpecialBlockRemoverArgument;
+import plugily.projects.murdermystery.commands.arguments.admin.arena.TaskAndVentArgument;
 import plugily.projects.murdermystery.commands.arguments.game.RoleSelectorArgument;
 
 /**
@@ -39,6 +40,7 @@ public class ArgumentsRegistry extends PluginArgumentsRegistry {
     //register admin related arguments
     new SpecialBlockRemoverArgument(this);
     new RolePassArgument(this);
+    new TaskAndVentArgument(this);
   }
 
 }
