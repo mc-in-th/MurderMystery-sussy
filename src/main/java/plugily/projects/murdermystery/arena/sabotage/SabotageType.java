@@ -18,49 +18,51 @@
 
 package plugily.projects.murdermystery.arena.sabotage;
 
-import plugily.projects.murdermystery.arena.task.TaskType;
-
 public enum SabotageType {
 
   LIGHTS(
+    "lights",
     "ตัดระบบไฟฟ้า (Lights Out)",
     "[ไฟฟ้า]",
     false,
     0,
-    TaskType.CHECK_CONTROL_PANEL,
     "ระบบไฟฟ้าถูกตัด! สับคัตเอาท์เพื่อเปิดไฟ"
   ),
   ENGINE_MELTDOWN(
+    "engine",
     "วิกฤตเครื่องยนต์ระเบิด (Engine Meltdown)",
     "[เครื่องยนต์]",
     true,
     40,
-    TaskType.CHECK_RADIATOR_WATER,
     "เครื่องยนต์จะระเบิด! รีบไประบายความร้อน"
   ),
   COMMS(
+    "comms",
     "รบกวนสัญญาณเรดาร์ (Comms Jammed)",
     "[เรดาร์]",
     false,
     0,
-    TaskType.CHECK_STEERING_FLUID,
     "สัญญาณเรดาร์ถูกตัด! ปรับคลื่นวิทยุกู้ระบบ"
   );
 
+  private final String shortId;
   private final String displayName;
   private final String icon;
   private final boolean critical;
   private final int countdownSeconds;
-  private final TaskType fallbackStationType;
   private final String fixInstruction;
 
-  SabotageType(String displayName, String icon, boolean critical, int countdownSeconds, TaskType fallbackStationType, String fixInstruction) {
+  SabotageType(String shortId, String displayName, String icon, boolean critical, int countdownSeconds, String fixInstruction) {
+    this.shortId = shortId;
     this.displayName = displayName;
     this.icon = icon;
     this.critical = critical;
     this.countdownSeconds = countdownSeconds;
-    this.fallbackStationType = fallbackStationType;
     this.fixInstruction = fixInstruction;
+  }
+
+  public String getShortId() {
+    return shortId;
   }
 
   public String getDisplayName() {
@@ -79,11 +81,37 @@ public enum SabotageType {
     return countdownSeconds;
   }
 
-  public TaskType getFallbackStationType() {
-    return fallbackStationType;
-  }
-
   public String getFixInstruction() {
     return fixInstruction;
+  }
+
+  public static SabotageType fromInput(String input) {
+    if(input == null) {
+      return null;
+    }
+    String normalized = input.trim().toLowerCase();
+    for(SabotageType type : values()) {
+      if(type.name().equalsIgnoreCase(normalized) || type.shortId.equalsIgnoreCase(normalized)) {
+        return type;
+      }
+    }
+    switch(normalized) {
+      case "1":
+      case "light":
+      case "power":
+      case "electrical":
+        return LIGHTS;
+      case "2":
+      case "meltdown":
+      case "reactor":
+        return ENGINE_MELTDOWN;
+      case "3":
+      case "radar":
+      case "radio":
+      case "communication":
+        return COMMS;
+      default:
+        return null;
+    }
   }
 }
