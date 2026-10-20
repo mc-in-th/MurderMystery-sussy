@@ -19,12 +19,25 @@
 package plugily.projects.murdermystery.arena;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
@@ -38,14 +51,25 @@ import plugily.projects.murdermystery.arena.corpse.Corpse;
 import plugily.projects.murdermystery.arena.corpse.Stand;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.managers.ScoreboardManager;
+import plugily.projects.murdermystery.arena.map.ArenaMinimap;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
+import plugily.projects.murdermystery.arena.special.VentManager;
 import plugily.projects.murdermystery.arena.states.InGameState;
 import plugily.projects.murdermystery.arena.states.RestartingState;
 import plugily.projects.murdermystery.arena.states.StartingState;
 import plugily.projects.murdermystery.arena.states.WaitingState;
+import plugily.projects.murdermystery.arena.task.TaskManager;
+import plugily.projects.murdermystery.arena.task.TaskType;
+import plugily.projects.murdermystery.arena.voting.VotingManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tigerpanzer_02
@@ -75,6 +99,13 @@ public class Arena extends PluginArena {
   private final Map<CharacterType, Player> gameCharacters = new EnumMap<>(CharacterType.class);
   private final MapRestorerManager mapRestorerManager;
   private ArmorStandHologram bowHologram;
+  private final TaskManager taskManager;
+  private final VotingManager votingManager;
+  private final VentManager ventManager;
+  private final ArenaMinimap minimap;
+  private final SabotageManager sabotageManager;
+  private List<Location> taskLocations = new ArrayList<>();
+  private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
 
   public Arena(String id) {
     super(id);
@@ -82,6 +113,11 @@ public class Arena extends PluginArena {
     setScoreboardManager(new ScoreboardManager(this));
     mapRestorerManager = new MapRestorerManager(this);
     setMapRestorerManager(mapRestorerManager);
+    taskManager = new TaskManager(this);
+    votingManager = new VotingManager(this);
+    ventManager = new VentManager(plugin, this);
+    minimap = new ArenaMinimap(this);
+    sabotageManager = new SabotageManager(this);
     addGameStateHandler(IArenaState.IN_GAME, new InGameState());
     addGameStateHandler(IArenaState.RESTARTING, new RestartingState());
     addGameStateHandler(IArenaState.STARTING, new StartingState());
@@ -218,12 +254,224 @@ public class Arena extends PluginArena {
         }
         block.setArmorStandHologram(prayer);
         break;
-      case HORSE_PURCHASE:
       case RAPID_TELEPORTATION:
-        //not yet implemented
+        Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
+        TextDisplay td = spawnTextDisplay(ventLoc, "&8[&c ท่อระบายน้ำ / Sewer Vent &8]\n&7(กด &eSHIFT &7หรือคลิกขวาเพื่อมุดท่อ)", false);
+        block.setTextDisplay(td);
+        if(td != null) {
+          ventDisplays.add(td);
+        }
+        BlockDisplay bd = spawnBlockDisplay(block.getLocation(), null, ChatColor.RED);
+        if(bd != null) {
+          ventBlockDisplays.add(bd);
+        }
+        break;
+      case HORSE_PURCHASE:
       default:
         break;
     }
+  }
+
+  private final List<TextDisplay> textDisplays = new ArrayList<>();
+  private final List<TextDisplay> ventDisplays = new ArrayList<>();
+  private final List<BlockDisplay> blockDisplays = new ArrayList<>();
+  private final List<BlockDisplay> ventBlockDisplays = new ArrayList<>();
+
+  public TextDisplay spawnTextDisplay(Location loc, String text) {
+    return spawnTextDisplay(loc, text, true);
+  }
+
+  public TextDisplay spawnTextDisplay(Location loc, String text, boolean visibleByDefault) {
+    if(loc == null || loc.getWorld() == null) {
+      return null;
+    }
+    try {
+      TextDisplay display = loc.getWorld().spawn(loc, TextDisplay.class, entity -> {
+        entity.setText(ChatColor.translateAlternateColorCodes('&', text));
+        entity.setBillboard(Display.Billboard.CENTER);
+        entity.setShadowed(true);
+        entity.setDefaultBackground(true);
+        entity.setSeeThrough(false);
+        entity.setVisibleByDefault(visibleByDefault);
+      });
+      textDisplays.add(display);
+      return display;
+    } catch(Exception e) {
+      return null;
+    }
+  }
+
+  public BlockDisplay spawnBlockDisplay(Location loc, BlockData blockData, ChatColor glowColor) {
+    if(loc == null || loc.getWorld() == null) {
+      return null;
+    }
+    try {
+      Location blockLoc = loc.getBlock().getLocation();
+      BlockDisplay display = loc.getWorld().spawn(blockLoc, BlockDisplay.class, entity -> {
+        if(blockData != null) {
+          entity.setBlock(blockData);
+        } else {
+          Block b = loc.getBlock();
+          if(b.getType() != Material.AIR) {
+            entity.setBlock(b.getBlockData());
+          } else {
+            entity.setBlock(Material.BARRIER.createBlockData());
+          }
+        }
+        try {
+          Transformation transformation = new Transformation(
+            new Vector3f(-0.003f, -0.003f, -0.003f),
+            new AxisAngle4f(),
+            new Vector3f(1.006f, 1.006f, 1.006f),
+            new AxisAngle4f()
+          );
+          entity.setTransformation(transformation);
+        } catch(Throwable ignored) {
+        }
+
+        entity.setGlowing(true);
+        entity.setVisibleByDefault(false);
+      });
+
+      if(glowColor != null) {
+        setEntityGlowColor(display, glowColor);
+      }
+
+      blockDisplays.add(display);
+      return display;
+    } catch(Exception e) {
+      return null;
+    }
+  }
+
+  public void setEntityGlowColor(Entity entity, ChatColor color) {
+    if(entity == null) {
+      return;
+    }
+    try {
+      String teamName = "MM_GLOW_" + color.name();
+      if(teamName.length() > 16) {
+        teamName = teamName.substring(0, 16);
+      }
+      String entry = entity.getUniqueId().toString();
+
+      Scoreboard mainSb = Bukkit.getScoreboardManager().getMainScoreboard();
+      Team mainTeam = mainSb.getTeam(teamName);
+      if(mainTeam == null) {
+        mainTeam = mainSb.registerNewTeam(teamName);
+        mainTeam.setColor(color);
+      }
+      if(!mainTeam.hasEntry(entry)) {
+        mainTeam.addEntry(entry);
+      }
+
+      for(Player p : getPlayers()) {
+        try {
+          Scoreboard sb = p.getScoreboard();
+          if(sb != null && !sb.equals(mainSb)) {
+            Team team = sb.getTeam(teamName);
+            if(team == null) {
+              team = sb.registerNewTeam(teamName);
+              team.setColor(color);
+            }
+            if(!team.hasEntry(entry)) {
+              team.addEntry(entry);
+            }
+          }
+        } catch(Throwable ignored) {
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
+  public void showVentDisplays(Player player) {
+    for(TextDisplay td : ventDisplays) {
+      if(td != null && td.isValid()) {
+        try {
+          player.showEntity(plugin, td);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(BlockDisplay bd : ventBlockDisplays) {
+      if(bd != null && bd.isValid()) {
+        try {
+          setEntityGlowColor(bd, ChatColor.RED);
+          player.showEntity(plugin, bd);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+  }
+
+  public void hideVentDisplays(Player player) {
+    for(TextDisplay td : ventDisplays) {
+      if(td != null && td.isValid()) {
+        try {
+          player.hideEntity(plugin, td);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(BlockDisplay bd : ventBlockDisplays) {
+      if(bd != null && bd.isValid()) {
+        try {
+          player.hideEntity(plugin, bd);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+  }
+
+  public void updateVentDisplaysVisibility() {
+    for(Player player : getPlayers()) {
+      IUser user = plugin.getUserManager().getUser(player);
+      boolean isMurderer = Role.isRole(Role.MURDERER, user, this) || getMurdererList().contains(player);
+      if(isMurderer) {
+        showVentDisplays(player);
+      } else {
+        hideVentDisplays(player);
+      }
+    }
+  }
+
+  public void clearTextDisplays() {
+    for(SpecialBlock sb : specialBlocks) {
+      if(sb.getTextDisplay() != null) {
+        sb.setTextDisplay(null);
+      }
+    }
+    for(TextDisplay td : textDisplays) {
+      if(td != null && td.isValid()) {
+        td.remove();
+      }
+    }
+    for(BlockDisplay bd : blockDisplays) {
+      if(bd != null && bd.isValid()) {
+        bd.remove();
+      }
+    }
+    textDisplays.clear();
+    ventDisplays.clear();
+    blockDisplays.clear();
+    ventBlockDisplays.clear();
+  }
+
+  public List<TextDisplay> getTextDisplays() {
+    return textDisplays;
+  }
+
+  public List<TextDisplay> getVentDisplays() {
+    return ventDisplays;
+  }
+
+  public List<BlockDisplay> getVentBlockDisplays() {
+    return ventBlockDisplays;
+  }
+
+  public VentManager getVentManager() {
+    return ventManager;
   }
 
   public List<SpecialBlock> getSpecialBlocks() {
@@ -251,6 +499,9 @@ public class Arena extends PluginArena {
 
   public void setCharacter(Role role, Player player) {
     gameCharacters.put(role == Role.MURDERER ? CharacterType.MURDERER : CharacterType.DETECTIVE, player);
+    if(role == Role.MURDERER) {
+      showVentDisplays(player);
+    }
   }
 
   @Nullable
@@ -427,5 +678,61 @@ public class Arena extends PluginArena {
 
   public enum CharacterType {
     MURDERER, DETECTIVE, FAKE_DETECTIVE, HERO
+  }
+
+  public TaskManager getTaskManager() {
+    return taskManager;
+  }
+
+  public VotingManager getVotingManager() {
+    return votingManager;
+  }
+
+  public ArenaMinimap getMinimap() {
+    return minimap;
+  }
+
+  public SabotageManager getSabotageManager() {
+    return sabotageManager;
+  }
+
+  public List<Location> getTaskLocations() {
+    return taskLocations;
+  }
+
+  public void setTaskLocations(List<Location> taskLocations) {
+    this.taskLocations = taskLocations;
+  }
+
+  public Map<TaskType, List<Location>> getSpecificTaskLocations() {
+    return specificTaskLocations;
+  }
+
+  public List<Location> getTaskLocations(TaskType type) {
+    return specificTaskLocations.getOrDefault(type, Collections.emptyList());
+  }
+
+  public void addSpecificTaskLocation(TaskType type, Location loc) {
+    specificTaskLocations.computeIfAbsent(type, k -> new ArrayList<>()).add(loc);
+  }
+
+  public void clearSpecificTaskLocations(TaskType type) {
+    if(type == null) {
+      specificTaskLocations.clear();
+    } else {
+      specificTaskLocations.remove(type);
+    }
+  }
+
+  public List<Location> getAllTaskLocations() {
+    List<Location> all = new ArrayList<>(taskLocations);
+    for(List<Location> list : specificTaskLocations.values()) {
+      for(Location loc : list) {
+        if(!all.contains(loc)) {
+          all.add(loc);
+        }
+      }
+    }
+    return all;
   }
 }
