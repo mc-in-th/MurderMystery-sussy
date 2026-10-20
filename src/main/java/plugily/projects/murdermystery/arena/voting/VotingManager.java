@@ -80,7 +80,7 @@ public class VotingManager {
     }
 
     public void remove(Arena arena) {
-      if(hologram != null) {
+      if(hologram != null && !hologram.isDeleted()) {
         try {
           hologram.delete();
         } catch(Throwable ignored) {
@@ -93,6 +93,7 @@ public class VotingManager {
         for(ArmorStand stand : stands) {
           if(stand != null) {
             arena.getPlugin().getHologramManager().getArmorStands().remove(stand);
+            arena.getStands().removeIf(s -> s != null && stand.equals(s.getStand()));
             if(stand.isValid()) {
               stand.remove();
             }
