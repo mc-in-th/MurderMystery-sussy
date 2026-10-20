@@ -61,8 +61,8 @@ public class RolePassArgument {
           sender.sendMessage(ChatColor.RED + "Command: /mma rolepass <add/set/remove> <role> <amount> [player]");
           return;
         }
-        if(role != Role.MURDERER && role != Role.DETECTIVE) {
-          sender.sendMessage(ChatColor.RED + "Command: /mma rolepass <add/set/remove> <role> <amount> [player]");
+        if(role != Role.MURDERER) {
+          sender.sendMessage(ChatColor.RED + "Command: /mma rolepass <add/set/remove> MURDERER <amount> [player]");
           return;
         }
         java.util.Optional<Integer> opt = NumberUtils.parseInt(args[3]);
@@ -80,34 +80,18 @@ public class RolePassArgument {
         IUser user = registry.getPlugin().getUserManager().getUser(player);
         switch(addOrRemove.toLowerCase()) {
           case "add":
-            if(role == Role.MURDERER) {
-              user.adjustStatistic("PASS_MURDERER", amount);
-            } else {
-              user.adjustStatistic("PASS_DETECTIVE", amount);
-            }
+            user.adjustStatistic("PASS_MURDERER", amount);
             break;
           case "remove":
-            if(role == Role.MURDERER) {
-              user.adjustStatistic("PASS_MURDERER", -amount);
-            } else {
-              user.adjustStatistic("PASS_DETECTIVE", -amount);
-            }
+            user.adjustStatistic("PASS_MURDERER", -amount);
             break;
           case "set":
-            if(role == Role.MURDERER) {
-              user.setStatistic("PASS_MURDERER", amount);
-            } else {
-              user.setStatistic("PASS_DETECTIVE", amount);
-            }
+            user.setStatistic("PASS_MURDERER", amount);
             break;
           default:
             break;
         }
-        if(role == Role.MURDERER) {
-          new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_CHANGE").asKey().player(player).integer(user.getStatistic("PASS_MURDERER")).value(Role.MURDERER.name()).sendPlayer();
-        } else {
-          new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_CHANGE").asKey().player(player).integer(user.getStatistic("PASS_DETECTIVE")).value(Role.DETECTIVE.name()).sendPlayer();
-        }
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_CHANGE").asKey().player(player).integer(user.getStatistic("PASS_MURDERER")).value(Role.MURDERER.name()).sendPlayer();
       }
     });
   }

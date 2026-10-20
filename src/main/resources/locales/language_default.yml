@@ -123,8 +123,6 @@ Scoreboard:
       - "&f"
       - "■ Time | %arena_time%"
       - ""
-      - "■ %arena_detective_status%"
-      - ""
       - "■ Score | %user_statistic_local_score%"
       - ""
       - "   www.plugily.xyz"
@@ -135,8 +133,6 @@ Scoreboard:
       - "■ Innocents | %arena_innocent_size%"
       - "&f"
       - "■ Time | %arena_time%"
-      - ""
-      - "■ %arena_detective_status%"
       - ""
       - "■ Kills | %user_statistic_local_kills%"
       - ""
@@ -247,9 +243,7 @@ In-Game:
         - "%arena_summary%"
         - "%arena_summary_player%"
         - ""
-        - "&7Detective: %arena_detective_list%"
         - "&7Murderer: %arena_murderer_list% (%arena_murderer_kills%)"
-        - "&7Hero: %arena_hero%"
         - ""
         - "&a&m--------------------------------------------------"
       Placeholders:
@@ -270,7 +264,7 @@ In-Game:
       Set-Starting-In-To-0: "%plugin_prefix% An admin set waiting time to 0. The game starts now!"
     Arena:
       Chances:
-        Action-Bar: "&cMurderer Chance: %arena_murderer_chance% &a- &bDetective Chance: %arena_detective_chance%"
+        Action-Bar: "<#FF3B47>โอกาสเป็นฆาตกร (Murderer Chance): <#FFB703>%arena_murderer_chance%"
       Cooldown: "&8&l[%value%&8&l] &6%number% seconds"
       Locator:
         Bow: "Bow locator"

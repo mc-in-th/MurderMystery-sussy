@@ -185,8 +185,6 @@ public class PlaceholderInitializer {
           role = new MessageBuilder("SCOREBOARD_ROLES_DEAD").asKey().build();
         } else if(Role.isRole(Role.MURDERER, user, arena)) {
           role = new MessageBuilder("SCOREBOARD_ROLES_MURDERER").asKey().build();
-        } else if(Role.isRole(Role.ANY_DETECTIVE, user, arena)) {
-          role = new MessageBuilder("SCOREBOARD_ROLES_DETECTIVE").asKey().build();
         } else {
           role = new MessageBuilder("SCOREBOARD_ROLES_INNOCENT").asKey().build();
         }

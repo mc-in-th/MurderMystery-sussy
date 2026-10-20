@@ -53,9 +53,6 @@ public class ArenaUtils extends PluginArenaUtils {
       IUser loopUser = getPlugin().getUserManager().getUser(player);
       if(Role.isRole(Role.INNOCENT, loopUser, arena)) {
         addScore(loopUser, ScoreAction.SURVIVE_GAME, 0);
-      } else if(Role.isRole(Role.ANY_DETECTIVE, loopUser, arena)) {
-        addScore(loopUser, ScoreAction.WIN_GAME, 0);
-        addScore(loopUser, ScoreAction.DETECTIVE_WIN_GAME, 0);
       }
     }
     //we must call it ticks later due to instant respawn bug

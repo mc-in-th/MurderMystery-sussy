@@ -101,7 +101,7 @@ public class ArenaManager extends PluginArenaManager {
             List<Player> players = new ArrayList<>();
             for(Player gamePlayer : playersLeft) {
               IUser userGamePlayer = plugin.getUserManager().getUser(gamePlayer);
-              if(gamePlayer == player || Role.isRole(Role.ANY_DETECTIVE, userGamePlayer, arena) || Role.isRole(Role.MURDERER, userGamePlayer, arena)) {
+              if(gamePlayer == player || Role.isRole(Role.MURDERER, userGamePlayer, arena)) {
                 continue;
               }
               players.add(gamePlayer);
@@ -124,13 +124,6 @@ public class ArenaManager extends PluginArenaManager {
           } else {
             plugin.getDebugger().debug("No new murderer added as there are some");
           }
-        } else if(Role.isRole(Role.ANY_DETECTIVE, user, arena)
-          && pluginArena.lastAliveDetective()) {
-          pluginArena.setDetectiveDead(true);
-          if(Role.isRole(Role.FAKE_DETECTIVE, user, arena)) {
-            pluginArena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, null);
-          }
-          ArenaUtils.dropBowAndAnnounce(pluginArena, player);
         }
         plugin.getCorpseHandler().spawnCorpse(player, pluginArena);
       } else {
@@ -166,7 +159,6 @@ public class ArenaManager extends PluginArenaManager {
             multiplicator = arena.getMaximumPlayers();
           }
           pluginArena.adjustContributorValue(Role.MURDERER, user, plugin.getRandom().nextInt(10 * multiplicator));
-          pluginArena.adjustContributorValue(Role.DETECTIVE, user, plugin.getRandom().nextInt(10 * multiplicator));
           if(!hasDeathRole) {
             boolean hasMurdererRole = Role.isRole(Role.MURDERER, user, arena);
             if(murderWon || !hasMurdererRole) {

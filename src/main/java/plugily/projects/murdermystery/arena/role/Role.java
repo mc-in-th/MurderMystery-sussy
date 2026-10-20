@@ -91,15 +91,13 @@ public enum Role {
     Player player = user.getPlayer();
     switch(role) {
       case DETECTIVE:
-        return pluginArena.isCharacterSet(Arena.CharacterType.DETECTIVE) && pluginArena.getDetectiveList().contains(player);
       case FAKE_DETECTIVE:
-        return player.equals(pluginArena.getCharacter(Arena.CharacterType.FAKE_DETECTIVE));
+      case ANY_DETECTIVE:
+        return false;
       case MURDERER:
         return pluginArena.isCharacterSet(Arena.CharacterType.MURDERER) && pluginArena.getMurdererList().contains(player);
-      case ANY_DETECTIVE:
-        return isRole(Role.DETECTIVE, user) || isRole(Role.FAKE_DETECTIVE, user);
       case INNOCENT:
-        return !isRole(Role.MURDERER, user) && !isRole(Role.ANY_DETECTIVE, user);
+        return !isRole(Role.MURDERER, user, arena);
       case DEATH:
         return pluginArena.isDeathPlayer(player);
       case SPECTATOR:

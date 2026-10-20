@@ -256,6 +256,8 @@ public final class HalloweenChat {
               || key.startsWith("Bossbar.")
               || key.startsWith("Scoreboard.")
               || key.startsWith("In-Game.Messages.Arena.Playing.Role.")
+              || key.startsWith("In-Game.Messages.Arena.Chances.")
+              || key.startsWith("In-Game.Messages.Game-End.Summary")
               || key.startsWith("In-Game.Messages.Arena.Task.")
               || key.startsWith("In-Game.Messages.Arena.Voting.")) {
             languageConfig.set(key, defaultConfig.get(key));

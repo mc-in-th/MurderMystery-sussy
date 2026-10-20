@@ -18,12 +18,9 @@
 
 package plugily.projects.murdermystery.arena.states;
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginStartingState;
@@ -35,7 +32,6 @@ import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
-import plugily.projects.murdermystery.utils.ItemPosition;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +48,6 @@ import java.util.stream.Collectors;
 public class StartingState extends PluginStartingState {
 
   int maxmurderer = 1;
-  int maxdetectives = 1;
 
   @Override
   public void handleCall(PluginArena arena) {
@@ -86,13 +81,12 @@ public class StartingState extends PluginStartingState {
       getMaxRolesToSet(pluginArena);
 
       addRole(pluginArena, Role.MURDERER, playersToSet);
-      addRole(pluginArena, Role.DETECTIVE, playersToSet);
 
       for(Player player : playersToSet) {
         new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).sendPlayer();
       }
 
-      arena.getPlugin().getDebugger().debug("After: Arena: {0} | Detectives = {1}, Murders = {2}, Players = {3} | Players: Detectives = {4}, Murders = {5}", arena.getId(), maxdetectives, maxmurderer, arena.getPlayersLeft().size(), pluginArena.getDetectiveList(), pluginArena.getMurdererList());
+      arena.getPlugin().getDebugger().debug("After: Arena: {0} | Murders = {1}, Players = {2} | Players: Murders = {3}", arena.getId(), maxmurderer, arena.getPlayersLeft().size(), pluginArena.getMurdererList());
 
       // Load and append special blocks hologram
       pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
@@ -131,7 +125,7 @@ public class StartingState extends PluginStartingState {
     }
     getPlugin().getDebugger().debug("Arena {0} | Role add {1} | List {2}", arena.getId(), roleName, chancesPlayer);
 
-    int amount = role == Role.MURDERER ? maxmurderer : maxdetectives;
+    int amount = maxmurderer;
     for(int i = 0; i < amount && i < chancesRanking.size(); i++) {
       IUser user = chancesRanking.get(i);
       Player userPlayer = user.getPlayer();
@@ -142,35 +136,22 @@ public class StartingState extends PluginStartingState {
       if(role == Role.MURDERER) {
         arena.getMurdererList().add(userPlayer);
         arena.getSabotageManager().giveSabotageRemote(userPlayer);
-      } else if(role == Role.DETECTIVE) {
-        arena.getDetectiveList().add(userPlayer);
-        userPlayer.getInventory().setHeldItemSlot(0);
-        Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-          ItemPosition.setItem(user, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
-          ItemPosition.setItem(user, ItemPosition.INFINITE_ARROWS, new ItemStack(Material.ARROW, getPlugin().getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
-        }, 20);
       }
     }
   }
 
   private void getMaxRolesToSet(Arena arena) {
     int playersSize = arena.getPlayersLeft().size();
-    arena.getPlugin().getDebugger().debug("Before: Arena: {0} | Detectives = {1}, Murders = {2}, Players = {3} | Configured: Detectives = {4}, Murders = {5}", arena.getId(), maxdetectives, maxmurderer, playersSize, arena.getArenaOption("DETECTIVE_DIVIDER"), arena.getArenaOption("MURDERER_DIVIDER"));
+    arena.getPlugin().getDebugger().debug("Before: Arena: {0} | Murders = {1}, Players = {2} | Configured: Murders = {3}", arena.getId(), maxmurderer, playersSize, arena.getArenaOption("MURDERER_DIVIDER"));
     if(arena.getArenaOption("MURDERER_DIVIDER") > 1 && playersSize > arena.getArenaOption("MURDERER_DIVIDER")) {
       maxmurderer = (playersSize / arena.getArenaOption("MURDERER_DIVIDER"));
     }
-    if(arena.getArenaOption("DETECTIVE_DIVIDER") > 1 && playersSize > arena.getArenaOption("DETECTIVE_DIVIDER")) {
-      maxdetectives = (playersSize / arena.getArenaOption("DETECTIVE_DIVIDER"));
-    }
-    if(playersSize - (maxmurderer + maxdetectives) < 1) {
-      arena.getPlugin().getDebugger().debug("{0} Murderers and detectives amount was reduced because there are not enough players", arena.getId());
-      // Make sure to have one innocent!
-      if(maxdetectives > 1) {
-        maxdetectives--;
-      } else if(maxmurderer > 1) {
+    if(playersSize - maxmurderer < 1) {
+      arena.getPlugin().getDebugger().debug("{0} Murderers amount was reduced because there are not enough players", arena.getId());
+      if(maxmurderer > 1) {
         maxmurderer--;
       }
     }
-    arena.getPlugin().getDebugger().debug("After: Arena: {0} | Detectives = {1}, Murders = {2}, Players = {3} | Configured: Detectives = {4}, Murders = {5}", arena.getId(), maxdetectives, maxmurderer, playersSize, arena.getArenaOption("DETECTIVE_DIVIDER"), arena.getArenaOption("MURDERER_DIVIDER"));
+    arena.getPlugin().getDebugger().debug("After: Arena: {0} | Murders = {1}, Players = {2} | Configured: Murders = {3}", arena.getId(), maxmurderer, playersSize, arena.getArenaOption("MURDERER_DIVIDER"));
   }
 }

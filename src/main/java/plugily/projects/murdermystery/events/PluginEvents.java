@@ -171,14 +171,7 @@ public class PluginEvents implements Listener {
     victim.damage(100.0);
     attackerUser.adjustStatistic("LOCAL_KILLS", 1);
     attackerUser.adjustStatistic("KILLS", 1);
-    arena.adjustContributorValue(Role.DETECTIVE, user, plugin.getRandom().nextInt(2));
     ArenaUtils.addScore(attackerUser, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
-    if(Role.isRole(Role.ANY_DETECTIVE, user, victimArena) && arena.lastAliveDetective()) {
-      if(Role.isRole(Role.FAKE_DETECTIVE, user, victimArena)) {
-        arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, null);
-      }
-      ArenaUtils.dropBowAndAnnounce(arena, victim);
-    }
   }
 
   @EventHandler(priority = EventPriority.HIGH)

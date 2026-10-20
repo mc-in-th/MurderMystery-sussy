@@ -70,21 +70,6 @@ public class RoleSelectorArgument implements Listener {
       user.adjustStatistic("CONTRIBUTION_MURDERER", 999999999);
       new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_SUCCESS").asKey().player(player).value(Role.MURDERER.name()).sendPlayer();
     }));
-    List<String> descriptionDetective = new ArrayList<>();
-    plugin.getLanguageManager().getLanguageListFromKey("IN_GAME_MESSAGES_ARENA_PASS_ROLE_DETECTIVE_LORE").forEach(string -> descriptionDetective.add(new MessageBuilder(string).integer(plugin.getUserManager().getUser(player).getStatistic("PASS_DETECTIVE")).build()));
-    gui.addItem(new SimpleClickableItem(new ItemBuilder(XMaterial.BOW.parseMaterial())
-      .name(new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_ROLE_DETECTIVE_NAME").asKey().build())
-      .lore(descriptionDetective)
-      .build(), event -> {
-      IUser user = plugin.getUserManager().getUser(player);
-      if(user.getStatistic("PASS_DETECTIVE") <= 0) {
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_FAIL").asKey().player(player).value(Role.DETECTIVE.name()).sendPlayer();
-        return;
-      }
-      user.adjustStatistic("PASS_DETECTIVE", -1);
-      user.adjustStatistic("CONTRIBUTION_DETECTIVE", 999999999);
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_SUCCESS").asKey().player(player).value(Role.DETECTIVE.name()).sendPlayer();
-    }));
     gui.refresh();
     gui.open(player);
   }
