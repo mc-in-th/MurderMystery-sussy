@@ -449,7 +449,7 @@ public class ArenaEvents extends PluginArenaEvents {
     player.setAllowFlight(true);
     player.setFlying(true);
     player.getInventory().clear();
-    arena.getTaskManager().removePlayer(player);
+    arena.getTaskManager().handlePlayerDeath(player);
     if(plugin.getConfigPreferences().getOption("HIDE_DEATH")) {
       new MessageBuilder(MessageBuilder.ActionType.DEATH).player(player).arena(arena).sendArena();
     }

@@ -53,6 +53,7 @@ public class InGameState extends PluginInGameState {
     if(pluginArena == null) {
       return;
     }
+    pluginArena.clearPluginBossBars();
 
     if(pluginArena.getVotingManager().isVotingActive()) {
       pluginArena.getVotingManager().tick();
@@ -63,9 +64,11 @@ public class InGameState extends PluginInGameState {
     // winner checks
     if(pluginArena.getTimer() <= 0) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
+      return;
     }
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
+      return;
     }
 
     if(pluginArena.getTaskManager().areAllTasksCompleted()) {

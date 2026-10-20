@@ -59,6 +59,10 @@ public class ArenaManager extends PluginArenaManager {
     }
     super.joinAttempt(player, arena);
     ArenaUtils.updateNameTagsVisibility(player);
+    if(pluginArena.getArenaState() == IArenaState.IN_GAME && pluginArena.getPlayers().contains(player)) {
+      pluginArena.getTaskManager().addPlayerToBossBar(player);
+      pluginArena.getSabotageManager().addPlayerToBossBar(player);
+    }
   }
 
   @Override
@@ -67,7 +71,9 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena == null) {
       return;
     }
+    pluginArena.cleanUpBossBars(player);
     super.leaveAttempt(player, arena);
+    pluginArena.cleanUpBossBars(player);
     if(pluginArena.isDeathPlayer(player)) {
       pluginArena.removeDeathPlayer(player);
     }
@@ -84,6 +90,7 @@ public class ArenaManager extends PluginArenaManager {
     }
     pluginArena.getVotingManager().handlePlayerLeave(player);
     pluginArena.getTaskManager().removePlayer(player);
+    pluginArena.getSabotageManager().removePlayerFromBossBar(player);
 
     if(arena.getArenaState() == IArenaState.IN_GAME && !user.isSpectator()) {
       List<Player> playersLeft = arena.getPlayersLeft();
@@ -138,6 +145,10 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena == null) {
       return;
     }
+    pluginArena.getTaskManager().cleanup();
+    pluginArena.getSabotageManager().cleanup();
+    pluginArena.getVotingManager().cleanup();
+    pluginArena.clearPluginBossBars();
     for(SpecialBlock specialBlock : pluginArena.getSpecialBlocks()) {
       if(specialBlock.getArmorStandHologram() != null) {
         specialBlock.getArmorStandHologram().delete();

@@ -685,6 +685,7 @@ public class SabotageManager {
     removeEmergencyVisuals();
 
     if(meltdownBossBar != null) {
+      meltdownBossBar.setVisible(false);
       meltdownBossBar.removeAll();
       meltdownBossBar = null;
     }
@@ -718,6 +719,7 @@ public class SabotageManager {
     removeEmergencyVisuals();
 
     if(meltdownBossBar != null) {
+      meltdownBossBar.setVisible(false);
       meltdownBossBar.removeAll();
       meltdownBossBar = null;
     }
@@ -733,12 +735,25 @@ public class SabotageManager {
   public void handleClose(Player player) {
   }
 
+  public void addPlayerToBossBar(Player player) {
+    if(meltdownBossBar != null && player != null) {
+      meltdownBossBar.addPlayer(player);
+    }
+  }
+
+  public void removePlayerFromBossBar(Player player) {
+    if(meltdownBossBar != null && player != null) {
+      meltdownBossBar.removePlayer(player);
+    }
+  }
+
   public void cleanup() {
     if(tickTask != null) {
       tickTask.cancel();
       tickTask = null;
     }
     if(meltdownBossBar != null) {
+      meltdownBossBar.setVisible(false);
       meltdownBossBar.removeAll();
       meltdownBossBar = null;
     }

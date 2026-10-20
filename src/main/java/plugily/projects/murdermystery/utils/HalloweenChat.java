@@ -64,6 +64,9 @@ public final class HalloweenChat {
   private static final Pattern BUKKIT_HEX_PATTERN = Pattern.compile("(?i)[§&]x([§&][0-9a-f]){6}");
   private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("(?i)(?<![<:/])&?#([0-9a-f]{6})");
   private static final Pattern LEGACY_CODE_PATTERN = Pattern.compile("(?i)[§&]([0-9a-fk-or])");
+  private static final Pattern THAI_COMBINING_PREFIX_PATTERN = Pattern.compile(
+      "(?i)(?:[§&]x(?:[§&][0-9a-f]){6}|[§&][0-9a-fk-or])+(?=[\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E])"
+  );
   private static final Pattern NON_TAG_LT_PATTERN = Pattern.compile(
       "(?i)<(?!(/?(gradient|color|rainbow|transition|bold|b|italic|i|underlined|u|strikethrough|st|obfuscated|obf|reset|newline|hover|click)(:[^>]*)?>|/?#[0-9a-f]{6}>))"
   );
@@ -96,7 +99,8 @@ public final class HalloweenChat {
     String converted = toMiniMessageFormat(line);
     try {
       Component component = MINI_MESSAGE.deserialize(converted);
-      return LEGACY_SERIALIZER.serialize(component);
+      String serialized = LEGACY_SERIALIZER.serialize(component);
+      return THAI_COMBINING_PREFIX_PATTERN.matcher(serialized).replaceAll("");
     } catch(Exception ex) {
       return ChatColor.translateAlternateColorCodes('&', line);
     }
@@ -149,7 +153,12 @@ public final class HalloweenChat {
       for(int i = 2; i < match.length(); i += 2) {
         hex.append(match.charAt(i + 1));
       }
-      bukkitHexMatcher.appendReplacement(hexBuffer, "<reset><#" + hex.toString().toUpperCase(Locale.ROOT) + ">");
+      String hexUpper = hex.toString().toUpperCase(Locale.ROOT);
+      if(bukkitHexMatcher.start() > 0 && input.charAt(bukkitHexMatcher.start() - 1) == ':') {
+        bukkitHexMatcher.appendReplacement(hexBuffer, "#" + hexUpper);
+      } else {
+        bukkitHexMatcher.appendReplacement(hexBuffer, "<reset><#" + hexUpper + ">");
+      }
     }
     bukkitHexMatcher.appendTail(hexBuffer);
 
@@ -244,6 +253,7 @@ public final class HalloweenChat {
             continue;
           }
           if(key.startsWith("Color.")
+              || key.startsWith("Bossbar.")
               || key.startsWith("Scoreboard.")
               || key.startsWith("In-Game.Messages.Arena.Playing.Role.")
               || key.startsWith("In-Game.Messages.Arena.Task.")

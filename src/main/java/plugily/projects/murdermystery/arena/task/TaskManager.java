@@ -536,36 +536,39 @@ public class TaskManager {
     return playerTasks;
   }
 
+  private String formatBossBarTitle() {
+    return HalloweenChat.color(
+      "<gradient:#FF5400:#FFB703><bold>ซ่อมแซมรถบัส:</bold></gradient> <#6EEB83>"
+        + completedTasks
+        + "<#5A4E7C>/<#6EEB83>"
+        + totalTasks
+        + " <#FFB703>(Bus Repair)"
+    );
+  }
+
   private void createBossBar() {
     if(taskBossBar != null) {
+      taskBossBar.setVisible(false);
       taskBossBar.removeAll();
     }
-    String title = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR")
-      .asKey().arena(arena)
-      .integer(completedTasks)
-      .value(String.valueOf(totalTasks))
-      .build();
-    taskBossBar = Bukkit.createBossBar(HalloweenChat.color(title), BarColor.YELLOW, BarStyle.SEGMENTED_10);
+    taskBossBar = Bukkit.createBossBar(formatBossBarTitle(), BarColor.PURPLE, BarStyle.SEGMENTED_10);
     taskBossBar.setProgress(0.0);
+    taskBossBar.setVisible(true);
 
     for(Player player : arena.getPlayers()) {
       taskBossBar.addPlayer(player);
     }
+    updateBossBar();
   }
 
   public void updateBossBar() {
-    if(taskBossBar == null || totalTasks == 0) {
+    if(taskBossBar == null) {
       return;
     }
-    String title = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR")
-      .asKey().arena(arena)
-      .integer(completedTasks)
-      .value(String.valueOf(totalTasks))
-      .build();
-    taskBossBar.setTitle(HalloweenChat.color(title));
-    taskBossBar.setProgress(Math.min(1.0, (double) completedTasks / totalTasks));
+    taskBossBar.setTitle(formatBossBarTitle());
+    double progress = totalTasks <= 0 ? 0.0 : Math.max(0.0, Math.min(1.0, (double) completedTasks / totalTasks));
+    taskBossBar.setProgress(progress);
 
-    double progress = (double) completedTasks / totalTasks;
     if(progress >= 0.75) {
       taskBossBar.setColor(BarColor.GREEN);
     } else if(progress >= 0.5) {
@@ -576,13 +579,13 @@ public class TaskManager {
   }
 
   public void addPlayerToBossBar(Player player) {
-    if(taskBossBar != null) {
+    if(taskBossBar != null && player != null) {
       taskBossBar.addPlayer(player);
     }
   }
 
   public void removePlayerFromBossBar(Player player) {
-    if(taskBossBar != null) {
+    if(taskBossBar != null && player != null) {
       taskBossBar.removePlayer(player);
     }
   }
@@ -590,6 +593,7 @@ public class TaskManager {
   public void cleanup() {
     stopArrowTracker();
     if(taskBossBar != null) {
+      taskBossBar.setVisible(false);
       taskBossBar.removeAll();
       taskBossBar = null;
     }
@@ -693,15 +697,32 @@ public class TaskManager {
     return sample;
   }
 
+  public void handlePlayerDeath(Player player) {
+    List<GameTask> tasks = playerTasks.remove(player);
+    if(tasks != null) {
+      for(GameTask task : tasks) {
+        if(!task.isCompleted() && totalTasks > completedTasks) {
+          totalTasks--;
+        }
+      }
+      boolean hasLivingInnocents = !playerTasks.isEmpty() && arena.getPlayersLeft().size() > arena.aliveMurderer();
+      if(hasLivingInnocents && totalTasks > 0 && completedTasks >= totalTasks) {
+        allTasksCompleted = true;
+      }
+      updateBossBar();
+    }
+  }
+
   public void removePlayer(Player player) {
     List<GameTask> tasks = playerTasks.remove(player);
     if(tasks != null) {
       for(GameTask task : tasks) {
-        if(!task.isCompleted()) {
+        if(!task.isCompleted() && totalTasks > completedTasks) {
           totalTasks--;
         }
       }
-      if(totalTasks > 0 && completedTasks >= totalTasks) {
+      boolean hasLivingInnocents = !playerTasks.isEmpty() && arena.getPlayersLeft().size() > arena.aliveMurderer();
+      if(hasLivingInnocents && totalTasks > 0 && completedTasks >= totalTasks) {
         allTasksCompleted = true;
       }
       updateBossBar();

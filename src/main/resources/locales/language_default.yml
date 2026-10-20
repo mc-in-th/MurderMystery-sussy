@@ -169,20 +169,18 @@ Scoreboard:
 #
 # Bossbar needs to be enabled on config.yml
 Bossbar:
-  Title: "%plugin_name% - www.plugily.xyz"
+  Title: "<gradient:#9D4EDD:#FF7518><bold>%plugin_name%</bold></gradient>"
   Content:
     Waiting:
-      - "Waiting for more players..."
+      - "<#B8B0C8>กำลังรอผู้เล่นเพิ่มเติม... <#5A4E7C>(<#FFB703>Waiting for more players...<#5A4E7C>)"
     Starting:
-      - "Starting in: %arena_time%"
+      - "<gradient:#FF5400:#FFB703><bold>กำลังจะเริ่มใน:</bold></gradient> <#6EEB83>%arena_time% <#B8B0C8>วินาที"
     In-Game:
-      - "Playing %plugin_name_uppercase% on PLUGILY.XYZ"
-      - "Check the plugin creator out on PLUGILY.XYZ"
-      - "Your role %arena_player_role%"
+      - "<gradient:#9D4EDD:#FF7518><bold>%plugin_name%</bold></gradient> <#5A4E7C>| <#B8B0C8>บทบาทของคุณ: %arena_player_role%"
     Ending:
-      - "Game has ended! You were playing on PLUGILY.XYZ"
+      - "<gradient:#FF5400:#FFB703><bold>เกมจบลงแล้ว! (Game Over)</bold></gradient>"
     Restarting:
-      - "Restarting the arena. You will be moved soon!"
+      - "<#B8B0C8>กำลังรีเซ็ตสนามประลอง คุณจะถูกย้ายในไม่ช้า..."
 
 #
 # In-Game Messages

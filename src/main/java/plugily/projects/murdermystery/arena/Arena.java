@@ -24,6 +24,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
@@ -39,8 +40,10 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
+import plugily.projects.minigamesbox.classic.arena.managers.BossbarManager;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginMapRestorerManager;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
@@ -66,10 +69,12 @@ import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -115,6 +120,7 @@ public class Arena extends PluginArena {
   public Arena(String id) {
     super(id);
     setPluginValues();
+    initCustomBossbarManager();
     setScoreboardManager(new ScoreboardManager(this));
     mapRestorerManager = new MapRestorerManager(this);
     setMapRestorerManager(mapRestorerManager);
@@ -142,6 +148,93 @@ public class Arena extends PluginArena {
   @Override
   public PluginMapRestorerManager getMapRestorerManager() {
     return mapRestorerManager;
+  }
+
+  private void initCustomBossbarManager() {
+    try {
+      BossbarManager customManager = new BossbarManager(this) {
+        @Override
+        public void bossBarUpdate() {
+          cleanUpBossBars(null);
+          if(getArenaState() == IArenaState.IN_GAME) {
+            clearPluginBossBars();
+            return;
+          }
+          super.bossBarUpdate();
+        }
+
+        @Override
+        public void doBarAction(IPluginArena.IBarAction action, Player player) {
+          cleanUpBossBars(action == IPluginArena.IBarAction.REMOVE ? player : null);
+          if(action == IPluginArena.IBarAction.ADD && getArenaState() == IArenaState.IN_GAME) {
+            return;
+          }
+          super.doBarAction(action, player);
+          cleanUpBossBars(null);
+        }
+      };
+      Field bossbarField = PluginArena.class.getDeclaredField("bossbarManager");
+      bossbarField.setAccessible(true);
+      bossbarField.set(this, customManager);
+    } catch(Exception ignored) {
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void cleanUpBossBars(@Nullable Player leavingPlayer) {
+    BossbarManager manager = getBossbarManager();
+    if(manager == null) {
+      return;
+    }
+    try {
+      Field gameBarsField = BossbarManager.class.getDeclaredField("gameBars");
+      gameBarsField.setAccessible(true);
+      List<BossBar> gameBars = (List<BossBar>) gameBarsField.get(manager);
+      if(gameBars == null) {
+        return;
+      }
+      Iterator<BossBar> iterator = gameBars.iterator();
+      while(iterator.hasNext()) {
+        BossBar bar = iterator.next();
+        if(bar == null) {
+          iterator.remove();
+          continue;
+        }
+        if(leavingPlayer != null && bar.getPlayers().contains(leavingPlayer)) {
+          bar.removePlayer(leavingPlayer);
+        }
+        if(bar.getPlayers().isEmpty()) {
+          bar.setVisible(false);
+          bar.removeAll();
+          iterator.remove();
+        }
+      }
+    } catch(Exception ignored) {
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void clearPluginBossBars() {
+    BossbarManager manager = getBossbarManager();
+    if(manager == null) {
+      return;
+    }
+    try {
+      Field gameBarsField = BossbarManager.class.getDeclaredField("gameBars");
+      gameBarsField.setAccessible(true);
+      List<BossBar> gameBars = (List<BossBar>) gameBarsField.get(manager);
+      if(gameBars == null) {
+        return;
+      }
+      for(BossBar bar : gameBars) {
+        if(bar != null) {
+          bar.setVisible(false);
+          bar.removeAll();
+        }
+      }
+      gameBars.clear();
+    } catch(Exception ignored) {
+    }
   }
 
 

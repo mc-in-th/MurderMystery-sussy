@@ -113,6 +113,7 @@ public class StartingState extends PluginStartingState {
       }
 
       int tasksPerPlayer = getPlugin().getConfig().getInt("Tasks.Per-Player", 3);
+      pluginArena.clearPluginBossBars();
       pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
       pluginArena.getMinimap().distributeMaps();
       pluginArena.getSabotageManager().start();
@@ -131,7 +132,7 @@ public class StartingState extends PluginStartingState {
     getPlugin().getDebugger().debug("Arena {0} | Role add {1} | List {2}", arena.getId(), roleName, chancesPlayer);
 
     int amount = role == Role.MURDERER ? maxmurderer : maxdetectives;
-    for(int i = 0; i < amount; i++) {
+    for(int i = 0; i < amount && i < chancesRanking.size(); i++) {
       IUser user = chancesRanking.get(i);
       Player userPlayer = user.getPlayer();
       arena.setCharacter(role, userPlayer);
