@@ -82,6 +82,8 @@ public class ArenaManager extends PluginArenaManager {
     if(playerHasMurdererRole) {
       pluginArena.removeFromMurdererList(player);
     }
+    pluginArena.getVotingManager().handlePlayerLeave(player);
+    pluginArena.getTaskManager().removePlayer(player);
 
     if(arena.getArenaState() == IArenaState.IN_GAME && !user.isSpectator()) {
       List<Player> playersLeft = arena.getPlayersLeft();
@@ -110,6 +112,7 @@ public class ArenaManager extends PluginArenaManager {
               new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(player).arena(pluginArena).sendPlayer();
               plugin.getActionBarManager().addActionBar(player, new ActionBar((new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE")).asKey(), ActionBar.ActionBarType.DISPLAY, 5));
               ItemPosition.setItem(plugin.getUserManager().getUser(newMurderer), ItemPosition.MURDERER_SWORD, plugin.getSwordSkinManager().getRandomSwordSkin(player));
+              pluginArena.getSabotageManager().giveSabotageRemote(newMurderer);
             }
           } else {
             plugin.getDebugger().debug("No new murderer added as there are some");
