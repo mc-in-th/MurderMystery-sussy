@@ -263,10 +263,11 @@ public class SabotageManager {
   private ItemStack buildSabotageButton(SabotageType type, XMaterial readyMat, boolean onCooldown, boolean hasActive) {
     ItemStack item;
     boolean isActiveThis = (activeSabotage == type);
+    boolean hasLocation = resolveStationLocation(type) != null;
 
     if(isActiveThis) {
       item = XMaterial.REDSTONE_BLOCK.parseItem();
-    } else if(hasActive || onCooldown) {
+    } else if(!hasLocation || hasActive || onCooldown) {
       item = XMaterial.BARRIER.parseItem();
     } else {
       item = readyMat.parseItem();
@@ -274,7 +275,7 @@ public class SabotageManager {
 
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      meta.setDisplayName((isActiveThis ? "§e* " : (hasActive || onCooldown ? "§c[x] " : "§a>> ")) + "§l" + type.getIcon() + " " + type.getDisplayName());
+      meta.setDisplayName((isActiveThis ? "§e* " : (!hasLocation || hasActive || onCooldown ? "§c[x] " : "§a>> ")) + "§l" + type.getIcon() + " " + type.getDisplayName());
       List<String> lore = new ArrayList<>();
       if(type == SabotageType.LIGHTS) {
         lore.add("§7ตัดกระแสไฟฟ้าทั้งแผนที่!");
@@ -290,7 +291,10 @@ public class SabotageManager {
         lore.add("§7- จุดภารกิจและเข็มทิศจะถูกซ่อนจนกว่าจะกู้ระบบ");
       }
       lore.add(" ");
-      if(isActiveThis) {
+      if(!hasLocation) {
+        lore.add("§c[ ยังไม่ได้ตั้งจุด Sabotage นี้ในแมพ ]");
+        lore.add("§7ตั้งค่าด้วย: §e/mma setsabotage " + arena.getId() + " " + type.getShortId());
+      } else if(isActiveThis) {
         lore.add("§e§l[ กำลังทำงานอยู่! ]");
       } else if(hasActive) {
         lore.add("§c[ ใช้งานไม่ได้: มี Sabotage อื่นทำงานอยู่ ]");
@@ -331,15 +335,24 @@ public class SabotageManager {
     }
 
     if(selected != null) {
+      if(resolveStationLocation(selected) == null) {
+        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
+        VersionUtils.sendActionBar(player, "§cยังไม่ได้ตั้งจุด Sabotage นี้ในแมพ! (/mma setsabotage " + arena.getId() + " " + selected.getShortId() + ")");
+        return;
+      }
       player.closeInventory();
       triggerSabotage(player, selected);
     }
   }
 
   public void triggerSabotage(Player murderer, SabotageType type) {
+    Location stationLoc = resolveStationLocation(type);
+    if(stationLoc == null) {
+      return;
+    }
     this.activeSabotage = type;
     this.countdownSeconds = type.getCountdownSeconds();
-    this.activeFixLocation = resolveStationLocation(type);
+    this.activeFixLocation = stationLoc;
 
     spawnEmergencyVisuals(type, activeFixLocation);
 
@@ -406,22 +419,11 @@ public class SabotageManager {
   }
 
   private Location resolveStationLocation(SabotageType type) {
-    List<Location> locs = arena.getTaskLocations(type.getFallbackStationType());
+    List<Location> locs = arena.getSabotageLocations(type);
     if(!locs.isEmpty() && locs.get(0) != null) {
       return locs.get(0);
     }
-    List<Location> all = arena.getAllTaskLocations();
-    if(all.isEmpty()) {
-      return arena.getPlayersLeft().isEmpty() ? null : arena.getPlayersLeft().get(0).getLocation();
-    }
-    if(type == SabotageType.LIGHTS) {
-      return all.get(0);
-    } else if(type == SabotageType.ENGINE_MELTDOWN && all.size() > 1) {
-      return all.get(1);
-    } else if(type == SabotageType.COMMS && all.size() > 2) {
-      return all.get(2);
-    }
-    return all.get(0);
+    return null;
   }
 
   private void spawnEmergencyVisuals(SabotageType type, Location loc) {
