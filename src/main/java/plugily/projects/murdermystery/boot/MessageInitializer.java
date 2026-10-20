@@ -21,6 +21,7 @@ package plugily.projects.murdermystery.boot;
 import plugily.projects.minigamesbox.classic.handlers.language.Message;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageManager;
 import plugily.projects.murdermystery.Main;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 /**
  * @author Tigerpanzer_02
@@ -113,11 +114,16 @@ public class MessageInitializer {
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_DEATHS", new Message("Leaderboard.Statistics.Deaths", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_HIGHEST_SCORE", new Message("Leaderboard.Statistics.Highest-Score", ""));
 
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR", new Message("In-Game.Messages.Arena.Task.Bossbar", "&6&lซ่อมแซมรถบัส: &a%number%&7/&a%value% &e(Bus Repair)"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED", new Message("In-Game.Messages.Arena.Task.Completed", "&aสำเร็จภารกิจ: &e%value%&a!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED", new Message("In-Game.Messages.Arena.Task.All-Completed", "&a&lซ่อมแซมรถบัสสำเร็จแล้ว! ผู้โดยสารสามารถหลบหนีออกจากเมืองได้และคว้าชัยชนะ!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE", new Message("In-Game.Messages.Arena.Task.Win.Title", "&a&lรถบัสซ่อมแซมสำเร็จ!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE", new Message("In-Game.Messages.Arena.Task.Win.Subtitle", "&eผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ!"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR", new Message("In-Game.Messages.Arena.Task.Bossbar",
+        HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ซ่อมแซมรถบัส:</bold></gradient> <#6EEB83>%number%<#5A4E7C>/<#6EEB83>%value% <#FFB703>(Bus Repair)")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED", new Message("In-Game.Messages.Arena.Task.Completed",
+        HalloweenChat.color("<#6EEB83>สำเร็จภารกิจ: <#FFB703>%value%<#6EEB83>!")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED", new Message("In-Game.Messages.Arena.Task.All-Completed",
+        HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ซ่อมแซมรถบัสสำเร็จแล้ว! ผู้โดยสารหลบหนีออกจากเมืองได้และคว้าชัยชนะ!</bold></gradient>")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE", new Message("In-Game.Messages.Arena.Task.Win.Title",
+        HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>รถบัสซ่อมแซมสำเร็จ!</bold></gradient>")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE", new Message("In-Game.Messages.Arena.Task.Win.Subtitle",
+        HalloweenChat.color("<gradient:#FF7518:#FFB703>ผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ!</gradient>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", new Message("In-Game.Messages.Arena.Task.Types.Find-Diesel-Fuel", "หาน้ำมันดีเซล"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", new Message("In-Game.Messages.Arena.Task.Types.Check-Control-Panel", "ตรวจสอบแผงควบคุมรถบัส"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_REPAIR_ENGINE_WIRING", new Message("In-Game.Messages.Arena.Task.Types.Repair-Engine-Wiring", "ซ่อมสายไฟเครื่องยนต์"));
@@ -126,20 +132,34 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", new Message("In-Game.Messages.Arena.Task.Types.Check-Tire-Pressure", "เช็คลมยาง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", new Message("In-Game.Messages.Arena.Task.Types.Check-Steering-Fluid", "เช็คน้ำมันพวงมาลัย"));
 
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown", "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_BODY_REPORTED", new Message("In-Game.Messages.Arena.Voting.Body-Reported", "%color_chat_issue%%player% พบศพผู้เสียชีวิตและเรียกประชุมด่วนรอบกองไฟ!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_START", new Message("In-Game.Messages.Arena.Voting.Discussion-Start", "&e%player% เรียกประชุมด่วนรอบกองไฟ! เริ่มเวลาปรึกษาหารือ (&c%number% วินาที&e)"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_NOW", new Message("In-Game.Messages.Arena.Voting.Vote-Now", "&cเปิดให้ลงคะแนนโหวตแล้ว! คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก (&e%number% วินาที&c)"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_TIMER", new Message("In-Game.Messages.Arena.Voting.Discussion-Timer", "&eเวลาปรึกษาที่เหลือ: &c%number% วินาที"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_TIMER", new Message("In-Game.Messages.Arena.Voting.Vote-Timer", "&cเวลาโหวตที่เหลือ: &e%number% วินาที"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_ALREADY_VOTED", new Message("In-Game.Messages.Arena.Voting.Already-Voted", "%color_chat_issue%คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_PLAYER_VOTED", new Message("In-Game.Messages.Arena.Voting.Player-Voted", "&7%player% ได้ยืนยันการลงคะแนนโหวตแล้ว"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT", new Message("In-Game.Messages.Arena.Voting.No-Eject", "&eไม่มีใครถูกโหวตคัดออกในรอบนี้ (คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_TITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Title", "&eไม่มีใครถูกโหวตออก"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_SUBTITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Subtitle", "&7คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_EJECTED", new Message("In-Game.Messages.Arena.Voting.Ejected", "&c%player% ถูกโหวตคัดออก %value%"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Impostor", "&a(เขาคือคนร้าย!)"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_NOT_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Not-Impostor", "&c(เขาไม่ใช่คนร้าย...)"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown",
+        "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_BODY_REPORTED", new Message("In-Game.Messages.Arena.Voting.Body-Reported",
+        HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[รายงานศพ]</bold></gradient> <#C77DFF>%player% <#FF3B47>พบศพผู้เสียชีวิตและเรียกประชุมด่วนรอบกองไฟ!")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_START", new Message("In-Game.Messages.Arena.Voting.Discussion-Start",
+        HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ประชุมรอบกองไฟ]</bold></gradient> <#C77DFF>%player% <#FFB703>เรียกประชุมด่วน! เริ่มเวลาปรึกษาหารือ (<#FF3B47>%number% วินาที<#FFB703>)")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_NOW", new Message("In-Game.Messages.Arena.Voting.Vote-Now",
+        HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>[เปิดโหวต]</bold></gradient> <#FFB703>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก (<#FF3B47>%number% วินาที<#FFB703>)")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_TIMER", new Message("In-Game.Messages.Arena.Voting.Discussion-Timer",
+        HalloweenChat.color("<gradient:#FF5400:#FFB703>เวลาปรึกษาที่เหลือ:</gradient> <#FF3B47>%number% วินาที")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_TIMER", new Message("In-Game.Messages.Arena.Voting.Vote-Timer",
+        HalloweenChat.color("<gradient:#D90429:#FF5400>เวลาโหวตที่เหลือ:</gradient> <#FFB703>%number% วินาที")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_ALREADY_VOTED", new Message("In-Game.Messages.Arena.Voting.Already-Voted",
+        "%color_chat_issue%คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_PLAYER_VOTED", new Message("In-Game.Messages.Arena.Voting.Player-Voted",
+        HalloweenChat.color("<#C77DFF>%player% <#B8B0C8>ได้ยืนยันการลงคะแนนโหวตแล้ว")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT", new Message("In-Game.Messages.Arena.Voting.No-Eject",
+        HalloweenChat.color("<gradient:#FF5400:#FFB703>ไม่มีใครถูกโหวตคัดออกในรอบนี้</gradient> <#B8B0C8>(คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_TITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Title",
+        HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ไม่มีใครถูกโหวตออก</bold></gradient>")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_SUBTITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Subtitle",
+        HalloweenChat.color("<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_EJECTED", new Message("In-Game.Messages.Arena.Voting.Ejected",
+        HalloweenChat.color("<#C77DFF>%player% <#FF3B47>ถูกโหวตคัดออก %value%")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Impostor",
+        HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>(เขาคือฆาตกร!)</bold></gradient>")));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_NOT_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Not-Impostor",
+        HalloweenChat.color("<gradient:#D90429:#FF5400><bold>(เขาไม่ใช่ฆาตกร...)</bold></gradient>")));
   }
 
   private MessageManager getMessageManager() {
