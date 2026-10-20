@@ -419,9 +419,22 @@ public class SabotageManager {
   }
 
   private Location resolveStationLocation(SabotageType type) {
-    List<Location> locs = arena.getSabotageLocations(type);
-    if(!locs.isEmpty() && locs.get(0) != null) {
-      return locs.get(0);
+    return arena.getSabotageLocation(type);
+  }
+
+  public SabotageType getSabotageStationAt(Location clickedLoc) {
+    if(clickedLoc == null || clickedLoc.getWorld() == null) {
+      return null;
+    }
+    for(SabotageType type : SabotageType.values()) {
+      Location station = arena.getSabotageLocation(type);
+      if(station != null && station.getWorld() != null && station.getWorld().equals(clickedLoc.getWorld())) {
+        if(clickedLoc.getBlockX() == station.getBlockX()
+          && clickedLoc.getBlockY() == station.getBlockY()
+          && clickedLoc.getBlockZ() == station.getBlockZ()) {
+          return type;
+        }
+      }
     }
     return null;
   }
