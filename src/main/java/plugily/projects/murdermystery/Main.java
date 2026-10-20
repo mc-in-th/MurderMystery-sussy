@@ -38,6 +38,7 @@ import plugily.projects.murdermystery.handlers.setup.SetupCategoryManager;
 import plugily.projects.murdermystery.handlers.skins.sword.SwordSkinManager;
 import plugily.projects.murdermystery.handlers.trails.BowTrailsHandler;
 import plugily.projects.murdermystery.handlers.trails.TrailsManager;
+import plugily.projects.murdermystery.handlers.voicechat.VoiceChatManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 /**
@@ -52,6 +53,7 @@ public class Main extends PluginMain {
   private SwordSkinManager swordSkinManager;
   private HookManager hookManager;
   private CorpseHandler corpseHandler;
+  private VoiceChatManager voiceChatManager;
 
   @TestOnly
   public Main() {
@@ -83,6 +85,14 @@ public class Main extends PluginMain {
         System.currentTimeMillis() - start);
   }
 
+  @Override
+  public void onDisable() {
+    if(voiceChatManager != null) {
+      voiceChatManager.unregister();
+    }
+    super.onDisable();
+  }
+
   public void initializePluginClasses() {
     addFileName("lastwords");
     addFileName("powerups");
@@ -106,6 +116,7 @@ public class Main extends PluginMain {
     trailsManager = new TrailsManager(this);
     hookManager = new HookManager(this);
     corpseHandler = new CorpseHandler(this);
+    voiceChatManager = new VoiceChatManager(this);
     swordSkinManager = new SwordSkinManager(this);
     new PluginEvents(this);
     addPluginMetrics();
@@ -157,6 +168,10 @@ public class Main extends PluginMain {
 
   public CorpseHandler getCorpseHandler() {
     return corpseHandler;
+  }
+
+  public VoiceChatManager getVoiceChatManager() {
+    return voiceChatManager;
   }
 
   @Override
