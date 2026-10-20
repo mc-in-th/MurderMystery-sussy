@@ -18,7 +18,6 @@
 
 package plugily.projects.murdermystery.arena.managers;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.golde.bukkit.corpsereborn.CorpseAPI.CorpseAPI;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginMapRestorerManager;
@@ -80,7 +79,10 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   public void clearCorpses() {
     if(!arena.getPlugin().getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
       for(Stand stand : arena.getStands()) {
-        if(!stand.getHologram().isDeleted()) {
+        if(stand == null) {
+          continue;
+        }
+        if(stand.getHologram() != null && !stand.getHologram().isDeleted()) {
           stand.getHologram().delete();
         }
         if(stand.getStand() != null) {
@@ -91,7 +93,10 @@ public class MapRestorerManager extends PluginMapRestorerManager {
       return;
     }
     for(Corpse corpse : arena.getCorpses()) {
-      if(!corpse.getHologram().isDeleted()) {
+      if(corpse == null) {
+        continue;
+      }
+      if(corpse.getHologram() != null && !corpse.getHologram().isDeleted()) {
         corpse.getHologram().delete();
       }
       if(corpse.getCorpseData() != null) {
