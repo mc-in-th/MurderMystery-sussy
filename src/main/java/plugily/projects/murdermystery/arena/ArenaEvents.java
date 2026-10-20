@@ -72,6 +72,7 @@ import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
@@ -533,7 +534,7 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena.getArenaState() == IArenaState.IN_GAME) {
       VotingManager.DeadBody nearbyBody = arena.getVotingManager().findNearbyBody(player.getLocation(), 3.8);
       if(nearbyBody != null) {
-        VersionUtils.sendActionBar(player, "§c§l พบศพของ " + nearbyBody.getVictimName() + "! §e§l[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>พบศพของ " + nearbyBody.getVictimName() + "!</bold></gradient> <#FFB703><bold>[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]</bold>"));
       }
 
       if(Role.isRole(Role.INNOCENT, user, arena)) {
@@ -689,7 +690,7 @@ public class ArenaEvents extends PluginArenaEvents {
         }
       } else {
         event.setCancelled(true);
-        VersionUtils.sendActionBar(player, "§c[คนร้าย] คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้!");
+        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[คนร้าย]</bold></gradient> <#FF3B47>คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้!"));
       }
     }
   }
@@ -755,7 +756,7 @@ public class ArenaEvents extends PluginArenaEvents {
     SabotageType stationType = arena.getSabotageManager().getSabotageStationAt(targetLoc);
     if(stationType != null) {
       event.setCancelled(true);
-      VersionUtils.sendActionBar(player, "§a[[/]] จุด " + stationType.getIcon() + " " + stationType.getDisplayName() + " §7ยังทำงานปกติ ไม่มีการก่อวินาศกรรม");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[[/]] จุด " + stationType.getIcon() + " " + stationType.getDisplayName() + " <#B8B0C8>ยังทำงานปกติ ไม่มีการก่อวินาศกรรม"));
       return;
     }
 
@@ -766,7 +767,7 @@ public class ArenaEvents extends PluginArenaEvents {
             if((targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ())
               || targetLoc.distanceSquared(loc) <= 4.0) {
               event.setCancelled(true);
-              VersionUtils.sendActionBar(player, "§c[คนร้าย] คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้! (แอบลงท่อหรือกำจัดผู้โดยสาร)");
+              VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[คนร้าย]</bold></gradient> <#FF3B47>คุณเป็นคนร้าย ไม่สามารถทำภารกิจได้! <#B8B0C8>(แอบลงท่อหรือกำจัดผู้โดยสาร)"));
               return;
             }
           }

@@ -36,6 +36,7 @@ import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.GameTask;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -137,22 +138,22 @@ public class ArenaMinimap {
       }
 
       if(isMurderer) {
-        meta.setDisplayName("§c§l เรดาร์ฆาตกร (Impostor Radar)");
-        meta.setLore(Arrays.asList(
-          "§7แสดงตำแหน่งท่อและจุดทำภารกิจทั้งหมด",
-          "§c* [V] สีแดง: ท่อระบายน้ำ (Vents)",
-          "§e* [!] สีเหลือง: จุดภารกิจของผู้โดยสาร (Tasks)",
-          "§b^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
-          "§8(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
+        meta.setDisplayName(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>เรดาร์ฆาตกร (Impostor Radar)</bold></gradient>"));
+        meta.setLore(HalloweenChat.colorLines(
+          "<#B8B0C8>แสดงตำแหน่งท่อและจุดทำภารกิจทั้งหมด",
+          "<#FF3B47>* [V] สีแดง: ท่อระบายน้ำ (Vents)",
+          "<#FFB703>* [!] สีเหลือง: จุดภารกิจของผู้โดยสาร (Tasks)",
+          "<#72EFDD>^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
+          "<#5A4E7C>(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
         ));
       } else {
-        meta.setDisplayName("§e§l แผนที่ภารกิจ (Task Minimap)");
-        meta.setLore(Arrays.asList(
-          "§7แสดงตำแหน่งภารกิจซ่อมรถบัสของคุณ",
-          "§e* [!] สีเหลือง: ภารกิจที่ยังไม่เสร็จ (Unfinished)",
-          "§a* [[/]] สีเขียว: ภารกิจที่เสร็จแล้ว (Completed)",
-          "§b^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
-          "§8(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
+        meta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>แผนที่ภารกิจ (Task Minimap)</bold></gradient>"));
+        meta.setLore(HalloweenChat.colorLines(
+          "<#B8B0C8>แสดงตำแหน่งภารกิจซ่อมรถบัสของคุณ",
+          "<#FFB703>* [!] สีเหลือง: ภารกิจที่ยังไม่เสร็จ (Unfinished)",
+          "<#6EEB83>* [[/]] สีเขียว: ภารกิจที่เสร็จแล้ว (Completed)",
+          "<#72EFDD>^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
+          "<#5A4E7C>(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
         ));
       }
       item.setItemMeta(meta);

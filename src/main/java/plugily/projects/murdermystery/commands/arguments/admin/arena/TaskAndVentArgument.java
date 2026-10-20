@@ -34,11 +34,16 @@ import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.commands.arguments.ArgumentsRegistry;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskAndVentArgument {
+
+  private static void msg(Player player, String text) {
+    player.sendMessage(HalloweenChat.color(text));
+  }
 
   public TaskAndVentArgument(ArgumentsRegistry registry) {
     registry.mapArgument(
@@ -55,14 +60,14 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma addtask <ชื่อห้อง/arena> [ประเภทภารกิจ/taskType]");
+            msg(player, "<#FF3B47>การใช้งาน: /mma addtask <ชื่อห้อง/arena> [ประเภทภารกิจ/taskType]");
             sendTaskTypesHelp(player);
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -77,7 +82,7 @@ public class TaskAndVentArgument {
           if(args.length >= 3) {
             TaskType type = TaskType.fromInput(args[2]);
             if(type == null) {
-              player.sendMessage("§cไม่พบประเภทภารกิจ: §e" + args[2]);
+              msg(player, "<#FF3B47>ไม่พบประเภทภารกิจ: <#FFB703>" + args[2]);
               sendTaskTypesHelp(player);
               return;
             }
@@ -91,10 +96,10 @@ public class TaskAndVentArgument {
 
             arena.addSpecificTaskLocation(type, loc);
 
-            player.sendMessage("§a[+] ตั้งจุดภารกิจ §6" + type.getIcon() + " " + type.getDisplayName()
-              + " §aให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+            msg(player, "<#6EEB83>[+] ตั้งจุดภารกิจ <#FF7518>" + type.getIcon() + " " + type.getDisplayName()
+              + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
               + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
-              + " §a(รวมเฉพาะภารกิจนี้ §e" + list.size() + " §aจุด)");
+              + " <#6EEB83>(รวมเฉพาะภารกิจนี้ <#FFB703>" + list.size() + " <#6EEB83>จุด)");
           } else {
             List<String> list = config.getStringList("instances." + arenaId + ".tasklocations");
             if(!list.contains(serialized)) {
@@ -109,10 +114,10 @@ public class TaskAndVentArgument {
             }
             arena.setTaskLocations(currentLocs);
 
-            player.sendMessage("§a[+] เพิ่มจุดภารกิจทั่วไป (Generic Task Point) ให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+            msg(player, "<#6EEB83>[+] เพิ่มจุดภารกิจทั่วไป (Generic Task Point) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
               + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
-              + " §a(รวมทั้งหมด §e" + list.size() + " §aจุด)");
-            player.sendMessage("§7Tip: สามารถระบุภารกิจเจาะจงได้ เช่น: §e/mma settask " + arenaId + " diesel");
+              + " <#6EEB83>(รวมทั้งหมด <#FFB703>" + list.size() + " <#6EEB83>จุด)");
+            msg(player, "<#B8B0C8>Tip: สามารถระบุภารกิจเจาะจงได้ เช่น: <#FFB703>/mma settask " + arenaId + " diesel");
           }
         }
       }
@@ -132,20 +137,20 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 3) {
-            player.sendMessage("§cการใช้งาน: /mma settask <ชื่อห้อง/arena> <ประเภทภารกิจ/taskType>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma settask <ชื่อห้อง/arena> <ประเภทภารกิจ/taskType>");
             sendTaskTypesHelp(player);
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
           TaskType type = TaskType.fromInput(args[2]);
           if(type == null) {
-            player.sendMessage("§cไม่พบประเภทภารกิจ: §e" + args[2]);
+            msg(player, "<#FF3B47>ไม่พบประเภทภารกิจ: <#FFB703>" + args[2]);
             sendTaskTypesHelp(player);
             return;
           }
@@ -166,10 +171,10 @@ public class TaskAndVentArgument {
 
           arena.addSpecificTaskLocation(type, loc);
 
-          player.sendMessage("§a[+] ตั้งจุดภารกิจ §6" + type.getIcon() + " " + type.getDisplayName()
-            + " §aให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+          msg(player, "<#6EEB83>[+] ตั้งจุดภารกิจ <#FF7518>" + type.getIcon() + " " + type.getDisplayName()
+            + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
             + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
-            + " §a(รวมเฉพาะภารกิจนี้ §e" + list.size() + " §aจุด)");
+            + " <#6EEB83>(รวมเฉพาะภารกิจนี้ <#FFB703>" + list.size() + " <#6EEB83>จุด)");
         }
       }
     );
@@ -188,39 +193,39 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma listtasks <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma listtasks <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
-          player.sendMessage("§6================= [ รายการจุดภารกิจ: §e" + arenaId + " §6] =================");
+          msg(player, "<#5A4E7C>================= [ <gradient:#FF5400:#FFB703><bold>รายการจุดภารกิจ: " + arenaId + "</bold></gradient> <#5A4E7C>] =================");
           int idx = 1;
           for(TaskType type : TaskType.values()) {
             List<Location> locs = arena.getTaskLocations(type);
             if(locs.isEmpty()) {
-              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
-                + " §7(" + type.getShortId() + "): §cยังไม่ได้ตั้งค่า (จะสุ่มจุดทั่วไป)");
+              msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " <#B8B0C8>(" + type.getShortId() + "): <#FF3B47>ยังไม่ได้ตั้งค่า (จะสุ่มจุดทั่วไป)");
             } else {
-              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
-                + " §7(" + type.getShortId() + "): §a" + locs.size() + " จุด");
+              msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " <#B8B0C8>(" + type.getShortId() + "): <#6EEB83>" + locs.size() + " จุด");
               for(Location l : locs) {
-                player.sendMessage("   §7+- §f" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
+                msg(player, "   <#B8B0C8>+- <#F4F1DE>" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
               }
             }
             idx++;
           }
           List<Location> genericLocs = arena.getTaskLocations();
-          player.sendMessage("§bจุดภารกิจทั่วไป (Generic Task Points): "
-            + (genericLocs.isEmpty() ? "§cไม่มี" : "§a" + genericLocs.size() + " จุด"));
+          msg(player, "<#72EFDD>จุดภารกิจทั่วไป (Generic Task Points): "
+            + (genericLocs.isEmpty() ? "<#FF3B47>ไม่มี" : "<#6EEB83>" + genericLocs.size() + " จุด"));
           Location cf = arena.getCampfireLocation();
-          player.sendMessage("§6 จุดกองไฟประชุมฉุกเฉิน (Campfire): "
-            + (cf == null ? "§cยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "§a" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
-          player.sendMessage("§6=============================================================");
+          msg(player, "<#FF7518>จุดกองไฟประชุมฉุกเฉิน (Campfire): "
+            + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
+          msg(player, "<#5A4E7C>=============================================================");
         }
       }
     );
@@ -239,13 +244,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma cleartasks <ชื่อห้อง/arena> [ประเภทภารกิจ/taskType]");
+            msg(player, "<#FF3B47>การใช้งาน: /mma cleartasks <ชื่อห้อง/arena> [ประเภทภารกิจ/taskType]");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -254,21 +259,21 @@ public class TaskAndVentArgument {
           if(args.length >= 3) {
             TaskType type = TaskType.fromInput(args[2]);
             if(type == null) {
-              player.sendMessage("§cไม่พบประเภทภารกิจ: §e" + args[2]);
+              msg(player, "<#FF3B47>ไม่พบประเภทภารกิจ: <#FFB703>" + args[2]);
               sendTaskTypesHelp(player);
               return;
             }
             config.set("instances." + arenaId + ".tasks." + type.name(), null);
             ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
             arena.clearSpecificTaskLocations(type);
-            player.sendMessage("§c[!] ล้างจุดภารกิจ §6" + type.getIcon() + " " + type.getDisplayName() + " §cของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+            msg(player, "<#FF3B47>[!] ล้างจุดภารกิจ <#FF7518>" + type.getIcon() + " " + type.getDisplayName() + " <#FF3B47>ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
           } else {
             config.set("instances." + arenaId + ".tasklocations", new ArrayList<String>());
             config.set("instances." + arenaId + ".tasks", null);
             ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
             arena.setTaskLocations(new ArrayList<>());
             arena.clearSpecificTaskLocations(null);
-            player.sendMessage("§c[!] ล้างจุดภารกิจทั้งหมด (ทุกประเภท) ของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+            msg(player, "<#FF3B47>[!] ล้างจุดภารกิจทั้งหมด (ทุกประเภท) ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
           }
         }
       }
@@ -322,31 +327,31 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma listsabotages <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma listsabotages <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
-          player.sendMessage("§c================= [ รายการบล็อกแก้ Sabotage: §e" + arenaId + " §c] =================");
+          msg(player, "<#5A4E7C>================= [ <gradient:#D90429:#FF5400><bold>รายการบล็อกแก้ Sabotage: " + arenaId + "</bold></gradient> <#5A4E7C>] =================");
           int idx = 1;
           for(SabotageType type : SabotageType.values()) {
             Location l = arena.getSabotageLocation(type);
             if(l == null) {
-              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
-                + " §7(" + type.getShortId() + "): §cยังไม่ได้ตั้งค่า");
+              msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " <#B8B0C8>(" + type.getShortId() + "): <#FF3B47>ยังไม่ได้ตั้งค่า");
             } else {
-              player.sendMessage("§e" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
-                + " §7(" + type.getShortId() + "): §a"
+              msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName()
+                + " <#B8B0C8>(" + type.getShortId() + "): <#6EEB83>"
                 + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ());
             }
             idx++;
           }
-          player.sendMessage("§c=============================================================");
+          msg(player, "<#5A4E7C>=============================================================");
         }
       }
     );
@@ -365,13 +370,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma clearsabotages <ชื่อห้อง/arena> [ประเภท/sabotageType]");
+            msg(player, "<#FF3B47>การใช้งาน: /mma clearsabotages <ชื่อห้อง/arena> [ประเภท/sabotageType]");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -380,19 +385,19 @@ public class TaskAndVentArgument {
           if(args.length >= 3) {
             SabotageType type = SabotageType.fromInput(args[2]);
             if(type == null) {
-              player.sendMessage("§cไม่พบประเภท Sabotage: §e" + args[2]);
+              msg(player, "<#FF3B47>ไม่พบประเภท Sabotage: <#FFB703>" + args[2]);
               sendSabotageTypesHelp(player);
               return;
             }
             config.set("instances." + arenaId + ".sabotages." + type.name(), null);
             ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
             arena.clearSabotageLocations(type);
-            player.sendMessage("§c[!] ล้างจุด Sabotage §6" + type.getIcon() + " " + type.getDisplayName() + " §cของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+            msg(player, "<#FF3B47>[!] ล้างจุด Sabotage <#FF7518>" + type.getIcon() + " " + type.getDisplayName() + " <#FF3B47>ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
           } else {
             config.set("instances." + arenaId + ".sabotages", null);
             ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
             arena.clearSabotageLocations(null);
-            player.sendMessage("§c[!] ล้างจุด Sabotage ทั้งหมดของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+            msg(player, "<#FF3B47>[!] ล้างจุด Sabotage ทั้งหมดของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
           }
         }
       }
@@ -412,13 +417,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma setcampfire <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma setcampfire <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -434,7 +439,7 @@ public class TaskAndVentArgument {
 
           arena.setCampfireLocation(loc);
 
-          player.sendMessage("§a[+] ตั้งจุดกองไฟประชุมฉุกเฉิน (Campfire) ให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+          msg(player, "<#6EEB83>[+] ตั้งจุดกองไฟประชุมฉุกเฉิน (Campfire) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
             + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
         }
       }
@@ -454,13 +459,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma clearcampfire <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma clearcampfire <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -470,7 +475,7 @@ public class TaskAndVentArgument {
 
           arena.setCampfireLocation(null);
 
-          player.sendMessage("§c[!] ล้างจุดกองไฟประชุมฉุกเฉินของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+          msg(player, "<#FF3B47>[!] ล้างจุดกองไฟประชุมฉุกเฉินของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
         }
       }
     );
@@ -489,13 +494,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma addvent <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma addvent <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -516,9 +521,9 @@ public class TaskAndVentArgument {
           SpecialBlock sb = new SpecialBlock(loc, SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION);
           arena.loadSpecialBlock(sb);
 
-          player.sendMessage("§a[+] เพิ่มท่อระบายน้ำ (Sewer Vent) ให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+          msg(player, "<#6EEB83>[+] เพิ่มท่อระบายน้ำ (Sewer Vent) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
             + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
-            + " §a(รวมทั้งหมด §e" + list.size() + " §aจุด)");
+            + " <#6EEB83>(รวมทั้งหมด <#FFB703>" + list.size() + " <#6EEB83>จุด)");
         }
       }
     );
@@ -537,13 +542,13 @@ public class TaskAndVentArgument {
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
           if(args.length < 2) {
-            player.sendMessage("§cการใช้งาน: /mma clearvents <ชื่อห้อง/arena>");
+            msg(player, "<#FF3B47>การใช้งาน: /mma clearvents <ชื่อห้อง/arena>");
             return;
           }
           String arenaId = args[1];
           Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
           if(arena == null) {
-            player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
             return;
           }
 
@@ -554,7 +559,7 @@ public class TaskAndVentArgument {
 
           arena.getSpecialBlocks().removeIf(b -> b.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION);
 
-          player.sendMessage("§c[!] ล้างท่อระบายน้ำทั้งหมดของห้อง §e" + arenaId + " §cเรียบร้อยแล้ว");
+          msg(player, "<#FF3B47>[!] ล้างท่อระบายน้ำทั้งหมดของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
         }
       }
     );
@@ -562,20 +567,20 @@ public class TaskAndVentArgument {
 
   private static void handleSetSabotage(ArgumentsRegistry registry, Player player, String[] args) {
     if(args.length < 3) {
-      player.sendMessage("§cการใช้งาน: /mma setsabotage <ชื่อห้อง/arena> <ประเภท/sabotageType>");
+      msg(player, "<#FF3B47>การใช้งาน: /mma setsabotage <ชื่อห้อง/arena> <ประเภท/sabotageType>");
       sendSabotageTypesHelp(player);
       return;
     }
     String arenaId = args[1];
     Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
     if(arena == null) {
-      player.sendMessage("§cไม่พบห้องชื่อ " + arenaId);
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
       return;
     }
 
     SabotageType type = SabotageType.fromInput(args[2]);
     if(type == null) {
-      player.sendMessage("§cไม่พบประเภท Sabotage: §e" + args[2]);
+      msg(player, "<#FF3B47>ไม่พบประเภท Sabotage: <#FFB703>" + args[2]);
       sendSabotageTypesHelp(player);
       return;
     }
@@ -592,28 +597,28 @@ public class TaskAndVentArgument {
 
     arena.setSabotageLocation(type, loc);
 
-    player.sendMessage("§a[+] ตั้งบล็อกแก้ Sabotage §c" + type.getIcon() + " " + type.getDisplayName()
-      + " §aให้ห้อง §e" + arenaId + " §aเรียบร้อยแล้วที่ §f"
+    msg(player, "<#6EEB83>[+] ตั้งบล็อกแก้ Sabotage <#FF3B47>" + type.getIcon() + " " + type.getDisplayName()
+      + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
   }
 
   private static void sendTaskTypesHelp(Player player) {
-    player.sendMessage("§e=== ประเภทภารกิจที่ใช้ได้ (Available Tasks) ===");
+    msg(player, "<gradient:#FF5400:#FFB703><bold>=== ประเภทภารกิจที่ใช้ได้ (Available Tasks) ===</bold></gradient>");
     int i = 1;
     for(TaskType t : TaskType.values()) {
-      player.sendMessage("§f" + i + ". §e" + t.getShortId() + " §7- " + t.getIcon() + " " + t.getDisplayName());
+      msg(player, "<#F4F1DE>" + i + ". <#FFB703>" + t.getShortId() + " <#B8B0C8>- " + t.getIcon() + " " + t.getDisplayName());
       i++;
     }
-    player.sendMessage("§7(สามารถระบุเป็นหมายเลข 1-7 หรือชื่อ เช่น diesel, wiring, panel)");
+    msg(player, "<#B8B0C8>(สามารถระบุเป็นหมายเลข 1-7 หรือชื่อ เช่น diesel, wiring, panel)");
   }
 
   private static void sendSabotageTypesHelp(Player player) {
-    player.sendMessage("§c=== ประเภท Sabotage ที่ใช้ได้ (Available Sabotages) ===");
+    msg(player, "<gradient:#D90429:#FF5400><bold>=== ประเภท Sabotage ที่ใช้ได้ (Available Sabotages) ===</bold></gradient>");
     int i = 1;
     for(SabotageType s : SabotageType.values()) {
-      player.sendMessage("§f" + i + ". §c" + s.getShortId() + " §7- " + s.getIcon() + " " + s.getDisplayName());
+      msg(player, "<#F4F1DE>" + i + ". <#FF3B47>" + s.getShortId() + " <#B8B0C8>- " + s.getIcon() + " " + s.getDisplayName());
       i++;
     }
-    player.sendMessage("§7(สามารถระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms)");
+    msg(player, "<#B8B0C8>(สามารถระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms)");
   }
 }

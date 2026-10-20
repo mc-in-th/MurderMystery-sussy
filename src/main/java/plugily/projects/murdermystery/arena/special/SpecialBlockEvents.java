@@ -54,6 +54,7 @@ import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.arena.special.mysterypotion.MysteryPotion;
 import plugily.projects.murdermystery.arena.special.mysterypotion.MysteryPotionRegistry;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 
@@ -263,7 +264,7 @@ public class SpecialBlockEvents implements Listener {
     IUser user = plugin.getUserManager().getUser(player);
 
     if(!Role.isRole(Role.MURDERER, user, arena)) {
-      player.sendMessage("§7ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่แอบมุดผ่านไปได้...");
+      player.sendMessage(HalloweenChat.color("<#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่แอบมุดผ่านไปได้..."));
       return;
     }
 
@@ -295,9 +296,9 @@ public class SpecialBlockEvents implements Listener {
 
     if(slot == SabotageManager.SABOTAGE_REMOTE_SLOT || (item != null && arena.getSabotageManager() != null && arena.getSabotageManager().isSabotageRemote(item))) {
       arena.getSabotageManager().openSabotageGUI(player);
-    } else if(slot == 0 || slot == 3 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && item.getItemMeta().getDisplayName().contains("<<"))) {
+    } else if(slot == 0 || slot == 3 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("<<"))) {
       arena.getVentManager().previousVent(player);
-    } else if(slot == 8 || slot == 5 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && item.getItemMeta().getDisplayName().contains(">>"))) {
+    } else if(slot == 8 || slot == 5 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains(">>"))) {
       arena.getVentManager().nextVent(player);
     } else if(slot == 4 || (item != null && item.getType() == Material.IRON_TRAPDOOR)) {
       arena.getVentManager().exitVent(player);

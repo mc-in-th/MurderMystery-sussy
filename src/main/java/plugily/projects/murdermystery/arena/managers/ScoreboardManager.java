@@ -26,6 +26,7 @@ import plugily.projects.minigamesbox.classic.arena.managers.PluginScoreboardMana
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.GameTask;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,40 +52,42 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
 
       List<String> lines = new ArrayList<>();
-      lines.add("&7----------------");
-      lines.add("&fบทบาท: " + (isMurderer ? "&cฆาตกร (Impostor)" : "&aผู้โดยสาร (Passenger)"));
-      lines.add("&fเวลา: &e%arena_time%");
-      lines.add("&fผู้รอดชีวิต: &b%arena_innocent_size% คน");
+      lines.add(HalloweenChat.color("<gradient:#9D4EDD:#FF7518>----------------</gradient>"));
+      lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + (isMurderer
+        ? "<gradient:#D90429:#FF5400><bold>ฆาตกร (Impostor)</bold></gradient>"
+        : "<gradient:#FF7518:#FFB703><bold>ผู้โดยสาร (Passenger)</bold></gradient>")));
+      lines.add(HalloweenChat.color("<#F4F1DE>เวลา: <#FFB703>%arena_time%"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"));
       lines.add("");
 
       if(isMurderer) {
-        lines.add("&c&lภารกิจหลอก (Fake Tasks):");
+        lines.add(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>ภารกิจหลอก (Fake Tasks):</bold></gradient>"));
         List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
           for(GameTask task : sampleTasks) {
-            lines.add("&7- " + task.getTaskType().getDisplayName());
+            lines.add(HalloweenChat.color("<#B8B0C8>- <#C77DFF>" + task.getTaskType().getDisplayName()));
           }
         } else {
-          lines.add("&7ไม่มีภารกิจในห้องนี้");
+          lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจในห้องนี้"));
         }
       } else {
         List<GameTask> tasks = gameArena.getTaskManager().getPlayerTasks(player);
         int completed = gameArena.getTaskManager().getPlayerCompletedTasks(player);
         int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
-        lines.add("&e&lภารกิจของคุณ &7(" + completed + "/" + total + "):");
+        lines.add(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ภารกิจของคุณ</bold></gradient> <#B8B0C8>(" + completed + "/" + total + "):"));
         if(tasks != null && !tasks.isEmpty()) {
           for(GameTask task : tasks) {
             if(task.isCompleted()) {
-              lines.add("&a[/] &a" + task.getTaskType().getDisplayName());
+              lines.add(HalloweenChat.color("<#6EEB83>[/] <#6EEB83>" + task.getTaskType().getDisplayName()));
             } else {
-              lines.add("&c[x] &f" + task.getTaskType().getDisplayName());
+              lines.add(HalloweenChat.color("<#FF3B47>[x] <#F4F1DE>" + task.getTaskType().getDisplayName()));
             }
           }
         } else {
-          lines.add("&7ไม่มีภารกิจ");
+          lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจ"));
         }
       }
-      lines.add("&7----------------");
+      lines.add(HalloweenChat.color("<gradient:#FF7518:#9D4EDD>----------------</gradient>"));
       return lines;
     }
     return super.getScoreboardLines(player);

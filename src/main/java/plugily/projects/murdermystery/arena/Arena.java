@@ -64,6 +64,7 @@ import plugily.projects.murdermystery.arena.states.WaitingState;
 import plugily.projects.murdermystery.arena.task.TaskManager;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -260,7 +261,7 @@ public class Arena extends PluginArena {
         break;
       case RAPID_TELEPORTATION:
         Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
-        TextDisplay td = spawnTextDisplay(ventLoc, "&8[&c ท่อระบายน้ำ / Sewer Vent &8]\n&7(กด &eSHIFT &7หรือคลิกขวาเพื่อมุดท่อ)", false);
+        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>ท่อระบายน้ำ / Sewer Vent</bold></gradient> <#5A4E7C>]\n<#B8B0C8>(กด <#FFB703>SHIFT <#B8B0C8>หรือคลิกขวาเพื่อมุดท่อ)", false);
         block.setTextDisplay(td);
         if(td != null) {
           ventDisplays.add(td);
@@ -291,7 +292,7 @@ public class Arena extends PluginArena {
     }
     try {
       TextDisplay display = loc.getWorld().spawn(loc, TextDisplay.class, entity -> {
-        entity.setText(ChatColor.translateAlternateColorCodes('&', text));
+        entity.setText(HalloweenChat.color(text));
         entity.setBillboard(Display.Billboard.CENTER);
         entity.setShadowed(true);
         entity.setDefaultBackground(true);
@@ -792,7 +793,7 @@ public class Arena extends PluginArena {
     if(campfireLocation != null && campfireLocation.getWorld() != null) {
       campfireDisplay = spawnTextDisplay(
         campfireLocation.clone().add(0.5, 1.8, 0.5),
-        "&6&l กองไฟประชุมฉุกเฉิน (Emergency Campfire) \n&e[คลิกขวาเพื่อเรียกประชุมฉุกเฉิน]"
+        "<gradient:#FF5400:#FFB703><bold>กองไฟประชุมฉุกเฉิน (Emergency Campfire)</bold></gradient>\n<#FFB703>[คลิกขวาเพื่อเรียกประชุมฉุกเฉิน]"
       );
     }
   }

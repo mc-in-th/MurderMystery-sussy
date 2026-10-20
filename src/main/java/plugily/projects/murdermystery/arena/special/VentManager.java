@@ -33,10 +33,10 @@ import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +107,7 @@ public class VentManager {
     long nextAllowed = ventCooldowns.getOrDefault(player.getUniqueId(), 0L);
     if(now < nextAllowed) {
       long remaining = (nextAllowed - now + 999) / 1000;
-      VersionUtils.sendActionBar(player, "§c[ท่อระบายน้ำ] คูลดาวน์: รออีก " + remaining + " วินาที (Vent Cooldown)");
+      VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[ท่อระบายน้ำ]</bold></gradient> <#FF3B47>คูลดาวน์: รออีก <#FFB703>" + remaining + " วินาที <#B8B0C8>(Vent Cooldown)"));
       return false;
     }
 
@@ -119,7 +119,7 @@ public class VentManager {
     }
 
     if(sewerBlocks.size() < 2) {
-      player.sendMessage("§cไม่มีท่อระบายน้ำจุดอื่นให้เชื่อมต่อในแผนที่นี้!");
+      player.sendMessage(HalloweenChat.color("<#FF3B47>ไม่มีท่อระบายน้ำจุดอื่นให้เชื่อมต่อในแผนที่นี้!"));
       return false;
     }
 
@@ -146,8 +146,11 @@ public class VentManager {
     ItemStack prev = new ItemStack(Material.SPECTRAL_ARROW);
     ItemMeta metaPrev = prev.getItemMeta();
     if(metaPrev != null) {
-      metaPrev.setDisplayName("§a§l<< ห้องก่อนหน้า (Previous Vent)");
-      metaPrev.setLore(Arrays.asList("§7คลิกซ้ายหรือขวาเพื่อสลับไปท่อห้องก่อนหน้า", "§e[คลิกเพื่อเปลี่ยนห้อง]"));
+      metaPrev.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold><< ห้องก่อนหน้า (Previous Vent)</bold></gradient>"));
+      metaPrev.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>คลิกซ้ายหรือขวาเพื่อสลับไปท่อห้องก่อนหน้า",
+        "<#FFB703>[คลิกเพื่อเปลี่ยนห้อง]"
+      ));
       prev.setItemMeta(metaPrev);
     }
     player.getInventory().setItem(0, prev);
@@ -156,8 +159,11 @@ public class VentManager {
     ItemStack exit = new ItemStack(Material.IRON_TRAPDOOR);
     ItemMeta metaExit = exit.getItemMeta();
     if(metaExit != null) {
-      metaExit.setDisplayName("§c§l[x] ออกจากท่อ (Exit Vent)");
-      metaExit.setLore(Arrays.asList("§7คลิกไอเทมนี้ หรือกด SHIFT เพื่อออกจากท่อ", "§e[คลิกเพื่อโผล่ขึ้นมา]"));
+      metaExit.setDisplayName(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[x] ออกจากท่อ (Exit Vent)</bold></gradient>"));
+      metaExit.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>คลิกไอเทมนี้ หรือกด SHIFT เพื่อออกจากท่อ",
+        "<#FFB703>[คลิกเพื่อโผล่ขึ้นมา]"
+      ));
       exit.setItemMeta(metaExit);
     }
     player.getInventory().setItem(4, exit);
@@ -165,8 +171,11 @@ public class VentManager {
     ItemStack next = new ItemStack(Material.SPECTRAL_ARROW);
     ItemMeta metaNext = next.getItemMeta();
     if(metaNext != null) {
-      metaNext.setDisplayName("§a§l>> ห้องถัดไป (Next Vent)");
-      metaNext.setLore(Arrays.asList("§7คลิกซ้ายหรือขวาเพื่อสลับไปท่อห้องถัดไป", "§e[คลิกเพื่อเปลี่ยนห้อง]"));
+      metaNext.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>>> ห้องถัดไป (Next Vent)</bold></gradient>"));
+      metaNext.setLore(HalloweenChat.colorLines(
+        "<#B8B0C8>คลิกซ้ายหรือขวาเพื่อสลับไปท่อห้องถัดไป",
+        "<#FFB703>[คลิกเพื่อเปลี่ยนห้อง]"
+      ));
       next.setItemMeta(metaNext);
     }
     player.getInventory().setItem(5, next);
@@ -219,7 +228,8 @@ public class VentManager {
     XSound.ENTITY_BAT_TAKEOFF.play(player.getLocation(), 1F, 0.6F);
     VersionUtils.sendParticles("SMOKE_LARGE", player, insideLoc.clone().add(0, 0.2, 0), 15);
 
-    VersionUtils.sendActionBar(player, "§e[ท่อระบายน้ำ] จุดที่ " + (startIndex + 1) + "/" + sewerBlocks.size() + " §7| ใช้ << / >> เพื่อเลือกห้อง | คลิก [ออกจากท่อ] หรือกด SHIFT");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ท่อระบายน้ำ]</bold></gradient> <#FFB703>จุดที่ " + (startIndex + 1) + "/" + sewerBlocks.size()
+      + " <#5A4E7C>| <#B8B0C8>ใช้ << / >> เพื่อเลือกห้อง <#5A4E7C>| <#FF3B47>คลิก [ออกจากท่อ] หรือกด SHIFT"));
     return true;
   }
 
@@ -265,8 +275,8 @@ public class VentManager {
     XSound.BLOCK_IRON_TRAPDOOR_CLOSE.play(loc, 1F, 1.2F);
     XSound.ENTITY_BAT_TAKEOFF.play(loc, 1F, 0.8F);
 
-    VersionUtils.sendActionBar(player, "§e[ท่อระบายน้ำ] สลับมาจุดที่ " + (session.currentVentIndex + 1) + "/" + session.sewerBlocks.size()
-      + " §7| คลิก <</>> เพื่อเปลี่ยนห้อง | คลิก [ออกจากท่อ] หรือกด SHIFT เพื่อออก");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ท่อระบายน้ำ]</bold></gradient> <#FFB703>สลับมาจุดที่ " + (session.currentVentIndex + 1) + "/" + session.sewerBlocks.size()
+      + " <#5A4E7C>| <#B8B0C8>คลิก <</>> เพื่อเปลี่ยนห้อง <#5A4E7C>| <#FF3B47>คลิก [ออกจากท่อ] หรือกด SHIFT เพื่อออก"));
   }
 
   public void exitVent(Player player) {
@@ -337,7 +347,7 @@ public class VentManager {
     int cooldownSeconds = plugin.getConfig().getInt("Vent.Cooldown", 10);
     ventCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldownSeconds * 1000L));
 
-    VersionUtils.sendActionBar(player, "§a[/] ออกจากท่อระบายน้ำแล้ว! §7[คูลดาวน์ " + cooldownSeconds + "s]");
+    VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] ออกจากท่อระบายน้ำแล้ว! <#B8B0C8>[คูลดาวน์ " + cooldownSeconds + "s]"));
   }
 
   public void cleanup() {
