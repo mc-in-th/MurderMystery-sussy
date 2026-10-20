@@ -108,6 +108,8 @@ public class Arena extends PluginArena {
   private List<Location> taskLocations = new ArrayList<>();
   private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
   private final Map<SabotageType, List<Location>> sabotageLocations = new EnumMap<>(SabotageType.class);
+  private Location campfireLocation;
+  private TextDisplay campfireDisplay;
 
   public Arena(String id) {
     super(id);
@@ -458,6 +460,7 @@ public class Arena extends PluginArena {
     ventDisplays.clear();
     blockDisplays.clear();
     ventBlockDisplays.clear();
+    campfireDisplay = null;
   }
 
   public List<TextDisplay> getTextDisplays() {
@@ -768,5 +771,27 @@ public class Arena extends PluginArena {
       }
     }
     return all;
+  }
+
+  public Location getCampfireLocation() {
+    return campfireLocation;
+  }
+
+  public void setCampfireLocation(Location campfireLocation) {
+    this.campfireLocation = campfireLocation;
+    spawnCampfireHologram();
+  }
+
+  public void spawnCampfireHologram() {
+    if(campfireDisplay != null && campfireDisplay.isValid()) {
+      campfireDisplay.remove();
+      campfireDisplay = null;
+    }
+    if(campfireLocation != null && campfireLocation.getWorld() != null) {
+      campfireDisplay = spawnTextDisplay(
+        campfireLocation.clone().add(0.5, 1.8, 0.5),
+        "&6&l กองไฟประชุมฉุกเฉิน (Emergency Campfire) \n&e[คลิกขวาเพื่อเรียกประชุมฉุกเฉิน]"
+      );
+    }
   }
 }
