@@ -62,7 +62,7 @@ public final class HalloweenChat {
       .build();
 
   private static final Pattern BUKKIT_HEX_PATTERN = Pattern.compile("(?i)[§&]x([§&][0-9a-f]){6}");
-  private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("(?i)(?<![</])&?#([0-9a-f]{6})");
+  private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("(?i)(?<![<:/])&?#([0-9a-f]{6})");
   private static final Pattern LEGACY_CODE_PATTERN = Pattern.compile("(?i)[§&]([0-9a-fk-or])");
   private static final Pattern NON_TAG_LT_PATTERN = Pattern.compile(
       "(?i)<(?!(/?(gradient|color|rainbow|transition|bold|b|italic|i|underlined|u|strikethrough|st|obfuscated|obf|reset|newline|hover|click)(:[^>]*)?>|/?#[0-9a-f]{6}>))"
