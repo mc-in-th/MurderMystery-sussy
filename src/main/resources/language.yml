@@ -287,9 +287,9 @@ In-Game:
         Time-Left: "5,20,5;%arena_time% seconds left!;After %arena_time%s the Murderer will lose"
         Role:
           Change: "5,20,5;Previous %arena_player_role% has left!"
-          Murderer: "5,20,5;ROLE | MURDERER; Kill all players!"
-          Detective: "5,20,5;ROLE | DETECTIVE;Find and kill the murderer!"
-          Innocent: "5,20,5;ROLE | INNOCENT;Stay alive as long as possible!"
+          Murderer: "5,20,5;&cบทบาท | ฆาตกร;&7กำจัดผู้โดยสารทุกคนและใช้ท่อระบายน้ำแฝงตัว!"
+          Detective: "5,20,5;&bบทบาท | นักสืบ;&7สืบหาความจริงและเปิดโปงฆาตกร!"
+          Innocent: "5,20,5;&eบทบาท | ผู้บริสุทธิ์;&7ร่วมมือกันหาทรัพยากรซ่อมรถบัสและเปิดโปงฆาตกร!"
         Score:
           Bonus: "+%number% score (%value%)"
           Gold: "Picked up gold!"
@@ -341,6 +341,36 @@ In-Game:
           Shot:
             Gold: "&a+1 Bow Shot!"
             Title: "5,20,5;;You collected 10 gold and got an arrow!"
+      Task:
+        Bossbar: "&6&lซ่อมแซมรถบัส: &a%number%&7/&a%value% &e(Bus Repair)"
+        Completed: "&aสำเร็จภารกิจ: &e%value%&a!"
+        All-Completed: "&a&lซ่อมแซมรถบัสสำเร็จแล้ว! ผู้โดยสารสามารถหลบหนีออกจากเมืองได้และคว้าชัยชนะ!"
+        Win:
+          Title: "&a&lรถบัสซ่อมแซมสำเร็จ!"
+          Subtitle: "&eผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ!"
+        Types:
+          Find-Diesel-Fuel: "หาน้ำมันดีเซล"
+          Check-Control-Panel: "ตรวจสอบแผงควบคุมรถบัส"
+          Repair-Engine-Wiring: "ซ่อมสายไฟเครื่องยนต์"
+          Check-Radiator-Water: "เช็คระดับน้ำในหม้อน้ำ"
+          Check-Engine-Oil: "เช็คน้ำมันเครื่อง"
+          Check-Tire-Pressure: "เช็คลมยาง"
+          Check-Steering-Fluid: "เช็คน้ำมันพวงมาลัย"
+      Voting:
+        Cooldown: "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!"
+        Body-Reported: "%color_chat_issue%%player% พบศพผู้เสียชีวิตและเรียกประชุมด่วนรอบกองไฟ!"
+        Discussion-Start: "&e%player% เรียกประชุมด่วนรอบกองไฟ! เริ่มเวลาปรึกษาหารือ (&c%number% วินาที&e)"
+        Vote-Now: "&cเปิดให้ลงคะแนนโหวตแล้ว! คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก (&e%number% วินาที&c)"
+        Discussion-Timer: "&eเวลาปรึกษาที่เหลือ: &c%number% วินาที"
+        Vote-Timer: "&cเวลาโหวตที่เหลือ: &e%number% วินาที"
+        Already-Voted: "%color_chat_issue%คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!"
+        Player-Voted: "&7%player% ได้ยืนยันการลงคะแนนโหวตแล้ว"
+        No-Eject: "&eไม่มีใครถูกโหวตคัดออกในรอบนี้ (คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)"
+        No-Eject-Title: "&eไม่มีใครถูกโหวตออก"
+        No-Eject-Subtitle: "&7คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม"
+        Ejected: "&c%player% ถูกโหวตคัดออก %value%"
+        Was-Impostor: "&a(เขาคือคนร้าย!)"
+        Was-Not-Impostor: "&c(เขาไม่ใช่คนร้าย...)"
 
 
 
