@@ -23,8 +23,9 @@ import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginScoreboardManager;
-import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
+import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.task.GameTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,18 +45,48 @@ public class ScoreboardManager extends PluginScoreboardManager {
 
   @Override
   public List<String> getScoreboardLines(Player player) {
-    List<String> lines;
-    if(arena.getArenaState() == IArenaState.IN_GAME) {
+    if(arena.getArenaState() == IArenaState.IN_GAME && arena instanceof Arena) {
+      Arena gameArena = (Arena) arena;
       IUser user = arena.getPlugin().getUserManager().getUser(player);
-      lines =
-        arena
-          .getPlugin()
-          .getLanguageManager()
-          .getLanguageList(
-            "Scoreboard.Content." + arena.getArenaState().getFormattedName() + (Role.isRole(Role.MURDERER, user) ? "-Murderer" : ""));
-    } else {
-      lines = super.getScoreboardLines(player);
+      boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
+
+      List<String> lines = new ArrayList<>();
+      lines.add("&7----------------");
+      lines.add("&fบทบาท: " + (isMurderer ? "&cฆาตกร (Impostor)" : "&aผู้โดยสาร (Passenger)"));
+      lines.add("&fเวลา: &e%arena_time%");
+      lines.add("&fผู้รอดชีวิต: &b%arena_innocent_size% คน");
+      lines.add("");
+
+      if(isMurderer) {
+        lines.add("&c&lภารกิจหลอก (Fake Tasks):");
+        List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
+        if(sampleTasks != null && !sampleTasks.isEmpty()) {
+          for(GameTask task : sampleTasks) {
+            lines.add("&7- " + task.getTaskType().getDisplayName());
+          }
+        } else {
+          lines.add("&7ไม่มีภารกิจในห้องนี้");
+        }
+      } else {
+        List<GameTask> tasks = gameArena.getTaskManager().getPlayerTasks(player);
+        int completed = gameArena.getTaskManager().getPlayerCompletedTasks(player);
+        int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
+        lines.add("&e&lภารกิจของคุณ &7(" + completed + "/" + total + "):");
+        if(tasks != null && !tasks.isEmpty()) {
+          for(GameTask task : tasks) {
+            if(task.isCompleted()) {
+              lines.add("&a[/] &a" + task.getTaskType().getDisplayName());
+            } else {
+              lines.add("&c[x] &f" + task.getTaskType().getDisplayName());
+            }
+          }
+        } else {
+          lines.add("&7ไม่มีภารกิจ");
+        }
+      }
+      lines.add("&7----------------");
+      return lines;
     }
-    return lines;
+    return super.getScoreboardLines(player);
   }
 }
