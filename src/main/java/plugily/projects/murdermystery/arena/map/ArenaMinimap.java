@@ -93,6 +93,9 @@ public class ArenaMinimap {
     List<Location> allLocs = new ArrayList<>();
     allLocs.addAll(arena.getAllTaskLocations());
     allLocs.addAll(arena.getAllSabotageLocations());
+    if(arena.getCampfireLocation() != null) {
+      allLocs.add(arena.getCampfireLocation());
+    }
     allLocs.addAll(arena.getPlayerSpawnPoints());
     allLocs.addAll(arena.getGoldSpawnPoints());
     for(SpecialBlock sb : arena.getSpecialBlocks()) {
@@ -453,6 +456,19 @@ public class ArenaMinimap {
             }
           }
         }
+      }
+
+      if(arena.getCampfireLocation() != null) {
+        Location campLoc = arena.getCampfireLocation();
+        int cx = bounds.toPixelX(campLoc.getX());
+        int cy = bounds.toPixelY(campLoc.getZ());
+        g.setColor(new Color(255, 130, 20));
+        g.fillOval(cx - 4, cy - 4, 8, 8);
+        g.setColor(new Color(255, 220, 120));
+        g.drawOval(cx - 4, cy - 4, 8, 8);
+        g.setFont(new Font("SansSerif", Font.BOLD, 6));
+        g.setColor(Color.WHITE);
+        g.drawString("C", cx - 2, cy + 3);
       }
 
       if(arena.getSabotageManager().hasActiveSabotage()) {
