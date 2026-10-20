@@ -29,6 +29,7 @@ import plugily.projects.minigamesbox.classic.arena.PluginArenaRegistry;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.Main;
+import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.TaskType;
 
@@ -106,6 +107,21 @@ public class ArenaRegistry extends PluginArenaRegistry {
             Location l = LocationSerializer.getLocation(locStr);
             if(l != null) {
               ((Arena) arena).addSpecificTaskLocation(type, l);
+            }
+          }
+        }
+      }
+    }
+
+    ConfigurationSection sabotageSec = section.getConfigurationSection(id + ".sabotages");
+    if(sabotageSec != null) {
+      for(String key : sabotageSec.getKeys(false)) {
+        SabotageType type = SabotageType.fromInput(key);
+        if(type != null) {
+          for(String locStr : sabotageSec.getStringList(key)) {
+            Location l = LocationSerializer.getLocation(locStr);
+            if(l != null) {
+              ((Arena) arena).addSabotageLocation(type, l);
             }
           }
         }
