@@ -92,6 +92,7 @@ public class ArenaMinimap {
   public Bounds calculateBounds() {
     List<Location> allLocs = new ArrayList<>();
     allLocs.addAll(arena.getAllTaskLocations());
+    allLocs.addAll(arena.getAllSabotageLocations());
     allLocs.addAll(arena.getPlayerSpawnPoints());
     allLocs.addAll(arena.getGoldSpawnPoints());
     for(SpecialBlock sb : arena.getSpecialBlocks()) {
