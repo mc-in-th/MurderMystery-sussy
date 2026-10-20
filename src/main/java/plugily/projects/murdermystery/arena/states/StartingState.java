@@ -20,6 +20,7 @@ package plugily.projects.murdermystery.arena.states;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +37,12 @@ import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -90,6 +96,25 @@ public class StartingState extends PluginStartingState {
 
       // Load and append special blocks hologram
       pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
+      pluginArena.updateVentDisplaysVisibility();
+
+      List<Player> innocentPlayers = new ArrayList<>();
+      for(Player player : arena.getPlayersLeft()) {
+        IUser user = arena.getPlugin().getUserManager().getUser(player);
+        if(!Role.isRole(Role.MURDERER, user, arena)) {
+          innocentPlayers.add(player);
+        }
+      }
+
+      List<Location> taskLocs = pluginArena.getAllTaskLocations();
+      if(taskLocs.isEmpty()) {
+        taskLocs = pluginArena.getGoldSpawnPoints();
+      }
+
+      int tasksPerPlayer = getPlugin().getConfig().getInt("Tasks.Per-Player", 3);
+      pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
+      pluginArena.getMinimap().distributeMaps();
+      pluginArena.getSabotageManager().start();
     }
   }
 
@@ -114,6 +139,7 @@ public class StartingState extends PluginStartingState {
       new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_" + roleName).asKey().arena(arena).player(userPlayer).sendPlayer();
       if(role == Role.MURDERER) {
         arena.getMurdererList().add(userPlayer);
+        arena.getSabotageManager().giveSabotageRemote(userPlayer);
       } else if(role == Role.DETECTIVE) {
         arena.getDetectiveList().add(userPlayer);
         userPlayer.getInventory().setHeldItemSlot(0);
