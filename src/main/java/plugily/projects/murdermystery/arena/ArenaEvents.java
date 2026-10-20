@@ -68,6 +68,7 @@ import plugily.projects.murdermystery.api.events.game.MurderGameGoldPickupEvent;
 import plugily.projects.murdermystery.arena.corpse.Stand;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
@@ -748,6 +749,13 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, targetLoc)) {
       event.setCancelled(true);
       arena.getSabotageManager().openFixGUI(player);
+      return;
+    }
+
+    SabotageType stationType = arena.getSabotageManager().getSabotageStationAt(targetLoc);
+    if(stationType != null) {
+      event.setCancelled(true);
+      VersionUtils.sendActionBar(player, "§a[[/]] จุด " + stationType.getIcon() + " " + stationType.getDisplayName() + " §7ยังทำงานปกติ ไม่มีการก่อวินาศกรรม");
       return;
     }
 
