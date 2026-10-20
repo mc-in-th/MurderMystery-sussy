@@ -47,6 +47,7 @@ import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
 import plugily.projects.murdermystery.arena.corpse.Stand;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -127,7 +128,7 @@ public class CorpseHandler implements Listener {
       arena.addHead(new Stand(null, hitboxStand));
 
       TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-        "&c&l ร่างไร้วิญญาณของ &f" + player.getName() + " &c&l\n&e[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+        "<gradient:#D90429:#FF5400><bold>ร่างไร้วิญญาณของ</bold></gradient> <#C77DFF><bold>" + player.getName() + "</bold>\n<#FFB703>[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
 
       List<ArmorStand> corpseStands = new ArrayList<>();
       corpseStands.add(stand);
@@ -141,7 +142,7 @@ public class CorpseHandler implements Listener {
     //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
     arena.addCorpse(new Corpse(hologram, corpse));
     TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-      "&c&l ร่างไร้วิญญาณของ &f" + player.getName() + " &c&l\n&e[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+      "<gradient:#D90429:#FF5400><bold>ร่างไร้วิญญาณของ</bold></gradient> <#C77DFF><bold>" + player.getName() + "</bold>\n<#FFB703>[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
     arena.getVotingManager().registerDeadBody(player.getName(), deathLoc, new ArrayList<>(), td, hologram);
   }
 
