@@ -268,6 +268,7 @@ public class TaskManager {
         completedText = sbDone.toString();
       }
 
+      arena.removeNearbyDisplays(displayLoc, 1.2, 1.8, 1.2, false);
       TextDisplay activeHologram = arena.spawnTextDisplay(displayLoc, activeText, false);
       TextDisplay completedHologram = arena.spawnTextDisplay(displayLoc, completedText, false);
       BlockDisplay glowingBlock = arena.spawnBlockDisplay(loc, null, ChatColor.GOLD);

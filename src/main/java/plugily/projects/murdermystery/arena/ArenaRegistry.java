@@ -51,6 +51,14 @@ public class ArenaRegistry extends PluginArenaRegistry {
 
 
   @Override
+  public void registerArenas() {
+    for(Arena arena : getPluginArenas()) {
+      arena.clearTextDisplays();
+    }
+    super.registerArenas();
+  }
+
+  @Override
   public PluginArena getNewArena(String id) {
     return new Arena(id);
   }

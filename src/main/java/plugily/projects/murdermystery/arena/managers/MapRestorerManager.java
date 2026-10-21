@@ -60,6 +60,7 @@ public class MapRestorerManager extends PluginMapRestorerManager {
     arena.getMinimap().cleanup();
     arena.getSabotageManager().cleanup();
     arena.clearTextDisplays();
+    arena.spawnCampfireHologram();
     clearCorpses();
     clearGold();
   }

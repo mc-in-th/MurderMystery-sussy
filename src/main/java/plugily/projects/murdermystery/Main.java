@@ -87,6 +87,11 @@ public class Main extends PluginMain {
 
   @Override
   public void onDisable() {
+    if(arenaRegistry != null) {
+      for(Arena arena : arenaRegistry.getPluginArenas()) {
+        arena.clearTextDisplays();
+      }
+    }
     if(voiceChatManager != null) {
       voiceChatManager.unregister();
     }

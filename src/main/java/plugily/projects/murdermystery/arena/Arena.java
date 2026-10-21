@@ -330,8 +330,22 @@ public class Arena extends PluginArena {
 
     switch(block.getSpecialBlockType()) {
       case RAPID_TELEPORTATION:
+        if(block.getTextDisplay() != null) {
+          TextDisplay oldTd = block.getTextDisplay();
+          textDisplays.remove(oldTd);
+          ventDisplays.remove(oldTd);
+          try {
+            if(oldTd.getLocation().getWorld() != null) {
+              oldTd.getLocation().getChunk().load();
+            }
+            oldTd.remove();
+          } catch(Throwable ignored) {
+          }
+          block.setTextDisplay(null);
+        }
         Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
-        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>ท่อระบายน้ำ / Sewer Vent</bold></gradient> <#5A4E7C>]\n<#B8B0C8>(กด <#FFB703>SHIFT <#B8B0C8>หรือคลิกขวาเพื่อมุดท่อ)", false);
+        removeNearbyDisplays(ventLoc, 1.2, 1.8, 1.2, false);
+        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[<#FF3B47>ท่อระบายน้ำ / Sewer Vent<#5A4E7C>]\n<#5A4E7C>(<#B8B0C8>กด <#FFB703>SHIFT <#B8B0C8>หรือคลิกขวาเพื่อมุดท่อ<#5A4E7C>)", false);
         block.setTextDisplay(td);
         if(td != null) {
           ventDisplays.add(td);
@@ -354,6 +368,27 @@ public class Arena extends PluginArena {
   private final List<BlockDisplay> blockDisplays = new ArrayList<>();
   private final List<BlockDisplay> ventBlockDisplays = new ArrayList<>();
 
+  public void removeNearbyDisplays(Location loc, double rx, double ry, double rz, boolean textOnly) {
+    if(loc == null || loc.getWorld() == null) {
+      return;
+    }
+    try {
+      loc.getChunk().load();
+      for(Entity entity : loc.getWorld().getNearbyEntities(loc, rx, ry, rz)) {
+        if(entity instanceof TextDisplay) {
+          textDisplays.remove(entity);
+          ventDisplays.remove(entity);
+          entity.remove();
+        } else if(!textOnly && entity instanceof BlockDisplay) {
+          blockDisplays.remove(entity);
+          ventBlockDisplays.remove(entity);
+          entity.remove();
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
   public TextDisplay spawnTextDisplay(Location loc, String text) {
     return spawnTextDisplay(loc, text, true);
   }
@@ -363,6 +398,7 @@ public class Arena extends PluginArena {
       return null;
     }
     try {
+      loc.getChunk().load();
       TextDisplay display = loc.getWorld().spawn(loc, TextDisplay.class, entity -> {
         entity.setText(HalloweenChat.color(text));
         entity.setBillboard(Display.Billboard.CENTER);
@@ -370,6 +406,7 @@ public class Arena extends PluginArena {
         entity.setDefaultBackground(true);
         entity.setSeeThrough(false);
         entity.setVisibleByDefault(visibleByDefault);
+        entity.setPersistent(false);
       });
       textDisplays.add(display);
       return display;
@@ -383,6 +420,7 @@ public class Arena extends PluginArena {
       return null;
     }
     try {
+      loc.getChunk().load();
       Location blockLoc = loc.getBlock().getLocation();
       BlockDisplay display = loc.getWorld().spawn(blockLoc, BlockDisplay.class, entity -> {
         if(blockData != null) {
@@ -408,6 +446,7 @@ public class Arena extends PluginArena {
 
         entity.setGlowing(true);
         entity.setVisibleByDefault(false);
+        entity.setPersistent(false);
       });
 
       if(glowColor != null) {
@@ -518,15 +557,33 @@ public class Arena extends PluginArena {
       if(sb.getTextDisplay() != null) {
         sb.setTextDisplay(null);
       }
-    }
-    for(TextDisplay td : textDisplays) {
-      if(td != null && td.isValid()) {
-        td.remove();
+      if(sb.getLocation() != null) {
+        removeNearbyDisplays(sb.getLocation().clone().add(0.5, 1.2, 0.5), 1.2, 1.8, 1.2, false);
       }
     }
-    for(BlockDisplay bd : blockDisplays) {
-      if(bd != null && bd.isValid()) {
-        bd.remove();
+    if(campfireLocation != null) {
+      removeNearbyDisplays(campfireLocation.clone().add(0.5, 1.8, 0.5), 1.5, 2.5, 1.5, true);
+    }
+    for(TextDisplay td : new ArrayList<>(textDisplays)) {
+      if(td != null) {
+        try {
+          if(td.getLocation().getWorld() != null) {
+            td.getLocation().getChunk().load();
+          }
+          td.remove();
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(BlockDisplay bd : new ArrayList<>(blockDisplays)) {
+      if(bd != null) {
+        try {
+          if(bd.getLocation().getWorld() != null) {
+            bd.getLocation().getChunk().load();
+          }
+          bd.remove();
+        } catch(Throwable ignored) {
+        }
       }
     }
     textDisplays.clear();
@@ -912,21 +969,44 @@ public class Arena extends PluginArena {
     if(campfireLocation == null || campfireLocation.getWorld() == null) {
       return;
     }
+    try {
+      campfireLocation.getChunk().load();
+    } catch(Throwable ignored) {
+    }
     if(campfireDisplay == null || !campfireDisplay.isValid()) {
       spawnCampfireHologram();
       return;
+    }
+    Location holoLoc = campfireLocation.clone().add(0.5, 1.8, 0.5);
+    try {
+      for(Entity entity : campfireLocation.getWorld().getNearbyEntities(holoLoc, 1.5, 2.5, 1.5)) {
+        if(entity instanceof TextDisplay && !entity.equals(campfireDisplay)) {
+          textDisplays.remove(entity);
+          entity.remove();
+        }
+      }
+    } catch(Throwable ignored) {
     }
     campfireDisplay.setText(HalloweenChat.color(buildCampfireHologramText()));
   }
 
   public void spawnCampfireHologram() {
-    if(campfireDisplay != null && campfireDisplay.isValid()) {
-      campfireDisplay.remove();
+    if(campfireDisplay != null) {
+      textDisplays.remove(campfireDisplay);
+      try {
+        if(campfireDisplay.getLocation().getWorld() != null) {
+          campfireDisplay.getLocation().getChunk().load();
+        }
+        campfireDisplay.remove();
+      } catch(Throwable ignored) {
+      }
       campfireDisplay = null;
     }
     if(campfireLocation != null && campfireLocation.getWorld() != null) {
+      Location holoLoc = campfireLocation.clone().add(0.5, 1.8, 0.5);
+      removeNearbyDisplays(holoLoc, 1.5, 2.5, 1.5, true);
       campfireDisplay = spawnTextDisplay(
-        campfireLocation.clone().add(0.5, 1.8, 0.5),
+        holoLoc,
         buildCampfireHologramText()
       );
     }
