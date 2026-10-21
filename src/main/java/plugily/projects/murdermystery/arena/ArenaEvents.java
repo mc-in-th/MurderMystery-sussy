@@ -18,6 +18,7 @@
 
 package plugily.projects.murdermystery.arena;
 
+import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -375,6 +376,9 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler
   public void locatorDistanceUpdate(PlayerMoveEvent event) {
     Player player = event.getPlayer();
+    if(CutsceneManager.isRecording(player) && event.getTo() != null) {
+      CutsceneManager.updateRecordedPlayerPosition(player, event.getTo());
+    }
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena == null) {
       return;
@@ -655,6 +659,19 @@ public class ArenaEvents extends PluginArenaEvents {
     if(event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE) {
       return;
     }
+    Player player = event.getPlayer();
+    if(CutsceneManager.isPreviewing(player)) {
+      event.setCancelled(true);
+      return;
+    }
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena != null && arena.getCutsceneManager().isPlaying()) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler
+  public void onStopSpectatingEntity(PlayerStopSpectatingEntityEvent event) {
     Player player = event.getPlayer();
     if(CutsceneManager.isPreviewing(player)) {
       event.setCancelled(true);

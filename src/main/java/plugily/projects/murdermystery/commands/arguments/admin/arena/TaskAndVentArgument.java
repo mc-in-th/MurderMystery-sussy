@@ -233,9 +233,9 @@ public class TaskAndVentArgument {
           Location cf = arena.getCampfireLocation();
           msg(player, "<#FF7518>จุดกองไฟประชุมฉุกเฉิน (Campfire): "
             + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
-          msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene): "
+          msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene 60FPS): "
             + (arena.getCutsceneManager().hasCutscene()
-              ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม)"
+              ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม @ 60FPS)"
               : "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")"));
           msg(player, "<#5A4E7C>=============================================================");
         }
@@ -770,7 +770,7 @@ public class TaskAndVentArgument {
     }
 
     CutsceneManager.startRecording(registry.getPlugin(), player, arena);
-    msg(player, "<gradient:#D90429:#FF5400><bold>[REC]</bold></gradient> <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว!");
+    msg(player, "<gradient:#D90429:#FF5400><bold>[REC 60FPS]</bold></gradient> <#6EEB83>เริ่มบันทึก Cutscene (60 FPS) สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว!");
     msg(player, "<#B8B0C8>เดินหรือบินไปตามเส้นทางมุมกล้องที่ต้องการ แล้วพิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>เพื่อหยุดและบันทึก");
   }
 
@@ -791,10 +791,10 @@ public class TaskAndVentArgument {
     }
     msg(
       player,
-      "<#6EEB83>[+] บันทึก Cutscene ของห้อง <#FFB703>" + result.getArena().getId()
+      "<#6EEB83>[+] บันทึก Cutscene (60 FPS) ของห้อง <#FFB703>" + result.getArena().getId()
         + " <#6EEB83>เรียบร้อยแล้ว! <#B8B0C8>(ความยาว <#FFB703>"
         + String.format(Locale.US, "%.1f วินาที", result.getDurationSeconds())
-        + " <#B8B0C8>/ <#F4F1DE>" + result.getFrameCount() + " เฟรม<#B8B0C8>)"
+        + " <#B8B0C8>/ <#F4F1DE>" + result.getFrameCount() + " เฟรม @ 60FPS<#B8B0C8>)"
     );
     msg(player, "<#B8B0C8>สามารถดูตัวอย่างได้ด้วยคำสั่ง: <#FFB703>/mma previewcutscene " + result.getArena().getId());
   }
