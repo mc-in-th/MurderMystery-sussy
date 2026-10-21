@@ -424,6 +424,7 @@ public class SabotageManager {
         VersionUtils.sendTitles(p, title, sub, 10, 60, 10);
       }
     }
+    arena.updateCampfireHologram();
   }
 
   private Location resolveStationLocation(SabotageType type) {
@@ -706,6 +707,7 @@ public class SabotageManager {
       XSound.ENTITY_PLAYER_LEVELUP.play(p.getLocation(), 0.8F, 1.5F);
       VersionUtils.sendTitles(p, title, sub, 10, 60, 10);
     }
+    arena.updateCampfireHologram();
   }
 
   public void cancelActiveSabotage(String reason) {
@@ -730,6 +732,7 @@ public class SabotageManager {
     }
 
     arena.getTaskManager().updateAllPlayersStationVisibility();
+    arena.updateCampfireHologram();
   }
 
   public void handleClose(Player player) {

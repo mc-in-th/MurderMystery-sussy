@@ -315,6 +315,13 @@ public class VotingManager {
     }
 
     if(victimName == null) {
+      if(arena.getSabotageManager() != null && arena.getSabotageManager().hasActiveSabotage()) {
+        XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
+        reportingPlayer.sendMessage(HalloweenChat.color(
+          "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>ไม่สามารถเรียกประชุมฉุกเฉินได้ขณะเกิดการก่อวินาศกรรม!"));
+        arena.updateCampfireHologram();
+        return false;
+      }
       if(remainingEmergencyMeetings <= 0) {
         XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
         reportingPlayer.sendMessage(HalloweenChat.color(

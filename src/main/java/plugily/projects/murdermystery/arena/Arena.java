@@ -950,12 +950,15 @@ public class Arena extends PluginArena {
       ? votingManager.getRemainingEmergencyMeetings()
       : plugin.getConfig().getInt("Voting.Max-Emergency-Meetings", 2);
     int cooldownSec = votingManager != null ? votingManager.getEmergencyCooldownRemaining() : 0;
+    boolean sabotageActive = sabotageManager != null && sabotageManager.hasActiveSabotage();
 
     StringBuilder sb = new StringBuilder();
     sb.append("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]\n\n");
     if(remainingUses > 0) {
       sb.append("<#F4F1DE>กดได้อีก <#FFB703>").append(remainingUses).append(" <#F4F1DE>รอบ");
-      if(cooldownSec > 0) {
+      if(sabotageActive) {
+        sb.append("\n<#FF3B47>เกิดวินาศกรรม (กดไม่ได้)");
+      } else if(cooldownSec > 0) {
         sb.append("\n<#FF3B47>คูลดาวน์ ").append(cooldownSec).append(" วิ");
       }
     } else {
