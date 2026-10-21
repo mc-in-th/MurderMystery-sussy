@@ -20,6 +20,7 @@ package plugily.projects.murdermystery.arena;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -403,7 +404,8 @@ public class Arena extends PluginArena {
         entity.setText(HalloweenChat.color(text));
         entity.setBillboard(Display.Billboard.CENTER);
         entity.setShadowed(true);
-        entity.setDefaultBackground(true);
+        entity.setDefaultBackground(false);
+        entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
         entity.setSeeThrough(false);
         entity.setVisibleByDefault(visibleByDefault);
         entity.setPersistent(false);
@@ -990,6 +992,8 @@ public class Arena extends PluginArena {
       }
     } catch(Throwable ignored) {
     }
+    campfireDisplay.setDefaultBackground(false);
+    campfireDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
     campfireDisplay.setText(HalloweenChat.color(buildCampfireHologramText()));
   }
 
