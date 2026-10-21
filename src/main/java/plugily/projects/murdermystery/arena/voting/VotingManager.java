@@ -58,6 +58,7 @@ public class VotingManager {
     private final List<ArmorStand> stands;
     private final TextDisplay textDisplay;
     private final ArmorStandHologram hologram;
+    private final long spawnTimeMs;
 
     public DeadBody(String victimName, Location location, List<ArmorStand> stands, TextDisplay textDisplay, ArmorStandHologram hologram) {
       this.victimName = victimName;
@@ -65,6 +66,7 @@ public class VotingManager {
       this.stands = stands;
       this.textDisplay = textDisplay;
       this.hologram = hologram;
+      this.spawnTimeMs = System.currentTimeMillis();
     }
 
     public String getVictimName() {
@@ -77,6 +79,10 @@ public class VotingManager {
 
     public List<ArmorStand> getStands() {
       return stands;
+    }
+
+    public long getSpawnTimeMs() {
+      return spawnTimeMs;
     }
 
     public void remove(Arena arena) {
@@ -117,6 +123,9 @@ public class VotingManager {
     28, 29, 30, 31, 32, 33, 34
   };
 
+  private static final long BODY_SPAWN_GRACE_MS = 1500L;
+  private static final long KILLER_REPORT_COOLDOWN_MS = 2500L;
+
   private final Arena arena;
   private final NoteBlockMusicManager musicManager;
   private VoteState voteState = VoteState.NONE;
@@ -131,6 +140,7 @@ public class VotingManager {
   private final Map<UUID, Location> meetingCircleLocations = new HashMap<>();
   private final Map<UUID, TextDisplay> circleStatusDisplays = new HashMap<>();
   private final Map<UUID, ItemStack> savedSlotItems = new HashMap<>();
+  private final Map<UUID, Long> recentKills = new HashMap<>();
   private final List<DeadBody> activeBodies = new ArrayList<>();
   private Player pendingEjectedPlayer;
   private boolean verdictExecuted = false;
@@ -164,14 +174,32 @@ public class VotingManager {
     return activeBodies;
   }
 
+  public void recordKill(Player killer) {
+    if(killer != null) {
+      recentKills.put(killer.getUniqueId(), System.currentTimeMillis());
+    }
+  }
+
+  public boolean isOnKillReportCooldown(Player player) {
+    if(player == null) {
+      return false;
+    }
+    Long lastKill = recentKills.get(player.getUniqueId());
+    return lastKill != null && (System.currentTimeMillis() - lastKill) < KILLER_REPORT_COOLDOWN_MS;
+  }
+
   public DeadBody findNearbyBody(Location loc, double maxDistance) {
     if(loc == null || loc.getWorld() == null) {
       return null;
     }
+    long now = System.currentTimeMillis();
     double maxDistSq = maxDistance * maxDistance;
     DeadBody closest = null;
     double bestDistSq = maxDistSq;
     for(DeadBody body : activeBodies) {
+      if(now - body.getSpawnTimeMs() < BODY_SPAWN_GRACE_MS) {
+        continue;
+      }
       Location bLoc = body.getLocation();
       if(bLoc != null && bLoc.getWorld() != null && bLoc.getWorld().equals(loc.getWorld())) {
         double dSq = bLoc.distanceSquared(loc);
@@ -185,7 +213,7 @@ public class VotingManager {
   }
 
   public boolean tryReportNearbyBody(Player player, Location interactLoc) {
-    if(isVotingActive()) {
+    if(player == null || isVotingActive() || isOnKillReportCooldown(player)) {
       return false;
     }
     DeadBody body = findNearbyBody(player.getLocation(), 3.8);

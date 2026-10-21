@@ -167,6 +167,7 @@ public class PluginEvents implements Listener {
     if(Role.isRole(Role.MURDERER, user, victimArena)) {
       return;
     }
+    arena.getVotingManager().recordKill(attackerUser.getPlayer());
     XSound.ENTITY_PLAYER_DEATH.play(victim.getLocation(), 50, 1);
     victim.damage(100.0);
     attackerUser.adjustStatistic("LOCAL_KILLS", 1);

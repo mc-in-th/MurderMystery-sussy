@@ -172,7 +172,7 @@ public class CorpseHandler implements Listener {
       Arena arena = plugin.getArenaRegistry().getArena(e.getClicker());
       if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
         IUser user = plugin.getUserManager().getUser(e.getClicker());
-        if(!user.isSpectator()) {
+        if(!user.isSpectator() && !arena.getVotingManager().isOnKillReportCooldown(e.getClicker())) {
           arena.getVotingManager().startVoting(e.getClicker(), e.getCorpse().getCorpseName());
         }
       }

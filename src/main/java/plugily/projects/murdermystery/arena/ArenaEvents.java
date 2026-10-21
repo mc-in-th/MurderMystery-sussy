@@ -208,6 +208,10 @@ public class ArenaEvents extends PluginArenaEvents {
       plugin.getRewardsHandler().performReward(attacker, plugin.getRewardsHandler().getRewardType("KILL_MURDERER"));
     }
 
+    if(checkArena != null) {
+      checkArena.getVotingManager().recordKill(attacker);
+    }
+
     XSound.ENTITY_PLAYER_DEATH.play(victim.getLocation());
     victim.damage(100.0);
 
@@ -519,6 +523,10 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     if(event.getRightClicked() instanceof ArmorStand) {
+      if(arena.getVotingManager().isOnKillReportCooldown(player)) {
+        event.setCancelled(true);
+        return;
+      }
       ArmorStand stand = (ArmorStand) event.getRightClicked();
       for(Stand corpseStand : arena.getStands()) {
         if(stand.equals(corpseStand.getStand())) {
@@ -591,15 +599,28 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
 
-    Block clickedBlock = event.getClickedBlock();
-    Location targetLoc = clickedBlock != null ? clickedBlock.getLocation() : null;
-
-    if(arena.getVotingManager().tryReportNearbyBody(player, targetLoc)) {
-      event.setCancelled(true);
+    if(event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
       return;
     }
 
-    if(event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) {
+    Block clickedBlock = event.getClickedBlock();
+    Location targetLoc = clickedBlock != null ? clickedBlock.getLocation() : null;
+
+    ItemStack inHand = player.getInventory().getItemInMainHand();
+    if(Role.isRole(Role.MURDERER, user, arena) && arena.getSabotageManager().isSabotageRemote(inHand)) {
+      event.setCancelled(true);
+      arena.getSabotageManager().openSabotageGUI(player);
+      return;
+    }
+
+    ItemStack murdererSword = plugin.getSwordSkinManager().getMurdererSword(player);
+    boolean holdingMurdererSword = Role.isRole(Role.MURDERER, user, arena)
+      && inHand != null
+      && murdererSword != null
+      && inHand.getType() == murdererSword.getType();
+
+    if(!holdingMurdererSword && arena.getVotingManager().tryReportNearbyBody(player, targetLoc)) {
+      event.setCancelled(true);
       return;
     }
 
@@ -611,13 +632,6 @@ public class ArenaEvents extends PluginArenaEvents {
         arena.getVotingManager().startVoting(player, null);
         return;
       }
-    }
-
-    ItemStack inHand = player.getInventory().getItemInMainHand();
-    if(Role.isRole(Role.MURDERER, user, arena) && arena.getSabotageManager().isSabotageRemote(inHand)) {
-      event.setCancelled(true);
-      arena.getSabotageManager().openSabotageGUI(player);
-      return;
     }
 
     if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, targetLoc)) {
