@@ -110,6 +110,7 @@ public class StartingState extends PluginStartingState {
         pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
         pluginArena.getMinimap().distributeMaps();
         pluginArena.getSabotageManager().start();
+        pluginArena.getVotingManager().initForGame();
       };
 
       if(pluginArena.getCutsceneManager().hasCutscene()) {

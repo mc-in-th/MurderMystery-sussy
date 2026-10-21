@@ -537,6 +537,11 @@ public class ArenaEvents extends PluginArenaEvents {
       }
     }
     if(event.getRightClicked() instanceof Display) {
+      if(event.getRightClicked().equals(arena.getCampfireDisplay())) {
+        event.setCancelled(true);
+        arena.getVotingManager().startVoting(player, null);
+        return;
+      }
       if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, event.getRightClicked().getLocation())) {
         event.setCancelled(true);
         arena.getSabotageManager().openFixGUI(player);

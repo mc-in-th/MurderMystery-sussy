@@ -884,6 +884,41 @@ public class Arena extends PluginArena {
     return cutsceneManager;
   }
 
+  public TextDisplay getCampfireDisplay() {
+    return campfireDisplay;
+  }
+
+  public String buildCampfireHologramText() {
+    int remainingUses = votingManager != null
+      ? votingManager.getRemainingEmergencyMeetings()
+      : plugin.getConfig().getInt("Voting.Max-Emergency-Meetings", 2);
+    int cooldownSec = votingManager != null ? votingManager.getEmergencyCooldownRemaining() : 0;
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]\n\n");
+    if(remainingUses > 0) {
+      sb.append("<#F4F1DE>กดได้อีก <#FFB703>").append(remainingUses).append(" <#F4F1DE>รอบ");
+      if(cooldownSec > 0) {
+        sb.append("\n<#FF3B47>คูลดาวน์ ").append(cooldownSec).append(" วิ");
+      }
+    } else {
+      sb.append("<#FF3B47>กดได้อีก 0 รอบ");
+    }
+    sb.append("\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อเรียกประชุมฉุกเฉิน<#5A4E7C>)");
+    return sb.toString();
+  }
+
+  public void updateCampfireHologram() {
+    if(campfireLocation == null || campfireLocation.getWorld() == null) {
+      return;
+    }
+    if(campfireDisplay == null || !campfireDisplay.isValid()) {
+      spawnCampfireHologram();
+      return;
+    }
+    campfireDisplay.setText(HalloweenChat.color(buildCampfireHologramText()));
+  }
+
   public void spawnCampfireHologram() {
     if(campfireDisplay != null && campfireDisplay.isValid()) {
       campfireDisplay.remove();
@@ -892,7 +927,7 @@ public class Arena extends PluginArena {
     if(campfireLocation != null && campfireLocation.getWorld() != null) {
       campfireDisplay = spawnTextDisplay(
         campfireLocation.clone().add(0.5, 1.8, 0.5),
-        "<gradient:#FF5400:#FFB703><bold>กองไฟประชุมฉุกเฉิน (Emergency Campfire)</bold></gradient>\n<#FFB703>[คลิกขวาเพื่อเรียกประชุมฉุกเฉิน]"
+        buildCampfireHologramText()
       );
     }
   }

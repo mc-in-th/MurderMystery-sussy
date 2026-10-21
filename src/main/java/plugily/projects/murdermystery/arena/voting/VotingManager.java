@@ -145,10 +145,34 @@ public class VotingManager {
   private Player pendingEjectedPlayer;
   private boolean verdictExecuted = false;
   private long lastVoteEndTime = 0;
+  private int remainingEmergencyMeetings = 2;
 
   public VotingManager(Arena arena) {
     this.arena = arena;
     this.musicManager = new NoteBlockMusicManager(arena);
+    this.remainingEmergencyMeetings = arena.getPlugin().getConfig().getInt("Voting.Max-Emergency-Meetings", 2);
+  }
+
+  public void initForGame() {
+    this.remainingEmergencyMeetings = arena.getPlugin().getConfig().getInt("Voting.Max-Emergency-Meetings", 2);
+    this.lastVoteEndTime = System.currentTimeMillis();
+    arena.updateCampfireHologram();
+  }
+
+  public int getRemainingEmergencyMeetings() {
+    return remainingEmergencyMeetings;
+  }
+
+  public int getEmergencyCooldownRemaining() {
+    if(remainingEmergencyMeetings <= 0 || lastVoteEndTime <= 0 || isVotingActive()) {
+      return 0;
+    }
+    long cooldownMs = arena.getPlugin().getConfig().getInt("Voting.Cooldown", 20) * 1000L;
+    long elapsedMs = System.currentTimeMillis() - lastVoteEndTime;
+    if(elapsedMs >= cooldownMs) {
+      return 0;
+    }
+    return Math.max(1, (int) Math.ceil((cooldownMs - elapsedMs) / 1000.0));
   }
 
   private void broadcastArenaMessage(String message) {
@@ -291,14 +315,22 @@ public class VotingManager {
     }
 
     if(victimName == null) {
-      long cooldownMs = arena.getPlugin().getConfig().getInt("Voting.Cooldown", 30) * 1000L;
-      long elapsedMs = System.currentTimeMillis() - lastVoteEndTime;
-      if(elapsedMs < cooldownMs) {
-        long remainSec = Math.max(1L, (cooldownMs - elapsedMs) / 1000L);
+      if(remainingEmergencyMeetings <= 0) {
+        XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
         reportingPlayer.sendMessage(HalloweenChat.color(
-          "<gradient:#D90429:#FF5400><bold>[ประชุมฉุกเฉิน]</bold></gradient> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารออีก <#FFB703>" + remainSec + " วินาที!"));
+          "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>ไม่สามารถเรียกประชุมฉุกเฉินได้อีก (ใช้ครบจำนวนรอบแล้ว)"));
+        arena.updateCampfireHologram();
         return false;
       }
+      int remainSec = getEmergencyCooldownRemaining();
+      if(remainSec > 0) {
+        XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
+        reportingPlayer.sendMessage(HalloweenChat.color(
+          "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารออีก <#FFB703>" + remainSec + " วิ"));
+        arena.updateCampfireHologram();
+        return false;
+      }
+      remainingEmergencyMeetings--;
     }
 
     this.reporter = reportingPlayer;
@@ -400,6 +432,7 @@ public class VotingManager {
 
     voteState = VoteState.DISCUSSION;
     voteTimer = arena.getPlugin().getConfig().getInt("Voting.Discussion-Time", 15);
+    arena.updateCampfireHologram();
 
     broadcastArenaMessage("<gradient:#FF5400:#FFB703><bold>[รอบกองไฟ]</bold></gradient> <#F4F1DE>เริ่มเวลาปรึกษาหารือเป็นเวลา <#FF3B47>"
       + voteTimer + " วินาที <#B8B0C8>(พูดคุยในแชทเพื่อหาตัวคนร้าย)");
@@ -1094,6 +1127,7 @@ public class VotingManager {
     verdictExecuted = false;
     reporter = null;
     reportedVictimName = null;
+    arena.updateCampfireHologram();
   }
 
   public boolean isVotingActive() {
@@ -1149,5 +1183,8 @@ public class VotingManager {
     reporter = null;
     reportedVictimName = null;
     lastVoteEndTime = 0;
+    recentKills.clear();
+    remainingEmergencyMeetings = arena.getPlugin().getConfig().getInt("Voting.Max-Emergency-Meetings", 2);
+    arena.updateCampfireHologram();
   }
 }

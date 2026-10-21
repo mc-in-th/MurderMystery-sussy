@@ -32,7 +32,8 @@ Tasks:
   Visual-Effects: true
 
 Voting:
-  Cooldown: 30
+  Cooldown: 20
+  Max-Emergency-Meetings: 2
   Discussion-Time: 15
   Voting-Time: 30
 

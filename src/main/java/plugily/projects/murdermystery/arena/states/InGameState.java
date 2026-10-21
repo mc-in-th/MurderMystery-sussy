@@ -59,6 +59,8 @@ public class InGameState extends PluginInGameState {
       return;
     }
 
+    pluginArena.updateCampfireHologram();
+
     // winner checks
     if(pluginArena.getTimer() <= 0) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
