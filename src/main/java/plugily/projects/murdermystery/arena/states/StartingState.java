@@ -64,15 +64,11 @@ public class StartingState extends PluginStartingState {
     }
 
     if(arena.getTimer() == 0 || arena.isForceStart()) {
-      int size = pluginArena.getPlayerSpawnPoints().size();
       for(Player player : arena.getPlayersLeft()) {
-        VersionUtils.teleport(player, pluginArena.getPlayerSpawnPoints().get(getPlugin().getRandom().nextInt(size)));
         IUser user = arena.getPlugin().getUserManager().getUser(player);
         user.resetNonePersistentStatistics();
         PrayerRegistry.getRush().remove(player);
         PrayerRegistry.getBan().remove(player);
-        ArenaUtils.updateNameTagsVisibility(player);
-        player.setGameMode(GameMode.ADVENTURE);
         getPlugin().getActionBarManager().clearActionBarsFromPlayer(player);
       }
 
@@ -82,32 +78,45 @@ public class StartingState extends PluginStartingState {
 
       addRole(pluginArena, Role.MURDERER, playersToSet);
 
-      for(Player player : playersToSet) {
-        new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).sendPlayer();
-      }
-
       arena.getPlugin().getDebugger().debug("After: Arena: {0} | Murders = {1}, Players = {2} | Players: Murders = {3}", arena.getId(), maxmurderer, arena.getPlayersLeft().size(), pluginArena.getMurdererList());
 
-      // Load and append special blocks hologram
       pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
       pluginArena.spawnCampfireHologram();
-      pluginArena.updateVentDisplaysVisibility();
-
-      List<Player> innocentPlayers = new ArrayList<>();
-      for(Player player : arena.getPlayersLeft()) {
-        IUser user = arena.getPlugin().getUserManager().getUser(player);
-        if(!Role.isRole(Role.MURDERER, user, arena)) {
-          innocentPlayers.add(player);
-        }
-      }
-
-      List<Location> taskLocs = pluginArena.getAllTaskLocations();
-
-      int tasksPerPlayer = pluginArena.getEffectiveTasksPerPlayer();
       pluginArena.clearPluginBossBars();
-      pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
-      pluginArena.getMinimap().distributeMaps();
-      pluginArena.getSabotageManager().start();
+
+      Runnable finishStart = () -> {
+        int size = pluginArena.getPlayerSpawnPoints().size();
+        List<Player> innocentPlayers = new ArrayList<>();
+        for(Player player : arena.getPlayersLeft()) {
+          if(size > 0) {
+            VersionUtils.teleport(player, pluginArena.getPlayerSpawnPoints().get(getPlugin().getRandom().nextInt(size)));
+          }
+          ArenaUtils.updateNameTagsVisibility(player);
+          player.setGameMode(GameMode.ADVENTURE);
+          IUser user = arena.getPlugin().getUserManager().getUser(player);
+          if(Role.isRole(Role.MURDERER, user, arena)) {
+            new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().arena(pluginArena).player(player).sendPlayer();
+            pluginArena.getSabotageManager().giveSabotageRemote(player);
+          } else {
+            new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).sendPlayer();
+            innocentPlayers.add(player);
+          }
+        }
+
+        pluginArena.updateVentDisplaysVisibility();
+        List<Location> taskLocs = pluginArena.getAllTaskLocations();
+        int tasksPerPlayer = pluginArena.getEffectiveTasksPerPlayer();
+        pluginArena.clearPluginBossBars();
+        pluginArena.getTaskManager().assignTasks(innocentPlayers, taskLocs, tasksPerPlayer);
+        pluginArena.getMinimap().distributeMaps();
+        pluginArena.getSabotageManager().start();
+      };
+
+      if(pluginArena.getCutsceneManager().hasCutscene()) {
+        pluginArena.getCutsceneManager().startCutscene(finishStart);
+      } else {
+        finishStart.run();
+      }
     }
   }
 
@@ -129,10 +138,8 @@ public class StartingState extends PluginStartingState {
       arena.setCharacter(role, userPlayer);
       arena.resetContributorValue(role, user);
       playersToSet.remove(userPlayer);
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_" + roleName).asKey().arena(arena).player(userPlayer).sendPlayer();
       if(role == Role.MURDERER) {
         arena.getMurdererList().add(userPlayer);
-        arena.getSabotageManager().giveSabotageRemote(userPlayer);
       }
     }
   }

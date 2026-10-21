@@ -52,6 +52,7 @@ import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
 import plugily.projects.murdermystery.arena.corpse.Stand;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.managers.ScoreboardManager;
 import plugily.projects.murdermystery.arena.map.ArenaMinimap;
@@ -111,6 +112,7 @@ public class Arena extends PluginArena {
   private final VentManager ventManager;
   private final ArenaMinimap minimap;
   private final SabotageManager sabotageManager;
+  private final CutsceneManager cutsceneManager;
   private List<Location> taskLocations = new ArrayList<>();
   private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
   private final Map<SabotageType, Location> sabotageLocations = new EnumMap<>(SabotageType.class);
@@ -131,6 +133,7 @@ public class Arena extends PluginArena {
     ventManager = new VentManager(plugin, this);
     minimap = new ArenaMinimap(this);
     sabotageManager = new SabotageManager(this);
+    cutsceneManager = new CutsceneManager(this);
     addGameStateHandler(IArenaState.IN_GAME, new InGameState());
     addGameStateHandler(IArenaState.RESTARTING, new RestartingState());
     addGameStateHandler(IArenaState.STARTING, new StartingState());
@@ -875,6 +878,10 @@ public class Arena extends PluginArena {
 
   public void setVisualTasksEnabled(boolean visualTasksEnabled) {
     this.visualTasksEnabled = visualTasksEnabled;
+  }
+
+  public CutsceneManager getCutsceneManager() {
+    return cutsceneManager;
   }
 
   public void spawnCampfireHologram() {

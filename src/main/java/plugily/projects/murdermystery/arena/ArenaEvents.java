@@ -43,6 +43,7 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -63,10 +64,8 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XPotion;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.inventory.XInventoryView;
 import plugily.projects.murdermystery.Main;
-import plugily.projects.murdermystery.api.events.game.MurderGameGetBowEvent;
-import plugily.projects.murdermystery.api.events.game.MurderGameGoldPickupEvent;
 import plugily.projects.murdermystery.arena.corpse.Stand;
-import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
@@ -174,7 +173,7 @@ public class ArenaEvents extends PluginArenaEvents {
     e.setCancelled(true);
 
     Arena checkArena = plugin.getArenaRegistry().getArena(attacker);
-    if(checkArena != null && checkArena.getVotingManager().isVotingActive()) {
+    if(checkArena != null && (checkArena.getVotingManager().isVotingActive() || checkArena.getCutsceneManager().isPlaying())) {
       return;
     }
 
@@ -493,6 +492,10 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
       return;
     }
+    if(arena.getCutsceneManager().isPlaying()) {
+      event.setCancelled(true);
+      return;
+    }
     IUser user = plugin.getUserManager().getUser(player);
     if(user.isSpectator()) {
       return;
@@ -567,6 +570,10 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
       return;
     }
+    if(arena.getCutsceneManager().isPlaying()) {
+      event.setCancelled(true);
+      return;
+    }
     IUser user = plugin.getUserManager().getUser(player);
     if(user.isSpectator()) {
       return;
@@ -639,6 +646,22 @@ public class ArenaEvents extends PluginArenaEvents {
     }
 
     if(arena.getTaskManager().interactTask(player, targetLoc)) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler
+  public void onSpectateTeleport(PlayerTeleportEvent event) {
+    if(event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE) {
+      return;
+    }
+    Player player = event.getPlayer();
+    if(CutsceneManager.isPreviewing(player)) {
+      event.setCancelled(true);
+      return;
+    }
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena != null && arena.getCutsceneManager().isPlaying()) {
       event.setCancelled(true);
     }
   }

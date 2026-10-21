@@ -89,6 +89,7 @@ public class ArenaManager extends PluginArenaManager {
       pluginArena.removeFromMurdererList(player);
     }
     pluginArena.getVotingManager().handlePlayerLeave(player);
+    pluginArena.getCutsceneManager().handlePlayerLeave(player);
     pluginArena.getTaskManager().removePlayer(player);
     pluginArena.getSabotageManager().removePlayerFromBossBar(player);
 
@@ -141,6 +142,7 @@ public class ArenaManager extends PluginArenaManager {
     pluginArena.getTaskManager().cleanup();
     pluginArena.getSabotageManager().cleanup();
     pluginArena.getVotingManager().cleanup();
+    pluginArena.getCutsceneManager().cleanup();
     pluginArena.clearPluginBossBars();
     for(SpecialBlock specialBlock : pluginArena.getSpecialBlocks()) {
       if(specialBlock.getArmorStandHologram() != null) {

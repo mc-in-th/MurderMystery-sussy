@@ -31,6 +31,7 @@ import plugily.projects.minigamesbox.classic.commands.arguments.data.LabeledComm
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.TaskType;
@@ -39,6 +40,7 @@ import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TaskAndVentArgument {
 
@@ -231,6 +233,10 @@ public class TaskAndVentArgument {
           Location cf = arena.getCampfireLocation();
           msg(player, "<#FF7518>จุดกองไฟประชุมฉุกเฉิน (Campfire): "
             + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
+          msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene): "
+            + (arena.getCutsceneManager().hasCutscene()
+              ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม)"
+              : "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")"));
           msg(player, "<#5A4E7C>=============================================================");
         }
       }
@@ -606,6 +612,234 @@ public class TaskAndVentArgument {
         }
       }
     );
+
+    String[] recordAliases = {"recordcutscene", "startcutscene"};
+    for(String alias : recordAliases) {
+      registry.mapArgument(
+        "murdermysteryadmin",
+        new LabeledCommandArgument(
+          alias,
+          "murdermystery.admin.addtask",
+          CommandArgument.ExecutorType.PLAYER,
+          new LabelData(
+            "/mma " + alias + " <arena>",
+            "/mma " + alias + " <arena>",
+            "&7เริ่มบันทึกมุมกล้องฉากเปิดตัว (Cutscene) ก่อนเริ่มเกมของห้อง\n&6Permission: &7murdermystery.admin.addtask")) {
+          @Override
+          public void execute(CommandSender sender, String[] args) {
+            handleRecordCutscene(registry, (Player) sender, args, alias);
+          }
+        }
+      );
+    }
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "stopcutscene",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma stopcutscene",
+          "/mma stopcutscene",
+          "&7หยุดบันทึก Cutscene และบันทึกข้อมูลลงห้อง\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleStopCutscene(registry, (Player) sender);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "previewcutscene",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma previewcutscene <arena>",
+          "/mma previewcutscene <arena>",
+          "&7ดูตัวอย่างฉากเปิดตัว (Cutscene) ที่บันทึกไว้ของห้อง\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handlePreviewCutscene(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearcutscene",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearcutscene <arena>",
+          "/mma clearcutscene <arena>",
+          "&7ลบฉากเปิดตัว (Cutscene) ของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearCutscene(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "cutscene",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma cutscene <arena|stop> [record|stop|preview|clear]",
+          "/mma cutscene <arena|stop> [record|stop|preview|clear]",
+          "&7จัดการฉากเปิดตัว (Cutscene) ก่อนเริ่มเกม (record / stop / preview / clear)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleCutsceneMasterCommand(registry, (Player) sender, args);
+        }
+      }
+    );
+  }
+
+  private static void handleCutsceneMasterCommand(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งานคำสั่ง Cutscene:");
+      msg(player, "<#FFB703>/mma recordcutscene <arena> <#B8B0C8>- เริ่มบันทึกมุมกล้อง Cutscene");
+      msg(player, "<#FFB703>/mma stopcutscene <#B8B0C8>- หยุดบันทึกและเซฟ Cutscene");
+      msg(player, "<#FFB703>/mma previewcutscene <arena> <#B8B0C8>- ทดสอบเล่น Cutscene");
+      msg(player, "<#FFB703>/mma clearcutscene <arena> <#B8B0C8>- ลบ Cutscene ของห้อง");
+      return;
+    }
+
+    String firstArg = args[1].trim();
+    if(firstArg.equalsIgnoreCase("stop")) {
+      handleStopCutscene(registry, player);
+      return;
+    }
+
+    if(args.length >= 3) {
+      String firstLower = firstArg.toLowerCase(Locale.ROOT);
+      String secondArg = args[2].trim();
+      String secondLower = secondArg.toLowerCase(Locale.ROOT);
+
+      if(firstLower.equals("record") || firstLower.equals("start")) {
+        handleRecordCutscene(registry, player, new String[]{args[0], secondArg}, "recordcutscene");
+        return;
+      }
+      if(firstLower.equals("preview") || firstLower.equals("play") || firstLower.equals("test")) {
+        handlePreviewCutscene(registry, player, new String[]{args[0], secondArg});
+        return;
+      }
+      if(firstLower.equals("clear") || firstLower.equals("delete") || firstLower.equals("remove")) {
+        handleClearCutscene(registry, player, new String[]{args[0], secondArg});
+        return;
+      }
+
+      if(secondLower.equals("record") || secondLower.equals("start")) {
+        handleRecordCutscene(registry, player, new String[]{args[0], firstArg}, "recordcutscene");
+        return;
+      }
+      if(secondLower.equals("stop")) {
+        handleStopCutscene(registry, player);
+        return;
+      }
+      if(secondLower.equals("preview") || secondLower.equals("play") || secondLower.equals("test")) {
+        handlePreviewCutscene(registry, player, new String[]{args[0], firstArg});
+        return;
+      }
+      if(secondLower.equals("clear") || secondLower.equals("delete") || secondLower.equals("remove")) {
+        handleClearCutscene(registry, player, new String[]{args[0], firstArg});
+        return;
+      }
+    }
+
+    handleRecordCutscene(registry, player, args, "cutscene");
+  }
+
+  private static void handleRecordCutscene(ArgumentsRegistry registry, Player player, String[] args, String label) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma " + label + " <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    CutsceneManager.startRecording(registry.getPlugin(), player, arena);
+    msg(player, "<gradient:#D90429:#FF5400><bold>[REC]</bold></gradient> <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว!");
+    msg(player, "<#B8B0C8>เดินหรือบินไปตามเส้นทางมุมกล้องที่ต้องการ แล้วพิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>เพื่อหยุดและบันทึก");
+  }
+
+  private static void handleStopCutscene(ArgumentsRegistry registry, Player player) {
+    if(CutsceneManager.isPreviewing(player)) {
+      CutsceneManager.stopPreview(player);
+      msg(player, "<#6EEB83>[+] หยุดการเล่นตัวอย่าง Cutscene แล้ว");
+      return;
+    }
+    if(!CutsceneManager.isRecording(player)) {
+      msg(player, "<#FF3B47>คุณยังไม่ได้เริ่มบันทึก Cutscene! ใช้ <#FFB703>/mma recordcutscene <ชื่อห้อง> <#FF3B47>เพื่อเริ่มบันทึก");
+      return;
+    }
+    CutsceneManager.RecordingResult result = CutsceneManager.stopRecording(registry.getPlugin(), player, true);
+    if(result == null || result.getFrameCount() <= 0) {
+      msg(player, "<#FF3B47>ไม่มีข้อมูลเฟรมที่ถูกบันทึก");
+      return;
+    }
+    msg(
+      player,
+      "<#6EEB83>[+] บันทึก Cutscene ของห้อง <#FFB703>" + result.getArena().getId()
+        + " <#6EEB83>เรียบร้อยแล้ว! <#B8B0C8>(ความยาว <#FFB703>"
+        + String.format(Locale.US, "%.1f วินาที", result.getDurationSeconds())
+        + " <#B8B0C8>/ <#F4F1DE>" + result.getFrameCount() + " เฟรม<#B8B0C8>)"
+    );
+    msg(player, "<#B8B0C8>สามารถดูตัวอย่างได้ด้วยคำสั่ง: <#FFB703>/mma previewcutscene " + result.getArena().getId());
+  }
+
+  private static void handlePreviewCutscene(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma previewcutscene <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+    if(!arena.getCutsceneManager().hasCutscene()) {
+      msg(player, "<#FF3B47>ห้อง <#FFB703>" + arenaId + " <#FF3B47>ยังไม่มี Cutscene ที่บันทึกไว้! ใช้ <#FFB703>/mma recordcutscene " + arenaId);
+      return;
+    }
+    if(CutsceneManager.startPreview(registry.getPlugin(), player, arena)) {
+      msg(
+        player,
+        "<#6EEB83>[+] กำลังเล่นตัวอย่าง Cutscene ของห้อง <#FFB703>" + arenaId
+          + " <#B8B0C8>(" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds())
+          + ") - พิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>หากต้องการหยุดกลางคัน"
+      );
+    }
+  }
+
+  private static void handleClearCutscene(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma clearcutscene <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".cutscene", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+    arena.getCutsceneManager().clearFrames();
+    msg(player, "<#FF3B47>[!] ลบ Cutscene ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
   }
 
   private static void handleSetTaskAmount(ArgumentsRegistry registry, CommandSender sender, String[] args, String label) {

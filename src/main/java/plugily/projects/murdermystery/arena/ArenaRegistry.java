@@ -29,6 +29,7 @@ import plugily.projects.minigamesbox.classic.arena.PluginArenaRegistry;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.Main;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.arena.task.TaskType;
@@ -140,6 +141,9 @@ public class ArenaRegistry extends PluginArenaRegistry {
     }
     ((Arena) arena).setVisualTasksEnabled(
       section.getBoolean(id + ".visualtasks", plugin.getConfig().getBoolean("Tasks.Visual-Effects", true))
+    );
+    ((Arena) arena).getCutsceneManager().setFrames(
+      CutsceneManager.deserializeFrames(section.getStringList(id + ".cutscene"))
     );
 
     List<SpecialBlock> specialBlocks = new ArrayList<>();

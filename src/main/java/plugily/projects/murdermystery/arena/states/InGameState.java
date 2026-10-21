@@ -48,6 +48,11 @@ public class InGameState extends PluginInGameState {
     }
     pluginArena.clearPluginBossBars();
 
+    if(pluginArena.getCutsceneManager().isPlaying()) {
+      arena.setTimer(arena.getTimer() + 1);
+      return;
+    }
+
     if(pluginArena.getVotingManager().isVotingActive()) {
       pluginArena.getVotingManager().tick();
       arena.setTimer(arena.getTimer() + 1);
