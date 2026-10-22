@@ -19,16 +19,23 @@
 package plugily.projects.murdermystery.arena.cutscene;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
@@ -59,6 +66,9 @@ public class CutsceneManager {
   private static final long FRAME_INTERVAL_NANOS = 1_000_000_000L / FPS;
   private static final int MAX_RECORDING_FRAMES = FPS * 60;
   private static final double PLAYER_EYE_OFFSET = 1.62;
+  private static final double OVERLAY_DISTANCE = 0.15;
+  private static final int FADE_IN_FRAMES = 60;
+  private static final int FADE_OUT_FRAMES = 45;
 
   private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(2, r -> {
     Thread t = new Thread(r, "MurderMystery-Cutscene-60FPS");
@@ -74,6 +84,7 @@ public class CutsceneManager {
   private ScheduledFuture<?> playbackFuture;
   private BukkitTask syncTask;
   private TextDisplay cameraRig;
+  private TextDisplay fadeOverlay;
   private volatile boolean playing = false;
 
   public CutsceneManager(Arena arena) {
@@ -122,8 +133,11 @@ public class CutsceneManager {
     List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
 
     List<Player> participants = new ArrayList<>(arena.getPlayersLeft());
-    Location initialEyeLoc = snapshotFrames.get(0).toEyeLocation(fallbackWorld);
+    CutsceneFrame firstFrame = snapshotFrames.get(0);
+    Location initialEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
+    Location initialOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
     cameraRig = spawnCameraRig(initialEyeLoc);
+    fadeOverlay = spawnFadeOverlay(initialOverlayLoc);
 
     for(Player player : participants) {
       if(player == null || !player.isOnline()) {
@@ -134,8 +148,8 @@ public class CutsceneManager {
         player,
         HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>" + arena.getMapName() + "</bold></gradient>"),
         HalloweenChat.color("<#B8B0C8>โปรดระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ..."),
-        10,
-        50,
+        15,
+        45,
         15
       );
       player.playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.5f, 1.2f);
@@ -163,6 +177,7 @@ public class CutsceneManager {
           if(cameraRig != null && cameraRig.isValid()) {
             cameraRig.teleport(eyeLoc);
           }
+          updateFadeOverlayTick(fadeOverlay, currentFrame, fallbackWorld, frameIdx, totalFrames);
           int remainingSec = Math.max(1, (int) Math.ceil((double) (totalFrames - frameIdx) / FPS));
           for(Player player : arena.getPlayersLeft()) {
             if(player == null || !player.isOnline()) {
@@ -198,9 +213,14 @@ public class CutsceneManager {
         return;
       }
       CutsceneFrame frame = snapshotFrames.get(frameIdx);
+      List<Player> viewers = arena.getPlayersLeft();
       TextDisplay rig = cameraRig;
       if(rig != null) {
-        PacketCameraSender.sendEntityPosition60Fps(rig, frame, arena.getPlayersLeft());
+        PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewers);
+      }
+      TextDisplay overlay = fadeOverlay;
+      if(overlay != null && computeFadeAlpha(frameIdx, totalFrames) > 0) {
+        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewers);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
   }
@@ -221,6 +241,7 @@ public class CutsceneManager {
       for(Player player : arena.getPlayers()) {
         if(player != null && player.isOnline()) {
           restorePlayerFromCutscene(player);
+          applyPostCutsceneFadeIn(player);
         }
       }
     }
@@ -258,6 +279,50 @@ public class CutsceneManager {
     removeCameraRig();
   }
 
+  private static int computeFadeAlpha(int frameIdx, int totalFrames) {
+    int fadeInAlpha = 0;
+    if(frameIdx < FADE_IN_FRAMES) {
+      double progress = Math.max(0.0, Math.min(1.0, (double) frameIdx / FADE_IN_FRAMES));
+      fadeInAlpha = (int) Math.round(255.0 * (1.0 - progress));
+    }
+    int fadeOutAlpha = 0;
+    int framesRemaining = totalFrames - frameIdx;
+    if(framesRemaining <= FADE_OUT_FRAMES) {
+      double progress = Math.max(0.0, Math.min(1.0, 1.0 - ((double) framesRemaining / FADE_OUT_FRAMES)));
+      fadeOutAlpha = (int) Math.round(255.0 * progress);
+    }
+    return Math.max(fadeInAlpha, fadeOutAlpha);
+  }
+
+  private static void updateFadeOverlayTick(TextDisplay overlay, CutsceneFrame frame, World fallbackWorld, int frameIdx, int totalFrames) {
+    if(overlay == null || !overlay.isValid()) {
+      return;
+    }
+    int alpha = computeFadeAlpha(frameIdx, totalFrames);
+    if(alpha <= 0) {
+      overlay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+      overlay.setViewRange(0.0f);
+    } else {
+      Location overlayLoc = frame.toOverlayLocation(fallbackWorld);
+      if(overlayLoc != null) {
+        overlay.teleport(overlayLoc);
+      }
+      overlay.setViewRange(1.0f);
+      overlay.setBackgroundColor(Color.fromARGB(Math.min(255, alpha), 0, 0, 0));
+    }
+  }
+
+  private static void applyPostCutsceneFadeIn(Player player) {
+    if(player == null || !player.isOnline()) {
+      return;
+    }
+    try {
+      player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 25, 0, false, false, false));
+      player.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 32, 0, false, false, false));
+    } catch(Throwable ignored) {
+    }
+  }
+
   private static TextDisplay spawnCameraRig(Location eyeLoc) {
     if(eyeLoc == null || eyeLoc.getWorld() == null) {
       return null;
@@ -275,6 +340,39 @@ public class CutsceneManager {
     }
   }
 
+  private static TextDisplay spawnFadeOverlay(Location overlayLoc) {
+    if(overlayLoc == null || overlayLoc.getWorld() == null) {
+      return null;
+    }
+    try {
+      return overlayLoc.getWorld().spawn(overlayLoc, TextDisplay.class, entity -> {
+        entity.setText("   \n   \n   ");
+        entity.setBillboard(Display.Billboard.CENTER);
+        entity.setShadowed(false);
+        entity.setDefaultBackground(false);
+        entity.setBackgroundColor(Color.fromARGB(255, 0, 0, 0));
+        entity.setSeeThrough(false);
+        entity.setGravity(false);
+        entity.setPersistent(false);
+        entity.setTeleportDuration(1);
+        entity.setInterpolationDuration(1);
+        entity.setBrightness(new Display.Brightness(0, 0));
+        try {
+          Transformation transformation = new Transformation(
+            new Vector3f(0.0f, -22.5f, 0.0f),
+            new AxisAngle4f(),
+            new Vector3f(60.0f, 60.0f, 1.0f),
+            new AxisAngle4f()
+          );
+          entity.setTransformation(transformation);
+        } catch(Throwable ignored) {
+        }
+      });
+    } catch(Throwable t) {
+      return null;
+    }
+  }
+
   private void removeCameraRig() {
     if(cameraRig != null) {
       try {
@@ -284,6 +382,15 @@ public class CutsceneManager {
       } catch(Throwable ignored) {
       }
       cameraRig = null;
+    }
+    if(fadeOverlay != null) {
+      try {
+        if(fadeOverlay.isValid()) {
+          fadeOverlay.remove();
+        }
+      } catch(Throwable ignored) {
+      }
+      fadeOverlay = null;
     }
   }
 
@@ -493,8 +600,11 @@ public class CutsceneManager {
     boolean originalFlying = player.isFlying();
     World fallbackWorld = arena.getCutsceneManager().getFallbackWorld();
 
-    Location startEyeLoc = cutsceneFrames.get(0).toEyeLocation(fallbackWorld);
+    CutsceneFrame firstFrame = cutsceneFrames.get(0);
+    Location startEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
+    Location startOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
     TextDisplay rig = spawnCameraRig(startEyeLoc);
+    TextDisplay overlay = spawnFadeOverlay(startOverlayLoc);
 
     if(startEyeLoc != null && startEyeLoc.getWorld() != null) {
       player.teleport(startEyeLoc);
@@ -537,6 +647,7 @@ public class CutsceneManager {
           } else {
             player.teleport(frame.toLocation(fallbackWorld));
           }
+          updateFadeOverlayTick(overlay, frame, fallbackWorld, idx, totalFrames);
         }
         double remaining = (double) (totalFrames - idx) / FPS;
         VersionUtils.sendActionBar(
@@ -560,14 +671,18 @@ public class CutsceneManager {
         Bukkit.getScheduler().runTask(plugin, () -> stopPreview(player));
         return;
       }
+      CutsceneFrame frame = cutsceneFrames.get(idx);
       if(rig != null) {
-        PacketCameraSender.sendEntityPosition60Fps(rig, cutsceneFrames.get(idx), viewerList);
+        PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewerList);
+      }
+      if(overlay != null && computeFadeAlpha(idx, totalFrames) > 0) {
+        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewerList);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
 
     activePreviews.put(
       player.getUniqueId(),
-      new PreviewSession(originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig)
+      new PreviewSession(originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
     );
     return true;
   }
@@ -599,12 +714,21 @@ public class CutsceneManager {
       if(session.originalLoc != null && session.originalLoc.getWorld() != null) {
         player.teleport(session.originalLoc);
       }
+      applyPostCutsceneFadeIn(player);
       VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>จบการเล่นตัวอย่าง Cutscene แล้ว"));
     }
     if(session.rig != null) {
       try {
         if(session.rig.isValid()) {
           session.rig.remove();
+        }
+      } catch(Throwable ignored) {
+      }
+    }
+    if(session.overlay != null) {
+      try {
+        if(session.overlay.isValid()) {
+          session.overlay.remove();
         }
       } catch(Throwable ignored) {
       }
@@ -710,6 +834,30 @@ public class CutsceneManager {
       return new Location(w, x, y + PLAYER_EYE_OFFSET, z, yaw, pitch);
     }
 
+    public Location toOverlayLocation(World fallbackWorld) {
+      World w = worldName != null ? Bukkit.getWorld(worldName) : null;
+      if(w == null) {
+        w = fallbackWorld;
+      }
+      if(w == null) {
+        return null;
+      }
+      double yawRad = Math.toRadians(yaw);
+      double pitchRad = Math.toRadians(pitch);
+      double cosPitch = Math.cos(pitchRad);
+      double dx = -Math.sin(yawRad) * cosPitch;
+      double dy = -Math.sin(pitchRad);
+      double dz = Math.cos(yawRad) * cosPitch;
+      return new Location(
+        w,
+        x + dx * OVERLAY_DISTANCE,
+        y + PLAYER_EYE_OFFSET + dy * OVERLAY_DISTANCE,
+        z + dz * OVERLAY_DISTANCE,
+        yaw,
+        pitch
+      );
+    }
+
     public String serialize() {
       return String.format(Locale.US, "%s,%.3f,%.3f,%.3f,%.2f,%.2f", worldName, x, y, z, yaw, pitch);
     }
@@ -789,8 +937,9 @@ public class CutsceneManager {
     private final BukkitTask syncTask;
     private final ScheduledFuture<?> highFreqFuture;
     private final TextDisplay rig;
+    private final TextDisplay overlay;
 
-    private PreviewSession(Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig) {
+    private PreviewSession(Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
       this.originalLoc = originalLoc;
       this.originalGameMode = originalGameMode;
       this.originalFlySpeed = originalFlySpeed;
@@ -799,6 +948,7 @@ public class CutsceneManager {
       this.syncTask = syncTask;
       this.highFreqFuture = highFreqFuture;
       this.rig = rig;
+      this.overlay = overlay;
     }
   }
 
@@ -852,21 +1002,46 @@ public class CutsceneManager {
       if(rig == null || frame == null || viewers == null || viewers.isEmpty()) {
         return;
       }
+      sendPositionPacket(rig, frame.x, frame.y + PLAYER_EYE_OFFSET, frame.z, frame.yaw, frame.pitch, viewers);
+    }
+
+    static void sendOverlayPosition60Fps(TextDisplay overlay, CutsceneFrame frame, List<Player> viewers) {
+      if(overlay == null || frame == null || viewers == null || viewers.isEmpty()) {
+        return;
+      }
+      double yawRad = Math.toRadians(frame.yaw);
+      double pitchRad = Math.toRadians(frame.pitch);
+      double cosPitch = Math.cos(pitchRad);
+      double dx = -Math.sin(yawRad) * cosPitch;
+      double dy = -Math.sin(pitchRad);
+      double dz = Math.cos(yawRad) * cosPitch;
+      sendPositionPacket(
+        overlay,
+        frame.x + dx * OVERLAY_DISTANCE,
+        frame.y + PLAYER_EYE_OFFSET + dy * OVERLAY_DISTANCE,
+        frame.z + dz * OVERLAY_DISTANCE,
+        frame.yaw,
+        frame.pitch,
+        viewers
+      );
+    }
+
+    private static void sendPositionPacket(TextDisplay entity, double x, double y, double z, float yaw, float pitch, List<Player> viewers) {
       init();
       if(!supported) {
         return;
       }
       try {
-        int entityId = rig.getEntityId();
-        Object posVec = vec3Constructor.newInstance(frame.x, frame.y + PLAYER_EYE_OFFSET, frame.z);
-        Object posMoveRot = posMoveRotConstructor.newInstance(posVec, zeroVec3, frame.yaw, frame.pitch);
+        int entityId = entity.getEntityId();
+        Object posVec = vec3Constructor.newInstance(x, y, z);
+        Object posMoveRot = posMoveRotConstructor.newInstance(posVec, zeroVec3, yaw, pitch);
         Object syncPacket = syncPacketConstructor.newInstance(entityId, posMoveRot, false);
 
         if(craftEntityGetHandle == null) {
-          craftEntityGetHandle = rig.getClass().getMethod("getHandle");
+          craftEntityGetHandle = entity.getClass().getMethod("getHandle");
         }
-        Object nmsEntity = craftEntityGetHandle.invoke(rig);
-        byte headYawByte = (byte) ((int) (frame.yaw * 256.0f / 360.0f));
+        Object nmsEntity = craftEntityGetHandle.invoke(entity);
+        byte headYawByte = (byte) ((int) (yaw * 256.0f / 360.0f));
         Object headPacket = rotateHeadConstructor.newInstance(nmsEntity, headYawByte);
 
         for(Player viewer : viewers) {
