@@ -92,7 +92,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คหม้อน้ำ]</bold></gradient> <#FFB703>เปิดฝาหม้อน้ำทางซ้าย แล้วเทน้ำยาหล่อเย็นทางขวา!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คหม้อน้ำ]</bold></gradient> <#FFB703>เปิดฝาหม้อน้ำทางซ้าย แล้วเทน้ำยาหล่อเย็นทางขวา!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจหม้อน้ำ]</bold></gradient> <#FFB703>เปิดฝาหม้อน้ำทางซ้าย -> เทน้ำยาทางขวาให้เต็ม -> ปิดฝาด้านล่าง"));
   }
 
@@ -246,7 +246,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
     if(rawSlot == INSTRUCTION_SLOT) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>เปิดฝาทางซ้าย -> เทน้ำยาทางขวาให้เต็ม -> ปิดฝาด้านล่าง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>เปิดฝาทางซ้าย -> เทน้ำยาทางขวาให้เต็ม -> ปิดฝาด้านล่าง!"));
       return true;
     }
 
@@ -258,7 +258,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 1F, 1.2F);
         XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
         arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, 1, 4);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เปิดฝาหม้อน้ำแล้ว! -> คลิกขวดน้ำยาทางขวา (ช่อง 15) เพื่อเทน้ำยา"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เปิดฝาหม้อน้ำแล้ว! -> คลิกขวดน้ำยาทางขวา (ช่อง 15) เพื่อเทน้ำยา"));
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
       }
@@ -269,7 +269,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     if(rawSlot == BOTTLE_SLOT) {
       if(!session.capOpen) {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[เปิดฝาก่อน] กรุณาคลิกเปิดฝาหม้อน้ำทางซ้าย (ช่อง 11) ก่อน!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[เปิดฝาก่อน] กรุณาคลิกเปิดฝาหม้อน้ำทางซ้าย (ช่อง 11) ก่อน!"));
         return true;
       }
 
@@ -281,13 +281,13 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
         if(session.waterLevel >= 3) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] น้ำยาหล่อเย็นเต็มขีดสีเขียวแล้ว! -> คลิก [ปิดฝาหม้อน้ำ] ด้านล่าง!"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] น้ำยาหล่อเย็นเต็มขีดสีเขียวแล้ว! -> คลิก [ปิดฝาหม้อน้ำ] ด้านล่าง!"));
         } else {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#72EFDD>[เติมน้ำยา] เทน้ำยาเพิ่มแล้ว (ระดับ " + session.waterLevel + " / 3)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#72EFDD>[เติมน้ำยา] เทน้ำยาเพิ่มแล้ว (ระดับ " + session.waterLevel + " / 3)"));
         }
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>น้ำยาหล่อเย็นเต็มขีดเขียวแล้ว! ให้กดปิดฝาด้านล่าง"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>น้ำยาหล่อเย็นเต็มขีดเขียวแล้ว! ให้กดปิดฝาด้านล่าง"));
       }
 
       buildGui(topInv, session);
@@ -301,7 +301,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ปิดฝาหม้อน้ำเรียบร้อย! ระบบระบายความร้อนพร้อมทำงาน!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ปิดฝาหม้อน้ำเรียบร้อย! ระบบระบายความร้อนพร้อมทำงาน!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -311,7 +311,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         }, 10L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่พร้อม] ต้องเปิดฝาและเติมน้ำยาให้ถึงขีดสีเขียวก่อน!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่พร้อม] ต้องเปิดฝาและเติมน้ำยาให้ถึงขีดสีเขียวก่อน!"));
       }
       return true;
     }

@@ -144,7 +144,7 @@ public class CutsceneManager {
         continue;
       }
       preparePlayerForCutscene(player, participants, initialEyeLoc, cameraRig);
-      VersionUtils.sendTitles(
+      HalloweenChat.sendTitles(
         player,
         HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>" + arena.getMapName() + "</bold></gradient>"),
         HalloweenChat.color("<#B8B0C8>โปรดระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ..."),
@@ -194,9 +194,9 @@ public class CutsceneManager {
             } else {
               player.teleport(currentFrame.toLocation(fallbackWorld));
             }
-            VersionUtils.sendActionBar(
+            HalloweenChat.sendActionBar(
               player,
-              HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>[ฉากเปิดตัว / Cutscene 60FPS]</bold></gradient> <#B8B0C8>เกมกำลังจะเริ่มใน <#FFB703>" + remainingSec + "s")
+              HalloweenChat.color("<#B8B0C8>เกมกำลังจะเริ่มใน <#FFB703>" + remainingSec + "s")
             );
           }
         }
@@ -490,7 +490,7 @@ public class CutsceneManager {
         }
         if(currentFrames % 12 == 0) {
           double seconds = (double) currentFrames / FPS;
-          VersionUtils.sendActionBar(
+          HalloweenChat.sendActionBar(
             player,
             HalloweenChat.color(
               "<gradient:#D90429:#FF5400><bold>[REC 60FPS]</bold></gradient> <#F4F1DE>ห้อง <#FFB703>"
@@ -547,7 +547,7 @@ public class CutsceneManager {
 
       if(player.isOnline()) {
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
-        VersionUtils.sendActionBar(
+        HalloweenChat.sendActionBar(
           player,
           HalloweenChat.color("<#6EEB83><bold>[SAVED 60FPS]</bold> บันทึก Cutscene ห้อง <#FFB703>" + arena.getId() + " <#6EEB83>สำเร็จ!")
         );
@@ -650,7 +650,7 @@ public class CutsceneManager {
           updateFadeOverlayTick(overlay, frame, fallbackWorld, idx, totalFrames);
         }
         double remaining = (double) (totalFrames - idx) / FPS;
-        VersionUtils.sendActionBar(
+        HalloweenChat.sendActionBar(
           player,
           HalloweenChat.color(
             "<gradient:#9D4EDD:#FF7518><bold>[PREVIEW 60FPS]</bold></gradient> <#F4F1DE>ห้อง <#FFB703>"
@@ -715,7 +715,7 @@ public class CutsceneManager {
         player.teleport(session.originalLoc);
       }
       applyPostCutsceneFadeIn(player);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>จบการเล่นตัวอย่าง Cutscene แล้ว"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>จบการเล่นตัวอย่าง Cutscene แล้ว"));
     }
     if(session.rig != null) {
       try {

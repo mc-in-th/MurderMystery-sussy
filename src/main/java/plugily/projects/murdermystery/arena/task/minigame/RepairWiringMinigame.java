@@ -118,7 +118,7 @@ public class RepairWiringMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ซ่อมสายไฟ]</bold></gradient> <#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ซ่อมสายไฟ]</bold></gradient> <#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจซ่อมสายไฟ]</bold></gradient> <#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วต่อกับสีเดียวกันฝั่งขวาให้ครบ 4 เส้น (ดูวิธีทำที่หนังสือช่องบน)"));
   }
 
@@ -248,7 +248,7 @@ public class RepairWiringMinigame implements TaskMinigame {
 
     if(rawSlot == 4) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>คลิกเลือกสายไฟฝั่งซ้าย แล้วคลิกต่อกับสีเดียวกันฝั่งขวา!"));
       return true;
     }
 
@@ -256,14 +256,14 @@ public class RepairWiringMinigame implements TaskMinigame {
       if(LEFT_SLOTS[i] == rawSlot) {
         if(session.connected[i]) {
           XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>สายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว!"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>สายไฟเส้นนี้เชื่อมต่อเรียบร้อยแล้ว!"));
           return true;
         }
 
         session.selectedLeft = i;
         WireColor color = session.leftWires[i];
         XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.2F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>เลือกสายไฟ" + color.name + " แล้ว! -> คลิกปลายสายสีเดียวกันทางขวา!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>เลือกสายไฟ" + color.name + " แล้ว! -> คลิกปลายสายสีเดียวกันทางขวา!"));
         buildGui(player.getOpenInventory().getTopInventory(), session);
         return true;
       }
@@ -273,7 +273,7 @@ public class RepairWiringMinigame implements TaskMinigame {
       if(RIGHT_SLOTS[j] == rawSlot) {
         if(session.selectedLeft == -1) {
           XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.2F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>กรุณาคลิกเลือกสายไฟทางฝั่งซ้ายก่อน!"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>กรุณาคลิกเลือกสายไฟทางฝั่งซ้ายก่อน!"));
           return true;
         }
 
@@ -302,7 +302,7 @@ public class RepairWiringMinigame implements TaskMinigame {
             sessions.remove(player.getUniqueId());
 
             XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ซ่อมสายไฟเครื่องยนต์สำเร็จ! ระบบไฟเชื่อมต่อสมบูรณ์!</bold></gradient>"));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ซ่อมสายไฟเครื่องยนต์สำเร็จ! ระบบไฟเชื่อมต่อสมบูรณ์!</bold></gradient>"));
 
             Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
               if(player.isOnline()) {
@@ -311,13 +311,13 @@ public class RepairWiringMinigame implements TaskMinigame {
               }
             }, 10L);
           } else {
-            VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เชื่อมต่อสายไฟ" + selectedColor.name + " สำเร็จ!"));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] เชื่อมต่อสายไฟ" + selectedColor.name + " สำเร็จ!"));
           }
         } else {
           XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 0.8F);
           XSound.ENTITY_CREEPER_PRIMED.play(player.getLocation(), 0.7F, 1.8F);
 
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[x] สีไม่ตรงกัน! (" + selectedColor.name + " != " + clickedRightColor.name + ") ลองใหม่อีกครั้ง!"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[x] สีไม่ตรงกัน! (" + selectedColor.name + " != " + clickedRightColor.name + ") ลองใหม่อีกครั้ง!"));
           session.selectedLeft = -1;
           buildGui(player.getOpenInventory().getTopInventory(), session);
         }

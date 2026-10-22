@@ -89,7 +89,7 @@ public class EngineOilMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คน้ำมันเครื่อง]</bold></gradient> <#FFB703>คลิกกระป๋องน้ำมันตรงกลางเพื่อเติมให้ถึงขีด MAX สีเขียว!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คน้ำมันเครื่อง]</bold></gradient> <#FFB703>คลิกกระป๋องน้ำมันตรงกลางเพื่อเติมให้ถึงขีด MAX สีเขียว!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจน้ำมันเครื่อง]</bold></gradient> <#FFB703>คลิกกระป๋องตรงกลางเพื่อเติมน้ำมันให้ถึงขีด MAX แล้วกดปิดฝาด้านล่าง"));
   }
 
@@ -215,7 +215,7 @@ public class EngineOilMinigame implements TaskMinigame {
 
     if(rawSlot == INSTRUCTION_SLOT) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>คลิกกระป๋องตรงกลางเพื่อเติมน้ำมันให้ถึงขีด MAX แล้วกดปิดฝาด้านล่าง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>คลิกกระป๋องตรงกลางเพื่อเติมน้ำมันให้ถึงขีด MAX แล้วกดปิดฝาด้านล่าง!"));
       return true;
     }
 
@@ -229,13 +229,13 @@ public class EngineOilMinigame implements TaskMinigame {
 
         if(session.oilLevel >= 3) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] น้ำมันเครื่องถึงขีด MAX แล้ว! -> คลิก [ปิดฝาน้ำมันเครื่อง] ด้านล่าง!"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] น้ำมันเครื่องถึงขีด MAX แล้ว! -> คลิก [ปิดฝาน้ำมันเครื่อง] ด้านล่าง!"));
         } else {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>[เติมน้ำมันเครื่อง]</gradient> <#FFB703>ระดับปานกลาง (เติมอีก 1 ครั้งเพื่อถึงขีด MAX)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>[เติมน้ำมันเครื่อง]</gradient> <#FFB703>ระดับปานกลาง (เติมอีก 1 ครั้งเพื่อถึงขีด MAX)"));
         }
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>น้ำมันเครื่องเต็มขีด MAX แล้ว! ให้คลิกปิดฝาด้านล่าง"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>น้ำมันเครื่องเต็มขีด MAX แล้ว! ให้คลิกปิดฝาด้านล่าง"));
       }
       buildGui(topInv, session);
       return true;
@@ -248,7 +248,7 @@ public class EngineOilMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ปิดฝาน้ำมันเครื่องเรียบร้อย! เครื่องยนต์พร้อมทำงาน!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ปิดฝาน้ำมันเครื่องเรียบร้อย! เครื่องยนต์พร้อมทำงาน!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -258,7 +258,7 @@ public class EngineOilMinigame implements TaskMinigame {
         }, 10L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่เสร็จ] ต้องคลิกเติมน้ำมันตรงกลางให้ถึงขีด MAX ก่อน!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่เสร็จ] ต้องคลิกเติมน้ำมันตรงกลางให้ถึงขีด MAX ก่อน!"));
       }
       return true;
     }

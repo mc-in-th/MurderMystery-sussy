@@ -361,11 +361,11 @@ public class TaskManager {
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
           }
         } else {
           player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
         }
 
         updatePlayerStationVisibility(player);
@@ -380,7 +380,7 @@ public class TaskManager {
 
     for(Location loc : arena.getAllTaskLocations()) {
       if(player.getWorld().equals(loc.getWorld()) && player.getLocation().distanceSquared(loc) <= (range * range)) {
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ หรือทำเสร็จไปแล้ว! (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ หรือทำเสร็จไปแล้ว! (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
         break;
       }
     }
@@ -463,9 +463,9 @@ public class TaskManager {
           }
         }
         if(wasCompletedHere) {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] คุณทำภารกิจจุดนี้เสร็จสิ้นแล้ว! (Completed)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] คุณทำภารกิจจุดนี้เสร็จสิ้นแล้ว! (Completed)"));
         } else {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
         }
         return true;
       }
@@ -502,11 +502,11 @@ public class TaskManager {
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
           }
         } else {
           player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
         }
 
         updatePlayerStationVisibility(player);

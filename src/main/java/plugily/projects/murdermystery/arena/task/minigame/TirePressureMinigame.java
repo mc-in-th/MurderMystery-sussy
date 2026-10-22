@@ -87,7 +87,7 @@ public class TirePressureMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คลมยาง]</bold></gradient> <#FFB703>ปั๊มและปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์ว!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คลมยาง]</bold></gradient> <#FFB703>ปั๊มและปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์ว!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจเช็คลมยาง]</bold></gradient> <#FFB703>ปรับแรงดันลมยางให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์ว (ดูวิธีทำที่หนังสือช่อง 1)"));
   }
 
@@ -269,7 +269,7 @@ public class TirePressureMinigame implements TaskMinigame {
 
     if(rawSlot == 0) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>ปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์วด้านล่าง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>ปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์วด้านล่าง!"));
       return true;
     }
 
@@ -292,7 +292,7 @@ public class TirePressureMinigame implements TaskMinigame {
     if(rawSlot == BLEED_VALVE_SLOT) {
       currentPsi = Math.max(0, currentPsi - 3);
       XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[วาล์วระบาย] ปล่อยลมออก -3 PSI -> เหลือ <#FFB703>" + currentPsi + " PSI"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[วาล์วระบาย] ปล่อยลมออก -3 PSI -> เหลือ <#FFB703>" + currentPsi + " PSI"));
       playerPsi.put(player.getUniqueId(), currentPsi);
       buildGui(player.getOpenInventory().getTopInventory(), currentPsi);
       return true;
@@ -305,7 +305,7 @@ public class TirePressureMinigame implements TaskMinigame {
 
         XSound.BLOCK_IRON_DOOR_CLOSE.play(player.getLocation(), 1F, 1.2F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] เช็คลมยางสำเร็จ! แรงดันล็อคที่ " + currentPsi + " PSI มาตรฐาน!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] เช็คลมยางสำเร็จ! แรงดันล็อคที่ " + currentPsi + " PSI มาตรฐาน!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -316,9 +316,9 @@ public class TirePressureMinigame implements TaskMinigame {
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
         if(currentPsi < MIN_TARGET_PSI) {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางยังอ่อนเกินไป! (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางยังอ่อนเกินไป! (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
         } else {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางเกินเกณฑ์! ต้องระบายลมออก (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางเกินเกณฑ์! ต้องระบายลมออก (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
         }
       }
       return true;
@@ -332,14 +332,14 @@ public class TirePressureMinigame implements TaskMinigame {
       XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.8F, 1.6F);
       XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 1F, 0.5F);
 
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>แรงดันเกิน 34 PSI! วาล์วนิรภัยระบายลมทิ้งฉุกเฉิน! (ลมยางลดเหลือ 16 PSI)</bold></gradient>"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>แรงดันเกิน 34 PSI! วาล์วนิรภัยระบายลมทิ้งฉุกเฉิน! (ลมยางลดเหลือ 16 PSI)</bold></gradient>"));
       newPsi = 16;
     } else {
       if(newPsi >= MIN_TARGET_PSI && newPsi <= MAX_TARGET_PSI) {
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] แรงดันอยู่ที่ " + newPsi + " PSI (พอดีแล้ว!) -> รีบกด [ล็อควาล์ว] ด้านล่าง!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] แรงดันอยู่ที่ " + newPsi + " PSI (พอดีแล้ว!) -> รีบกด [ล็อควาล์ว] ด้านล่าง!"));
         XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.8F, 1.8F);
       } else {
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>[เกจวัด]</gradient> <#F4F1DE>แรงดันปัจจุบัน: <#FF7518>" + newPsi + " PSI <#B8B0C8>(เป้าหมาย: <#6EEB83>30-32 PSI<#B8B0C8>)"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>[เกจวัด]</gradient> <#F4F1DE>แรงดันปัจจุบัน: <#FF7518>" + newPsi + " PSI <#B8B0C8>(เป้าหมาย: <#6EEB83>30-32 PSI<#B8B0C8>)"));
       }
     }
 

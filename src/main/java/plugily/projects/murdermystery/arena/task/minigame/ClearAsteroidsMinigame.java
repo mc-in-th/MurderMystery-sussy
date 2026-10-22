@@ -110,7 +110,7 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_ACTIVATE.play(player.getLocation(), 0.8F, 1.5F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ป้อมปืน]</bold></gradient> <#FFB703>คลิกยิงทำลายอุกกาบาต/สิ่งกีดขวางให้ครบ 8 เป้า! (คนอื่นเห็นลำแสงปืนใหญ่)"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ป้อมปืน]</bold></gradient> <#FFB703>คลิกยิงทำลายอุกกาบาต/สิ่งกีดขวางให้ครบ 8 เป้า! (คนอื่นเห็นลำแสงปืนใหญ่)"));
   }
 
   private void buildGui(Inventory inv, AsteroidSession session) {
@@ -192,7 +192,7 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทำลายสิ่งกีดขวางครบ 8 เป้าหมายแล้ว!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทำลายสิ่งกีดขวางครบ 8 เป้าหมายแล้ว!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -201,7 +201,7 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
           }
         }, 10L);
       } else {
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[ยิงเป้าสำเร็จ!] <#FFB703>ทำลายแล้ว " + session.hits + " / " + TARGET_HITS + " เป้าหมาย"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[ยิงเป้าสำเร็จ!] <#FFB703>ทำลายแล้ว " + session.hits + " / " + TARGET_HITS + " เป้าหมาย"));
       }
     }
     return true;

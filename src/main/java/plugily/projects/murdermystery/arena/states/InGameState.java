@@ -25,12 +25,12 @@ import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginInGameState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
@@ -75,7 +75,7 @@ public class InGameState extends PluginInGameState {
       new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
         .asKey().arena(pluginArena).sendArena();
       for(Player p : pluginArena.getPlayers()) {
-        VersionUtils.sendTitles(p,
+        HalloweenChat.sendTitles(p,
           new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE").asKey().build(),
           new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
           10, 60, 10);

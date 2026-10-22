@@ -102,7 +102,7 @@ public class ControlPanelMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[แผงควบคุม]</bold></gradient> <#FFB703>อ่านลำดับขั้นตอนด้านบน แล้วสับสวิตช์ตามลำดับที่ถูกต้อง!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[แผงควบคุม]</bold></gradient> <#FFB703>อ่านลำดับขั้นตอนด้านบน แล้วสับสวิตช์ตามลำดับที่ถูกต้อง!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจแผงควบคุม]</bold></gradient> <#FFB703>สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลือง (ดูวิธีทำได้ที่ไอคอนหนังสือช่อง 1)"));
   }
 
@@ -252,7 +252,7 @@ public class ControlPanelMinigame implements TaskMinigame {
 
     if(rawSlot == 0 || rawSlot == 8) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลืองด้านบน!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>สับสวิตช์ 5 ตัวตามลำดับไฟสีเหลืองด้านบน!"));
       return true;
     }
 
@@ -285,7 +285,7 @@ public class ControlPanelMinigame implements TaskMinigame {
           sessions.remove(player.getUniqueId());
 
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] แผงควบคุมระบบไฟสตาร์ทสำเร็จ! รถบัสพร้อมทำงาน!</bold></gradient>"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] แผงควบคุมระบบไฟสตาร์ทสำเร็จ! รถบัสพร้อมทำงาน!</bold></gradient>"));
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
             if(player.isOnline()) {
@@ -294,13 +294,13 @@ public class ControlPanelMinigame implements TaskMinigame {
             }
           }, 10L);
         } else {
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] ถูกต้อง! ขั้นตอนที่ " + session.currentStep + "/5 สำเร็จแล้ว"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] ถูกต้อง! ขั้นตอนที่ " + session.currentStep + "/5 สำเร็จแล้ว"));
         }
       } else {
         XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.7F, 1.8F);
         XSound.BLOCK_ANVIL_LAND.play(player.getLocation(), 0.6F, 0.6F);
 
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>ไฟฟ้าลัดวงจร! สับสวิตช์ผิดลำดับ เบรกเกอร์ตัดวงจรทั้งหมด!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>ไฟฟ้าลัดวงจร! สับสวิตช์ผิดลำดับ เบรกเกอร์ตัดวงจรทั้งหมด!</bold></gradient>"));
 
         PanelSession fresh = new PanelSession();
         sessions.put(player.getUniqueId(), fresh);

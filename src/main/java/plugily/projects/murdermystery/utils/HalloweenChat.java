@@ -19,6 +19,7 @@
 package plugily.projects.murdermystery.utils;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -27,8 +28,12 @@ import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.title.Title;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import plugily.projects.murdermystery.Main;
 
 public final class HalloweenChat {
@@ -110,8 +115,47 @@ public final class HalloweenChat {
     if(input == null || input.isEmpty()) {
       return Component.empty();
     }
-    String converted = toMiniMessageFormat(input);
-    return MINI_MESSAGE.deserialize(converted);
+    String colored = color(input);
+    return LEGACY_SERIALIZER.deserialize(colored);
+  }
+
+  public static void sendActionBar(Player player, String message) {
+    if(player == null) {
+      return;
+    }
+    String colored = message == null ? "" : color(message);
+    try {
+      player.sendActionBar(LEGACY_SERIALIZER.deserialize(colored));
+    } catch(Throwable t) {
+      player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(colored));
+    }
+  }
+
+  public static void sendTitles(Player player, String title, String subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
+    if(player == null) {
+      return;
+    }
+    String coloredTitle = title == null ? "" : color(title);
+    String coloredSub = subtitle == null ? "" : color(subtitle);
+    try {
+      Title.Times times = Title.Times.times(
+          Duration.ofMillis(fadeInTicks * 50L),
+          Duration.ofMillis(stayTicks * 50L),
+          Duration.ofMillis(fadeOutTicks * 50L)
+      );
+      Title advTitle = Title.title(
+          LEGACY_SERIALIZER.deserialize(coloredTitle),
+          LEGACY_SERIALIZER.deserialize(coloredSub),
+          times
+      );
+      player.showTitle(advTitle);
+    } catch(Throwable t) {
+      player.sendTitle(coloredTitle, coloredSub, fadeInTicks, stayTicks, fadeOutTicks);
+    }
+  }
+
+  public static void sendSubTitle(Player player, String subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
+    sendTitles(player, "", subtitle, fadeInTicks, stayTicks, fadeOutTicks);
   }
 
   public static String strip(String input) {

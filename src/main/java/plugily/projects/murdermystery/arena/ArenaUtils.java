@@ -35,6 +35,7 @@ import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAcc
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
@@ -49,7 +50,7 @@ public class ArenaUtils extends PluginArenaUtils {
 
   public static void onMurdererDeath(Arena arena) {
     for(Player player : arena.getPlayers()) {
-      VersionUtils.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
+      HalloweenChat.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
       IUser loopUser = getPlugin().getUserManager().getUser(player);
       if(Role.isRole(Role.INNOCENT, loopUser, arena)) {
         addScore(loopUser, ScoreAction.SURVIVE_GAME, 0);

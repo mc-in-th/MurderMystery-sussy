@@ -418,12 +418,12 @@ public class VotingManager {
       player.getInventory().setHeldItemSlot(VOTE_MENU_ITEM_SLOT);
 
       if(victimName != null) {
-        VersionUtils.sendTitles(player,
+        HalloweenChat.sendTitles(player,
           HalloweenChat.color("<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>รายงานศพผู้เสียชีวิต!</bold></gradient> <#5A4E7C>]"),
           HalloweenChat.color("<#C77DFF>" + reportingPlayer.getName() + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName),
           10, 60, 10);
       } else {
-        VersionUtils.sendTitles(player,
+        HalloweenChat.sendTitles(player,
           HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เรียกประชุมฉุกเฉินรอบกองไฟ!</bold></gradient> <#5A4E7C>]"),
           HalloweenChat.color("<#C77DFF>" + reportingPlayer.getName() + " <#F4F1DE>เรียกทุกคนมารวมตัวกันที่กองไฟ"),
           10, 60, 10);
@@ -500,7 +500,7 @@ public class VotingManager {
           String barMsg = HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[รอบกองไฟ]</bold></gradient> <#F4F1DE>เวลาปรึกษา: <#FFB703>"
             + voteTimer + " วินาที <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อดูรายชื่อ)");
           for(Player player : arena.getPlayersLeft()) {
-            VersionUtils.sendActionBar(player, barMsg);
+            HalloweenChat.sendActionBar(player, barMsg);
           }
         }
         break;
@@ -520,7 +520,7 @@ public class VotingManager {
             if(voteTimer <= 5) {
               XSound.BLOCK_NOTE_BLOCK_HAT.play(player.getLocation(), 0.6F, 1.6F);
             }
-            VersionUtils.sendActionBar(player, barMsg);
+            HalloweenChat.sendActionBar(player, barMsg);
           }
         }
         break;
@@ -827,13 +827,13 @@ public class VotingManager {
     if(rawSlot == CHAT_CLOSE_SLOT) {
       voter.closeInventory();
       XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.7F, 1.2F);
-      VersionUtils.sendActionBar(voter, HalloweenChat.color("<#6EEB83>ปิดหน้าต่างโหวตชั่วคราว <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง)"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#6EEB83>ปิดหน้าต่างโหวตชั่วคราว <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง)"));
       return true;
     }
 
     if(voteState == VoteState.DISCUSSION) {
       XSound.ENTITY_VILLAGER_NO.play(voter.getLocation(), 0.8F, 1.0F);
-      VersionUtils.sendActionBar(voter, HalloweenChat.color("<#FFB703>กรุณารอหมดเวลาปรึกษาอีก <#FF3B47>" + voteTimer + " วินาที <#FFB703>จึงจะลงคะแนนโหวตได้!"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>กรุณารอหมดเวลาปรึกษาอีก <#FF3B47>" + voteTimer + " วินาที <#FFB703>จึงจะลงคะแนนโหวตได้!"));
       return true;
     }
 
@@ -860,7 +860,7 @@ public class VotingManager {
       pendingVotes.remove(voter);
       pendingSkips.remove(voter);
       XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.8F, 0.8F);
-      VersionUtils.sendActionBar(voter, HalloweenChat.color("<#FFB703>ยกเลิกตัวเลือกแล้ว สามารถเลือกผู้เล่นใหม่ได้"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>ยกเลิกตัวเลือกแล้ว สามารถเลือกผู้เล่นใหม่ได้"));
       refreshOpenVotingGUIs();
       return true;
     }
@@ -872,7 +872,7 @@ public class VotingManager {
         pendingVotes.remove(voter);
         pendingSkips.add(voter);
         XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.9F, 1.3F);
-        VersionUtils.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#72EFDD>[ข้ามการโหวต] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
+        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#72EFDD>[ข้ามการโหวต] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
         refreshOpenVotingGUIs();
       }
       return true;
@@ -895,7 +895,7 @@ public class VotingManager {
         pendingSkips.remove(voter);
         pendingVotes.put(voter, target);
         XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.9F, 1.3F);
-        VersionUtils.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#C77DFF>[" + target.getName() + "] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
+        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#C77DFF>[" + target.getName() + "] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
         refreshOpenVotingGUIs();
       }
       return true;
@@ -1030,7 +1030,7 @@ public class VotingManager {
 
     for(Player p : arena.getPlayers()) {
       XSound.BLOCK_NOTE_BLOCK_PLING.play(p.getLocation(), 1.0F, 1.2F);
-      VersionUtils.sendTitles(p, revealTitle, revealSub, 5, 45, 10);
+      HalloweenChat.sendTitles(p, revealTitle, revealSub, 5, 45, 10);
     }
   }
 
@@ -1048,7 +1048,7 @@ public class VotingManager {
       String noEjectSub = HalloweenChat.color("<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม");
       for(Player player : arena.getPlayers()) {
         XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 1.0F, 0.8F);
-        VersionUtils.sendTitles(player, noEjectTitle, noEjectSub, 10, 45, 10);
+        HalloweenChat.sendTitles(player, noEjectTitle, noEjectSub, 10, 45, 10);
       }
       return;
     }
@@ -1079,7 +1079,7 @@ public class VotingManager {
     String ejectSub = HalloweenChat.color(roleReveal);
     for(Player player : arena.getPlayers()) {
       XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.9F, 1.0F);
-      VersionUtils.sendTitles(player, ejectTitle, ejectSub, 10, 60, 10);
+      HalloweenChat.sendTitles(player, ejectTitle, ejectSub, 10, 60, 10);
     }
 
     restoreVoteMenuItem(ejectedPlayer);

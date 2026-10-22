@@ -90,7 +90,7 @@ public class SubmitScanMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_ACTIVATE.play(player.getLocation(), 0.8F, 1.4F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>[สแกนร่างกาย]</bold></gradient> <#FFB703>คลิกปุ่มตรงกลางเพื่อเริ่มสแกนยืนยันตัวตน (คนอื่นจะเห็นแสงสแกนรอบตัวคุณ!)"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>[สแกนร่างกาย]</bold></gradient> <#FFB703>คลิกปุ่มตรงกลางเพื่อเริ่มสแกนยืนยันตัวตน (คนอื่นจะเห็นแสงสแกนรอบตัวคุณ!)"));
   }
 
   private void buildGui(Inventory inv, Player player, ScanSession session) {
@@ -187,7 +187,7 @@ public class SubmitScanMinigame implements TaskMinigame {
           completedSessions.add(player.getUniqueId());
           sessions.remove(player.getUniqueId());
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-          VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] สแกนร่างกายยืนยันตัวตนสำเร็จ!</bold></gradient>"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] สแกนร่างกายยืนยันตัวตนสำเร็จ!</bold></gradient>"));
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
             if(player.isOnline()) {

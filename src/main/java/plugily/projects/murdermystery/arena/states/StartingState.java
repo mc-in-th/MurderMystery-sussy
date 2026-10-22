@@ -26,12 +26,12 @@ import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginStartingState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
-import plugily.projects.minigamesbox.classic.utils.actionbar.ActionBar;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +59,7 @@ public class StartingState extends PluginStartingState {
 
     if(!pluginArena.isHideChances()) {
       for(Player player : arena.getPlayersLeft()) {
-        pluginArena.getPlugin().getActionBarManager().addActionBar(player, new ActionBar((new MessageBuilder("IN_GAME_MESSAGES_ARENA_ROLE_CHANCES_ACTION_BAR")).asKey().player(player).arena(pluginArena), ActionBar.ActionBarType.DISPLAY));
+        HalloweenChat.sendActionBar(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_ROLE_CHANCES_ACTION_BAR").asKey().player(player).arena(pluginArena).build());
       }
     }
 

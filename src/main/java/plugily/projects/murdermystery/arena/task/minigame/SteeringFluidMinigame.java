@@ -95,7 +95,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[น้ำมันพวงมาลัย]</bold></gradient> <#FFB703>กดหมุนซ้าย/ขวา เพื่อตั้งศูนย์พวงมาลัยให้ตรง [ 0 ]!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[น้ำมันพวงมาลัย]</bold></gradient> <#FFB703>กดหมุนซ้าย/ขวา เพื่อตั้งศูนย์พวงมาลัยให้ตรง [ 0 ]!"));
     player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจน้ำมันพวงมาลัย]</bold></gradient> <#FFB703>กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] สีเขียว -> กดล็อคด้านล่าง"));
   }
 
@@ -232,7 +232,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
     if(rawSlot == INSTRUCTION_SLOT) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] -> กดล็อคด้านล่าง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>กดปุ่มหมุนซ้าย/ขวาให้ตรงศูนย์ [ 0 ] -> กดล็อคด้านล่าง!"));
       return true;
     }
 
@@ -246,7 +246,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         buildGui(topInv, session);
       } else {
         XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนซ้ายแล้ว!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนซ้ายแล้ว!"));
       }
       return true;
     }
@@ -259,7 +259,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         buildGui(topInv, session);
       } else {
         XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนขวาแล้ว!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>สุดระยะการหมุนขวาแล้ว!"));
       }
       return true;
     }
@@ -271,7 +271,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ตั้งศูนย์และเช็คน้ำมันพวงมาลัยเพาเวอร์เสร็จสิ้น!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ตั้งศูนย์และเช็คน้ำมันพวงมาลัยเพาเวอร์เสร็จสิ้น!</bold></gradient>"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline()) {
@@ -281,7 +281,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         }, 10L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-        VersionUtils.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่พร้อม] กรุณาตั้งศูนย์พวงมาลัยให้ตรงที่ [ 0 ] ก่อน!"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ยังไม่พร้อม] กรุณาตั้งศูนย์พวงมาลัยให้ตรงที่ [ 0 ] ก่อน!"));
       }
       return true;
     }
@@ -292,11 +292,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
   private void checkAngleFeedback(Player player, SteeringSession session) {
     if(session.angle == 0) {
       XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] พวงมาลัยตรงศูนย์ [ 0 ] แล้ว! -> คลิก [ล็อคระบบพวงมาลัย] ด้านล่าง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] พวงมาลัยตรงศูนย์ [ 0 ] แล้ว! -> คลิก [ล็อคระบบพวงมาลัย] ด้านล่าง!"));
     } else if(session.angle < 0) {
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงซ้าย [ " + session.angle + " ] -> คลิกหมุนขวา >"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงซ้าย [ " + session.angle + " ] -> คลิกหมุนขวา >"));
     } else {
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงขวา [ +" + session.angle + " ] -> คลิกหมุนซ้าย <"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>พวงมาลัยเอียงขวา [ +" + session.angle + " ] -> คลิกหมุนซ้าย <"));
     }
   }
 

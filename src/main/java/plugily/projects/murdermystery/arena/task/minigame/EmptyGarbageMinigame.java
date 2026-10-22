@@ -86,7 +86,7 @@ public class EmptyGarbageMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ทิ้งขยะ]</bold></gradient> <#FFB703>คลิกดึงคันโยกทางขวา 5 ครั้งเพื่อระบายขยะออกนอกตัวรถ!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ทิ้งขยะ]</bold></gradient> <#FFB703>คลิกดึงคันโยกทางขวา 5 ครั้งเพื่อระบายขยะออกนอกตัวรถ!"));
   }
 
   private void buildGui(Inventory inv, int pulls) {
@@ -178,7 +178,7 @@ public class EmptyGarbageMinigame implements TaskMinigame {
       completedSessions.add(player.getUniqueId());
       pullCounts.remove(player.getUniqueId());
       XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทิ้งขยะออกนอกรถบัสเรียบร้อยแล้ว!</bold></gradient>"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทิ้งขยะออกนอกรถบัสเรียบร้อยแล้ว!</bold></gradient>"));
 
       Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
         if(player.isOnline()) {
@@ -187,7 +187,7 @@ public class EmptyGarbageMinigame implements TaskMinigame {
         }
       }, 10L);
     } else {
-      VersionUtils.sendActionBar(player, HalloweenChat.color("<#6EEB83>[กำลังระบายขยะ] <#FFB703>ดึงคันโยกแล้ว " + pulls + "/" + TOTAL_PULLS + " ครั้ง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[กำลังระบายขยะ] <#FFB703>ดึงคันโยกแล้ว " + pulls + "/" + TOTAL_PULLS + " ครั้ง!"));
     }
 
     return true;

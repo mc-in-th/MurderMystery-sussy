@@ -121,7 +121,7 @@ public class SpecialBlockEvents implements Listener {
       if(itemDisplayName.equals(potion.getName())) {
         event.setCancelled(true);
         event.getPlayer().sendMessage(potion.getSubtitle());
-        VersionUtils.sendTitles(event.getPlayer(), "", potion.getSubtitle(), 5, 40, 5);
+        HalloweenChat.sendTitles(event.getPlayer(), "", potion.getSubtitle(), 5, 40, 5);
         ItemPosition.setItem(user, ItemPosition.POTION, null);
         event.getPlayer().addPotionEffect(potion.getPotionEffect());
         return;
