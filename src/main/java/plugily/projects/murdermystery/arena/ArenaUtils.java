@@ -21,6 +21,7 @@ package plugily.projects.murdermystery.arena;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -46,6 +47,43 @@ public class ArenaUtils extends PluginArenaUtils {
 
   private ArenaUtils() {
     super();
+  }
+
+  public static void playRoleRevealSound(Player player, boolean murderer) {
+    if(player == null || !player.isOnline()) {
+      return;
+    }
+    if(murderer) {
+      player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.45f, 0.75f);
+      player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.85f, 0.6f);
+      player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1.0f, 0.6f);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.8f, 0.55f);
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 0.9f, 0.55f);
+        }
+      }, 4L);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, 0.75f);
+        }
+      }, 8L);
+    } else {
+      player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.85f, 1.25f);
+      player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 0.9f);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.2f);
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.85f, 1.1f);
+        }
+      }, 4L);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+          player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.65f, 1.35f);
+        }
+      }, 8L);
+    }
   }
 
   public static void onMurdererDeath(Arena arena) {

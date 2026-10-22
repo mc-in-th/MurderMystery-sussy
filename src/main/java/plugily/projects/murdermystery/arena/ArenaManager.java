@@ -116,7 +116,8 @@ public class ArenaManager extends PluginArenaManager {
 
             new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).sendArena();
             if(newMurderer != null) {
-              new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(player).arena(pluginArena).sendPlayer();
+              new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).sendPlayer();
+              ArenaUtils.playRoleRevealSound(newMurderer, true);
               HalloweenChat.sendActionBar(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().build());
               ItemPosition.setItem(plugin.getUserManager().getUser(newMurderer), ItemPosition.MURDERER_SWORD, plugin.getSwordSkinManager().getRandomSwordSkin(player));
               pluginArena.getSabotageManager().giveSabotageRemote(newMurderer);

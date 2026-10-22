@@ -96,9 +96,11 @@ public class StartingState extends PluginStartingState {
           IUser user = arena.getPlugin().getUserManager().getUser(player);
           if(Role.isRole(Role.MURDERER, user, arena)) {
             new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().arena(pluginArena).player(player).sendPlayer();
+            ArenaUtils.playRoleRevealSound(player, true);
             pluginArena.getSabotageManager().giveSabotageRemote(player);
           } else {
             new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).sendPlayer();
+            ArenaUtils.playRoleRevealSound(player, false);
             innocentPlayers.add(player);
           }
         }
