@@ -109,18 +109,19 @@ public class VotingManager {
     }
   }
 
-  public static final String VOTE_GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>โหวตหาคนร้ายรอบกองไฟ<#5A4E7C>]");
+  public static final String VOTE_GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]");
   public static final int VOTE_MENU_ITEM_SLOT = 4;
 
+  private static final int GUI_SIZE = 45;
   private static final int INFO_SLOT = 4;
-  private static final int CONFIRM_SLOT = 47;
-  private static final int SKIP_SLOT = 49;
-  private static final int CANCEL_SELECT_SLOT = 51;
-  private static final int CHAT_CLOSE_SLOT = 53;
-  private static final int[] PLAYER_SLOTS = {
-    10, 11, 12, 13, 14, 15, 16,
-    19, 20, 21, 22, 23, 24, 25,
-    28, 29, 30, 31, 32, 33, 34
+  private static final int CONFIRM_SLOT = 38;
+  private static final int SKIP_SLOT = 40;
+  private static final int CANCEL_SELECT_SLOT = 42;
+  private static final int CHAT_CLOSE_SLOT = 44;
+  private static final int[] BORDER_SLOTS = {
+    0, 1, 2, 3, 5, 6, 7, 8,
+    9, 17, 18, 26, 27, 35,
+    36, 37, 38, 39, 41, 42, 43
   };
 
   private static final long BODY_SPAWN_GRACE_MS = 1500L;
@@ -288,10 +289,12 @@ public class VotingManager {
     ItemStack item = XMaterial.NETHER_STAR.parseItem();
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>เปิดเมนูโหวตหาคนร้าย<#5A4E7C>]"));
+      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]"));
       meta.setLore(colorLines(Arrays.asList(
-        "<#B8B0C8>คลิกขวาเพื่อเปิดหน้าต่างโหวตคัดคนร้ายออก",
-        "<#5A4E7C>(<#B8B0C8>ปิดหน้าต่างเพื่อพิมพ์แชทแล้วกดเปิดใหม่ได้ตลอด<#5A4E7C>)"
+        "",
+        "<#F4F1DE>เมนูโหวตหาคนร้าย",
+        "",
+        "<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อเปิดหน้าต่างโหวต<#5A4E7C>)"
       )));
       item.setItemMeta(meta);
     }
@@ -302,7 +305,8 @@ public class VotingManager {
     if(item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
       return false;
     }
-    return HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("เปิดเมนูโหวตหาคนร้าย");
+    String stripped = HalloweenChat.strip(item.getItemMeta().getDisplayName());
+    return stripped.contains("Emergency Campfire") || stripped.contains("เปิดเมนูโหวตหาคนร้าย");
   }
 
   public boolean startVoting(Player reportingPlayer) {
@@ -570,7 +574,7 @@ public class VotingManager {
     if(voteState != VoteState.DISCUSSION && voteState != VoteState.VOTING && voteState != VoteState.RESULT) {
       return;
     }
-    Inventory gui = Bukkit.createInventory(null, 54, VOTE_GUI_TITLE);
+    Inventory gui = Bukkit.createInventory(null, GUI_SIZE, VOTE_GUI_TITLE);
     populateVotingGUI(gui, viewer);
     viewer.openInventory(gui);
     XSound.UI_BUTTON_CLICK.play(viewer.getLocation(), 0.7F, 1.2F);
@@ -604,26 +608,80 @@ public class VotingManager {
     }
   }
 
+  private static int[] getCenteredRowColumns(int countInRow) {
+    switch(countInRow) {
+      case 1:
+        return new int[]{4};
+      case 2:
+        return new int[]{3, 5};
+      case 3:
+        return new int[]{3, 4, 5};
+      case 4:
+        return new int[]{2, 3, 5, 6};
+      case 5:
+        return new int[]{2, 3, 4, 5, 6};
+      case 6:
+        return new int[]{1, 2, 3, 5, 6, 7};
+      default:
+        return new int[]{1, 2, 3, 4, 5, 6, 7};
+    }
+  }
+
+  private static int[] computePlayerSlots(int totalPlayers) {
+    int count = Math.max(0, Math.min(21, totalPlayers));
+    if(count == 0) {
+      return new int[0];
+    }
+    int[] result = new int[count];
+    int idx = 0;
+    if(count <= 7) {
+      for(int col : getCenteredRowColumns(count)) {
+        result[idx++] = 18 + col;
+      }
+    } else if(count <= 14) {
+      int topCount = (count + 1) / 2;
+      int midCount = count - topCount;
+      for(int col : getCenteredRowColumns(topCount)) {
+        result[idx++] = 9 + col;
+      }
+      for(int col : getCenteredRowColumns(midCount)) {
+        result[idx++] = 18 + col;
+      }
+    } else {
+      int r1 = Math.min(7, (count + 2) / 3);
+      int rem = count - r1;
+      int r2 = Math.min(7, (rem + 1) / 2);
+      int r3 = rem - r2;
+      for(int col : getCenteredRowColumns(r1)) {
+        result[idx++] = 9 + col;
+      }
+      for(int col : getCenteredRowColumns(r2)) {
+        result[idx++] = 18 + col;
+      }
+      for(int col : getCenteredRowColumns(r3)) {
+        result[idx++] = 27 + col;
+      }
+    }
+    return result;
+  }
+
   private void populateVotingGUI(Inventory gui, Player viewer) {
-    ItemStack darkBg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta dMeta = darkBg.getItemMeta();
-    if(dMeta != null) {
-      dMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
-      darkBg.setItemMeta(dMeta);
+    gui.clear();
+
+    ItemStack borderPane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+    ItemMeta bMeta = borderPane.getItemMeta();
+    if(bMeta != null) {
+      bMeta.setDisplayName(" ");
+      try {
+        bMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
+      borderPane.setItemMeta(bMeta);
     }
 
-    ItemStack fireBorder = XMaterial.ORANGE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta fMeta = fireBorder.getItemMeta();
-    if(fMeta != null) {
-      fMeta.setDisplayName(HalloweenChat.color("<#FF7518> "));
-      fireBorder.setItemMeta(fMeta);
-    }
-
-    for(int i = 0; i < 54; i++) {
-      if(i < 9 || i >= 45) {
-        gui.setItem(i, fireBorder);
-      } else {
-        gui.setItem(i, darkBg);
+    for(int slot : BORDER_SLOTS) {
+      if(slot < gui.getSize()) {
+        gui.setItem(slot, borderPane);
       }
     }
 
@@ -631,34 +689,38 @@ public class VotingManager {
     int totalVoted = votes.size() + skipVotes.size();
     boolean isResultPhase = (voteState == VoteState.RESULT);
 
-    ItemStack campfireInfo = XMaterial.CAMPFIRE.parseItem();
+    ItemStack campfireInfo = (reportedVictimName != null ? XMaterial.SOUL_CAMPFIRE : XMaterial.CAMPFIRE).parseItem();
     ItemMeta cMeta = campfireInfo.getItemMeta();
     if(cMeta != null) {
-      cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]"));
+      cMeta.setDisplayName(HalloweenChat.color(
+        reportedVictimName != null
+          ? "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]"
+          : "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]"
+      ));
       List<String> infoLore = new ArrayList<>();
+      infoLore.add("");
       if(reportedVictimName != null) {
-        infoLore.add("<#F4F1DE>รายงานศพของ <#FF3B47>" + reportedVictimName);
-      } else {
-        infoLore.add("<#F4F1DE>ประเภท <#FFB703>ประชุมฉุกเฉินรอบกองไฟ");
+        infoLore.add("<#F4F1DE>ร่างของ <#FF3B47>" + reportedVictimName);
       }
       if(reporter != null) {
         infoLore.add("<#F4F1DE>ผู้เรียกประชุม <#FFB703>" + reporter.getName());
       }
-      infoLore.add(" ");
       if(voteState == VoteState.DISCUSSION) {
-        infoLore.add("<#F4F1DE>สถานะ <#FFB703>กำลังปรึกษาหารือ");
-        infoLore.add("<#F4F1DE>เปิดโหวตในอีก <#FFB703>" + voteTimer + " วิ");
+        infoLore.add("<#F4F1DE>เปิดโหวตใน <#FFB703>" + voteTimer + " วิ");
       } else if(voteState == VoteState.VOTING) {
-        infoLore.add("<#F4F1DE>สถานะ <#6EEB83>เปิดให้ลงคะแนนโหวต");
-        infoLore.add("<#F4F1DE>เวลาที่เหลือ <#FF3B47>" + voteTimer + " วิ");
+        infoLore.add("<#F4F1DE>โหวตแล้ว <#6EEB83>" + totalVoted + "<#5A4E7C>/<#F4F1DE>" + alivePlayers.size() + " คน");
+        infoLore.add("<#FF3B47>เหลือเวลา " + voteTimer + " วิ");
       } else {
-        infoLore.add("<#F4F1DE>สถานะ <#FFB703>สรุปผลคะแนนโหวต");
+        infoLore.add("<#FFB703>สรุปผลคะแนนโหวต");
+        infoLore.add("<#F4F1DE>โหวตข้าม <#72EFDD>" + skipVotes.size() + " <#F4F1DE>คน");
       }
-      infoLore.add("<#F4F1DE>โหวตแล้ว <#6EEB83>" + totalVoted + "<#5A4E7C>/<#F4F1DE>" + alivePlayers.size() + " คน");
-      if(isResultPhase) {
-        infoLore.add("<#F4F1DE>ข้ามการโหวต <#72EFDD>" + skipVotes.size() + " คน");
+      infoLore.add("");
+      if(voteState == VoteState.DISCUSSION) {
+        infoLore.add("<#5A4E7C>(<#B8B0C8>กำลังอยู่ในช่วงปรึกษาหารือ<#5A4E7C>)");
+      } else if(voteState == VoteState.VOTING) {
+        infoLore.add("<#5A4E7C>(<#B8B0C8>คลิกหัวผู้เล่นเพื่อลงคะแนนโหวต<#5A4E7C>)");
       } else {
-        infoLore.add("<#5A4E7C>(<#B8B0C8>ผลคะแนนจะเปิดเผยเมื่อทุกคนโหวตครบ<#5A4E7C>)");
+        infoLore.add("<#5A4E7C>(<#B8B0C8>กำลังดำเนินการตามผลโหวต<#5A4E7C>)");
       }
       cMeta.setLore(colorLines(infoLore));
       campfireInfo.setItemMeta(cMeta);
@@ -673,9 +735,10 @@ public class VotingManager {
     Player viewerPendingTarget = pendingVotes.get(viewer);
     boolean viewerPendingSkip = pendingSkips.contains(viewer);
 
-    for(int idx = 0; idx < alivePlayers.size() && idx < PLAYER_SLOTS.length; idx++) {
+    int[] playerSlots = computePlayerSlots(alivePlayers.size());
+    for(int idx = 0; idx < alivePlayers.size() && idx < playerSlots.length; idx++) {
       Player target = alivePlayers.get(idx);
-      int slot = PLAYER_SLOTS[idx];
+      int slot = playerSlots[idx];
 
       ItemStack head = XMaterial.PLAYER_HEAD.parseItem();
       SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -683,20 +746,24 @@ public class VotingManager {
         meta = VersionUtils.setPlayerHead(target, meta);
 
         boolean targetHasVoted = hasLockedVote(target);
-        String votedBadge = targetHasVoted ? " <#5A4E7C>[<#6EEB83>โหวตแล้ว<#5A4E7C>]" : " <#5A4E7C>(<#B8B0C8>รอโหวต<#5A4E7C>)";
-
         IUser targetUser = arena.getPlugin().getUserManager().getUser(target);
-        if(viewerIsMurderer && Role.isRole(Role.MURDERER, targetUser, arena)) {
-          meta.setDisplayName(HalloweenChat.color("<#FF3B47>" + target.getName() + " <#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]" + votedBadge));
-        } else {
-          meta.setDisplayName(HalloweenChat.color("<#FFB703>" + target.getName() + votedBadge));
-        }
+        boolean isMurdererTeammate = viewerIsMurderer && Role.isRole(Role.MURDERER, targetUser, arena);
+
+        meta.setDisplayName(HalloweenChat.color(
+          isMurdererTeammate
+            ? "<#5A4E7C>[<#FF3B47>" + target.getName() + "<#5A4E7C>]"
+            : "<#5A4E7C>[<#FFB703>" + target.getName() + "<#5A4E7C>]"
+        ));
 
         List<String> lore = new ArrayList<>();
-        if(target.equals(reporter)) {
-          lore.add("<#5A4E7C>[<#FF7518>ผู้เรียกประชุม<#5A4E7C>]");
+        lore.add("");
+        if(isMurdererTeammate) {
+          lore.add("<#FF3B47>ฆาตกร");
         }
-        lore.add("<#F4F1DE>สถานะ " + (targetHasVoted ? "<#6EEB83>โหวตแล้ว" : "<#B8B0C8>กำลังตัดสินใจ"));
+        if(target.equals(reporter)) {
+          lore.add("<#FF7518>ผู้เรียกประชุม");
+        }
+        lore.add(targetHasVoted ? "<#6EEB83>โหวตแล้ว" : "<#B8B0C8>ยังไม่ได้โหวต");
 
         if(isResultPhase) {
           List<String> votersForTarget = new ArrayList<>();
@@ -705,27 +772,25 @@ public class VotingManager {
               votersForTarget.add(entry.getKey().getName());
             }
           }
-          lore.add(" ");
-          lore.add("<#F4F1DE>ผลโหวต <#FF3B47>" + votersForTarget.size() + " โหวต");
+          lore.add("<#F4F1DE>ได้รับ <#FFB703>" + votersForTarget.size() + " <#F4F1DE>โหวต");
           for(String voterName : votersForTarget) {
-            lore.add("<#5A4E7C>- <#FFB703>" + voterName);
+            lore.add("<#5A4E7C>- <#B8B0C8>" + voterName);
           }
-        } else {
-          lore.add("<#5A4E7C>(<#B8B0C8>ซ่อนผลโหวตจนกว่าจะหมดเวลา<#5A4E7C>)");
         }
 
-        lore.add(" ");
+        lore.add("");
         if(target.equals(viewerLockedTarget)) {
-          lore.add("<#6EEB83>คุณโหวตผู้เล่นคนนี้แล้ว");
-        } else if(viewerLocked) {
-          lore.add("<#B8B0C8>คุณยืนยันผลโหวตไปแล้ว");
-        } else if(voteState == VoteState.DISCUSSION) {
-          lore.add("<#FF3B47>รอหมดเวลาปรึกษาอีก " + voteTimer + " วิ");
+          lore.add("<#5A4E7C>(<#6EEB83>คุณโหวตผู้เล่นคนนี้แล้ว<#5A4E7C>)");
         } else if(target.equals(viewerPendingTarget)) {
-          lore.add("<#FFB703>กำลังเลือกผู้เล่นคนนี้");
-          lore.add("<#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยันโหวต<#5A4E7C>)");
+          lore.add("<#5A4E7C>(<#FFB703>กดคลิกซ้ำเพื่อยืนยันโหวต<#5A4E7C>)");
+        } else if(viewerLocked) {
+          lore.add("<#5A4E7C>(<#B8B0C8>คุณลงคะแนนโหวตไปแล้ว<#5A4E7C>)");
+        } else if(voteState == VoteState.DISCUSSION) {
+          lore.add("<#5A4E7C>(<#B8B0C8>รอเปิดโหวตอีก " + voteTimer + " วิ<#5A4E7C>)");
         } else if(voteState == VoteState.VOTING) {
-          lore.add("<#5A4E7C>(<#B8B0C8>คลิกเพื่อโหวต <#FFB703>" + target.getName() + "<#5A4E7C>)");
+          lore.add("<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อโหวตผู้เล่นนี้<#5A4E7C>)");
+        } else {
+          lore.add("<#5A4E7C>(<#B8B0C8>หมดเวลาลงคะแนนโหวต<#5A4E7C>)");
         }
 
         meta.setLore(colorLines(lore));
@@ -738,38 +803,36 @@ public class VotingManager {
     }
 
     boolean skipHighlighted = viewerLockedSkip || viewerPendingSkip;
-    ItemStack skipItem = skipHighlighted ? XMaterial.LIME_BANNER.parseItem() : XMaterial.FEATHER.parseItem();
+    ItemStack skipItem = skipHighlighted ? XMaterial.LIME_DYE.parseItem() : XMaterial.FEATHER.parseItem();
     ItemMeta skipMeta = skipItem.getItemMeta();
     if(skipMeta != null) {
-      if(viewerLockedSkip) {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ข้ามการโหวตแล้ว<#5A4E7C>]"));
-      } else if(viewerPendingSkip) {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ยืนยันข้ามการโหวต<#5A4E7C>]"));
-      } else {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>Skip Vote<#5A4E7C>]"));
-      }
+      skipMeta.setDisplayName(HalloweenChat.color(
+        viewerLockedSkip
+          ? "<#5A4E7C>[<#6EEB83>Skip Vote<#5A4E7C>]"
+          : (viewerPendingSkip ? "<#5A4E7C>[<#FFB703>Skip Vote<#5A4E7C>]" : "<#5A4E7C>[<#72EFDD>Skip Vote<#5A4E7C>]")
+      ));
       List<String> skipLore = new ArrayList<>();
+      skipLore.add("");
       skipLore.add("<#F4F1DE>ข้ามการโหวตในรอบนี้");
-      skipLore.add("<#B8B0C8>หากเสียงข้างมากเลือกข้าม จะไม่มีใครถูกคัดออก");
       if(isResultPhase) {
-        skipLore.add(" ");
-        skipLore.add("<#F4F1DE>โหวตข้าม <#72EFDD>" + skipVotes.size() + " คน");
+        skipLore.add("<#F4F1DE>โหวตข้าม <#FFB703>" + skipVotes.size() + " <#F4F1DE>คน");
         for(Player skipper : skipVotes) {
-          skipLore.add("<#5A4E7C>- <#FFB703>" + skipper.getName());
+          skipLore.add("<#5A4E7C>- <#B8B0C8>" + skipper.getName());
         }
       }
-      skipLore.add(" ");
+      skipLore.add("");
       if(viewerLockedSkip) {
-        skipLore.add("<#6EEB83>คุณยืนยันข้ามการโหวตแล้ว");
-      } else if(viewerLocked) {
-        skipLore.add("<#B8B0C8>คุณยืนยันผลโหวตไปแล้ว");
-      } else if(voteState == VoteState.DISCUSSION) {
-        skipLore.add("<#FF3B47>รอหมดเวลาปรึกษาอีก " + voteTimer + " วิ");
+        skipLore.add("<#5A4E7C>(<#6EEB83>คุณโหวตข้ามแล้ว<#5A4E7C>)");
       } else if(viewerPendingSkip) {
-        skipLore.add("<#FFB703>กำลังเลือกข้ามการโหวต");
-        skipLore.add("<#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยัน<#5A4E7C>)");
+        skipLore.add("<#5A4E7C>(<#FFB703>กดคลิกซ้ำเพื่อยืนยัน<#5A4E7C>)");
+      } else if(viewerLocked) {
+        skipLore.add("<#5A4E7C>(<#B8B0C8>คุณลงคะแนนโหวตไปแล้ว<#5A4E7C>)");
+      } else if(voteState == VoteState.DISCUSSION) {
+        skipLore.add("<#5A4E7C>(<#B8B0C8>รอเปิดโหวตอีก " + voteTimer + " วิ<#5A4E7C>)");
       } else if(voteState == VoteState.VOTING) {
-        skipLore.add("<#5A4E7C>(<#B8B0C8>คลิกเพื่อข้ามการโหวต<#5A4E7C>)");
+        skipLore.add("<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อข้ามการโหวต<#5A4E7C>)");
+      } else {
+        skipLore.add("<#5A4E7C>(<#B8B0C8>หมดเวลาลงคะแนนโหวต<#5A4E7C>)");
       }
       skipMeta.setLore(colorLines(skipLore));
       skipItem.setItemMeta(skipMeta);
@@ -782,28 +845,30 @@ public class VotingManager {
     if(voteState == VoteState.VOTING && !viewerLocked && (viewerPendingTarget != null || viewerPendingSkip)) {
       String choiceLabel = viewerPendingSkip ? "ข้ามการโหวต" : viewerPendingTarget.getName();
 
-      ItemStack confirmBtn = XMaterial.EMERALD_BLOCK.parseItem();
+      ItemStack confirmBtn = XMaterial.LIME_CONCRETE.parseItem();
       ItemMeta confirmMeta = confirmBtn.getItemMeta();
       if(confirmMeta != null) {
-        confirmMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ยืนยันผลโหวต<#5A4E7C>] <#FFB703>" + choiceLabel));
+        confirmMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Confirm Vote<#5A4E7C>]"));
         confirmMeta.setLore(colorLines(Arrays.asList(
-          "<#F4F1DE>ตัวเลือก <#FFB703>" + choiceLabel,
-          "<#FF3B47>เมื่อยืนยันแล้วไม่สามารถเปลี่ยนได้",
-          " ",
-          "<#5A4E7C>(<#B8B0C8>คลิกเพื่อยืนยันผลโหวต<#5A4E7C>)"
+          "",
+          "<#F4F1DE>ยืนยันโหวต <#FFB703>" + choiceLabel,
+          "",
+          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อล็อกผลโหวต<#5A4E7C>)"
         )));
         confirmBtn.setItemMeta(confirmMeta);
       }
       applyGlow(confirmBtn);
       gui.setItem(CONFIRM_SLOT, confirmBtn);
 
-      ItemStack cancelBtn = XMaterial.REDSTONE_BLOCK.parseItem();
+      ItemStack cancelBtn = XMaterial.RED_CONCRETE.parseItem();
       ItemMeta cancelMeta = cancelBtn.getItemMeta();
       if(cancelMeta != null) {
-        cancelMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ยกเลิกตัวเลือก<#5A4E7C>]"));
+        cancelMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Cancel<#5A4E7C>]"));
         cancelMeta.setLore(colorLines(Arrays.asList(
-          "<#F4F1DE>ยกเลิกการเลือก <#FFB703>" + choiceLabel,
-          "<#5A4E7C>(<#B8B0C8>คลิกเพื่อเลือกใหม่<#5A4E7C>)"
+          "",
+          "<#F4F1DE>ยกเลิกตัวเลือก <#FFB703>" + choiceLabel,
+          "",
+          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเลือกใหม่<#5A4E7C>)"
         )));
         cancelBtn.setItemMeta(cancelMeta);
       }
@@ -813,10 +878,12 @@ public class VotingManager {
     ItemStack closeChat = XMaterial.OAK_SIGN.parseItem();
     ItemMeta closeMeta = closeChat.getItemMeta();
     if(closeMeta != null) {
-      closeMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>ปิดหน้าต่างเพื่อพิมพ์แชท<#5A4E7C>]"));
+      closeMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Chat<#5A4E7C>]"));
       closeMeta.setLore(colorLines(Arrays.asList(
-        "<#B8B0C8>ซ่อนหน้าต่างโหวตชั่วคราวเพื่อพิมพ์คุยกับผู้เล่นอื่น",
-        "<#5A4E7C>(<#B8B0C8>คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง<#5A4E7C>)"
+        "",
+        "<#F4F1DE>ปิดหน้าต่างเพื่อพิมพ์แชท",
+        "",
+        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อซ่อนหน้าต่างโหวต<#5A4E7C>)"
       )));
       closeChat.setItemMeta(closeMeta);
     }
@@ -878,15 +945,16 @@ public class VotingManager {
       return true;
     }
 
+    List<Player> alivePlayers = arena.getPlayersLeft();
+    int[] playerSlots = computePlayerSlots(alivePlayers.size());
     int targetIdx = -1;
-    for(int i = 0; i < PLAYER_SLOTS.length; i++) {
-      if(PLAYER_SLOTS[i] == rawSlot) {
+    for(int i = 0; i < playerSlots.length; i++) {
+      if(playerSlots[i] == rawSlot) {
         targetIdx = i;
         break;
       }
     }
 
-    List<Player> alivePlayers = arena.getPlayersLeft();
     if(targetIdx >= 0 && targetIdx < alivePlayers.size()) {
       Player target = alivePlayers.get(targetIdx);
       if(target.equals(pendingVotes.get(voter))) {
@@ -1148,7 +1216,11 @@ public class VotingManager {
   }
 
   public boolean isVotingGUI(String title) {
-    return title != null && (VOTE_GUI_TITLE.equals(title) || HalloweenChat.strip(title).contains("โหวตหาคนร้ายรอบกองไฟ"));
+    if(title == null) {
+      return false;
+    }
+    String stripped = HalloweenChat.strip(title);
+    return VOTE_GUI_TITLE.equals(title) || stripped.contains("Emergency Campfire") || stripped.contains("โหวตหาคนร้ายรอบกองไฟ");
   }
 
   public void handlePlayerLeave(Player player) {

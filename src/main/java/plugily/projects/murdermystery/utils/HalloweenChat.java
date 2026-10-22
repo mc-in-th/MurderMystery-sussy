@@ -105,7 +105,11 @@ public final class HalloweenChat {
     try {
       Component component = MINI_MESSAGE.deserialize(converted);
       String serialized = LEGACY_SERIALIZER.serialize(component);
-      return THAI_COMBINING_PREFIX_PATTERN.matcher(serialized).replaceAll("");
+      String cleaned = THAI_COMBINING_PREFIX_PATTERN.matcher(serialized).replaceAll("");
+      if(!cleaned.isEmpty() && !cleaned.startsWith("§r")) {
+        return "§r" + cleaned;
+      }
+      return cleaned;
     } catch(Exception ex) {
       return ChatColor.translateAlternateColorCodes('&', line);
     }
