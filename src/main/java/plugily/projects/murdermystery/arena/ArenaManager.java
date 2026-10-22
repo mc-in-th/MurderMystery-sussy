@@ -112,6 +112,8 @@ public class ArenaManager extends PluginArenaManager {
               plugin.getDebugger().debug("A murderer left the game. New murderer: {0}", newMurderer.getName());
               pluginArena.setCharacter(Arena.CharacterType.MURDERER, newMurderer);
               pluginArena.addToMurdererList(newMurderer);
+              pluginArena.getTaskManager().removePlayer(newMurderer);
+              pluginArena.getTaskManager().addPlayerToBossBar(newMurderer);
             }
 
             new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).sendArena();

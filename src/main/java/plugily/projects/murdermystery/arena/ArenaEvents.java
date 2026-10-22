@@ -338,6 +338,18 @@ public class ArenaEvents extends PluginArenaEvents {
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       player.spigot().respawn();
       plugin.getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
+      if(arena.getTaskManager().hasAssignedTasks(player)) {
+        arena.getTaskManager().giveTaskPointer(player);
+        if(arena.getMinimap() != null) {
+          player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
+        }
+        arena.getTaskManager().updatePlayerStationVisibility(player);
+        int remaining = arena.getTaskManager().getPlayerTotalTasks(player) - arena.getTaskManager().getPlayerCompletedTasks(player);
+        if(remaining > 0) {
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>คุณเสียชีวิตแล้ว แต่ยังต้องทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจเพื่อช่วยทีม"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>บินไปทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
+        }
+      }
     }, 5);
   }
 
@@ -490,7 +502,7 @@ public class ArenaEvents extends PluginArenaEvents {
     }
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.HIGH)
   public void onCorpseStandInteract(PlayerInteractAtEntityEvent event) {
     if(event.getHand() == EquipmentSlot.OFF_HAND) {
       return;
@@ -506,6 +518,13 @@ public class ArenaEvents extends PluginArenaEvents {
     }
     IUser user = plugin.getUserManager().getUser(player);
     if(user.isSpectator()) {
+      if(!arena.getVotingManager().isVotingActive()
+        && event.getRightClicked() instanceof Display
+        && arena.getTaskManager().hasAssignedTasks(player)) {
+        if(arena.getTaskManager().interactTask(player, event.getRightClicked().getLocation())) {
+          event.setCancelled(true);
+        }
+      }
       return;
     }
     if(arena.getVotingManager().isVotingActive()) {
@@ -577,7 +596,7 @@ public class ArenaEvents extends PluginArenaEvents {
     }
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.HIGH)
   public void onTaskInteract(PlayerInteractEvent event) {
     if(event.getHand() == EquipmentSlot.OFF_HAND) {
       return;
@@ -593,6 +612,22 @@ public class ArenaEvents extends PluginArenaEvents {
     }
     IUser user = plugin.getUserManager().getUser(player);
     if(user.isSpectator()) {
+      if(!arena.getVotingManager().isVotingActive() && arena.getTaskManager().hasAssignedTasks(player)) {
+        if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+          Block specBlock = event.getClickedBlock();
+          Location specTargetLoc = specBlock != null ? specBlock.getLocation() : null;
+          if(arena.getTaskManager().interactTask(player, specTargetLoc)) {
+            event.setCancelled(true);
+          }
+        } else if(event.getAction() == Action.RIGHT_CLICK_AIR) {
+          ItemStack specHand = player.getInventory().getItemInMainHand();
+          if(specHand == null || specHand.getType() == Material.AIR || arena.getTaskManager().isTaskCompass(specHand)) {
+            if(arena.getTaskManager().interactTask(player, null)) {
+              event.setCancelled(true);
+            }
+          }
+        }
+      }
       return;
     }
 

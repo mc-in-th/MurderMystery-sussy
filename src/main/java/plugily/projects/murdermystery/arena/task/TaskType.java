@@ -32,7 +32,11 @@ public enum TaskType {
   CHECK_STEERING_FLUID("เช็คน้ำมันพวงมาลัย", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", "[พวงมาลัย]", "steering", false),
   SUBMIT_SCAN("สแกนร่างกายยืนยันตัวตน", "IN_GAME_MESSAGES_ARENA_TASK_SUBMIT_SCAN", "[สแกน]", "scan", true),
   EMPTY_GARBAGE("ทิ้งขยะออกนอกรถบัส", "IN_GAME_MESSAGES_ARENA_TASK_EMPTY_GARBAGE", "[ทิ้งขยะ]", "trash", true),
-  CLEAR_ASTEROIDS("ยิงสกัดสิ่งกีดขวาง", "IN_GAME_MESSAGES_ARENA_TASK_CLEAR_ASTEROIDS", "[ป้อมปืน]", "asteroids", true);
+  CLEAR_ASTEROIDS("ยิงสกัดสิ่งกีดขวาง", "IN_GAME_MESSAGES_ARENA_TASK_CLEAR_ASTEROIDS", "[ป้อมปืน]", "asteroids", true),
+  CLEAN_WINDSHIELD("เช็ดคราบโคลนกระจกหน้ารถ", "IN_GAME_MESSAGES_ARENA_TASK_CLEAN_WINDSHIELD", "[กระจกหน้า]", "windshield", false),
+  UNLOCK_MANIFOLDS("ปลดล็อกท่อแรงดัน", "IN_GAME_MESSAGES_ARENA_TASK_UNLOCK_MANIFOLDS", "[ปลดล็อก]", "manifolds", false),
+  CHARGE_BATTERY("พ่วงชาร์จแบตเตอรี่รถบัส", "IN_GAME_MESSAGES_ARENA_TASK_CHARGE_BATTERY", "[แบตเตอรี่]", "battery", false),
+  CLEAN_AIR_FILTER("ทำความสะอาดไส้กรองอากาศ", "IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", "[ไส้กรอง]", "filter", false);
 
   private final String defaultName;
   private final String messageKey;
@@ -125,6 +129,18 @@ public enum TaskType {
     if(clean.equals("10")) {
       return CLEAR_ASTEROIDS;
     }
+    if(clean.equals("11")) {
+      return CLEAN_WINDSHIELD;
+    }
+    if(clean.equals("12")) {
+      return UNLOCK_MANIFOLDS;
+    }
+    if(clean.equals("13")) {
+      return CHARGE_BATTERY;
+    }
+    if(clean.equals("14")) {
+      return CLEAN_AIR_FILTER;
+    }
 
     for(TaskType t : values()) {
       if(t.name().equalsIgnoreCase(clean) || t.getShortId().equalsIgnoreCase(clean)) {
@@ -161,6 +177,18 @@ public enum TaskType {
     }
     if(clean.contains("ASTEROID") || clean.contains("WEAPON") || clean.contains("LASER") || clean.contains("TURRET") || clean.contains("ป้อมปืน")) {
       return CLEAR_ASTEROIDS;
+    }
+    if(clean.contains("WINDSHIELD") || clean.contains("WIPE") || clean.contains("GLASS") || clean.contains("กระจก") || clean.contains("โคลน")) {
+      return CLEAN_WINDSHIELD;
+    }
+    if(clean.contains("MANIFOLD") || clean.contains("UNLOCK") || clean.contains("ปลดล็อก")) {
+      return UNLOCK_MANIFOLDS;
+    }
+    if(clean.contains("BATTERY") || clean.contains("CHARGE") || clean.contains("แบตเตอรี่") || clean.contains("พ่วง")) {
+      return CHARGE_BATTERY;
+    }
+    if(clean.contains("FILTER") || clean.contains("AIR") || clean.contains("LEAF") || clean.contains("ไส้กรอง")) {
+      return CLEAN_AIR_FILTER;
     }
 
     return null;

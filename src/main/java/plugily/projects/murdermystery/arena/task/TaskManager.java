@@ -151,24 +151,12 @@ public class TaskManager {
     }
 
     TaskType[] allTaskTypes = TaskType.getValues();
-    List<TaskType> configuredPool = new ArrayList<>();
-    for(TaskType t : allTaskTypes) {
-      if(!arena.getTaskLocations(t).isEmpty()) {
-        configuredPool.add(t);
-      }
-    }
-    boolean useConfiguredFirst = !configuredPool.isEmpty() && arena.getTaskLocations().isEmpty();
 
     Random random = new Random();
     List<Set<TaskType>> assignedSets = new ArrayList<>();
 
     for(Player player : innocents) {
-      List<TaskType> pool;
-      if(useConfiguredFirst && configuredPool.size() >= tasksPerPlayer) {
-        pool = new ArrayList<>(configuredPool);
-      } else {
-        pool = new ArrayList<>(Arrays.asList(allTaskTypes));
-      }
+      List<TaskType> pool = new ArrayList<>(Arrays.asList(allTaskTypes));
       Collections.shuffle(pool, random);
 
       int count = Math.max(1, Math.min(tasksPerPlayer, pool.size()));
@@ -192,9 +180,29 @@ public class TaskManager {
         List<Location> specificLocs = arena.getTaskLocations(type);
         if(!specificLocs.isEmpty()) {
           taskLoc = specificLocs.get(random.nextInt(specificLocs.size()));
+        } else if(!arena.getTaskLocations().isEmpty()) {
+          List<Location> genericLocs = arena.getTaskLocations();
+          taskLoc = genericLocs.get(random.nextInt(genericLocs.size()));
         } else if(!shuffledLocations.isEmpty()) {
-          taskLoc = shuffledLocations.get(i % shuffledLocations.size());
-          i++;
+          for(int attempt = 0; attempt < shuffledLocations.size(); attempt++) {
+            Location candidate = shuffledLocations.get((i + attempt) % shuffledLocations.size());
+            boolean alreadyUsed = false;
+            for(GameTask existing : tasks) {
+              if(existing.getLocation() != null && existing.getLocation().equals(candidate)) {
+                alreadyUsed = true;
+                break;
+              }
+            }
+            if(!alreadyUsed) {
+              taskLoc = candidate;
+              i += attempt + 1;
+              break;
+            }
+          }
+          if(taskLoc == null) {
+            taskLoc = shuffledLocations.get(i % shuffledLocations.size());
+            i++;
+          }
         }
         if(taskLoc != null) {
           tasks.add(new GameTask(type, taskLoc));
@@ -294,9 +302,29 @@ public class TaskManager {
         ));
         compass.setItemMeta(meta);
       }
-      player.getInventory().setItem(8, compass);
+      int targetSlot = 8;
+      ItemStack existing = player.getInventory().getItem(8);
+      if(existing != null && existing.getType() != Material.AIR && !isTaskCompass(existing)) {
+        targetSlot = 7;
+      }
+      player.getInventory().setItem(targetSlot, compass);
     } catch(Exception ignored) {
     }
+  }
+
+  public boolean isTaskCompass(ItemStack item) {
+    if(item == null || item.getType() != Material.COMPASS || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+      return false;
+    }
+    return HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("Task Compass");
+  }
+
+  public boolean hasAssignedTasks(Player player) {
+    if(player == null) {
+      return false;
+    }
+    List<GameTask> tasks = playerTasks.get(player);
+    return tasks != null && !tasks.isEmpty();
   }
 
   public void sendPlayerTaskList(Player player) {
@@ -718,19 +746,8 @@ public class TaskManager {
 
   public void handlePlayerDeath(Player player) {
     visualEffectManager.stopVisualSession(player);
-    List<GameTask> tasks = playerTasks.remove(player);
-    if(tasks != null) {
-      for(GameTask task : tasks) {
-        if(!task.isCompleted() && totalTasks > completedTasks) {
-          totalTasks--;
-        }
-      }
-      boolean hasLivingInnocents = !playerTasks.isEmpty() && arena.getPlayersLeft().size() > arena.aliveMurderer();
-      if(hasLivingInnocents && totalTasks > 0 && completedTasks >= totalTasks) {
-        allTasksCompleted = true;
-      }
-      updateBossBar();
-    }
+    minigameManager.handleClose(player, null);
+    updateBossBar();
   }
 
   public void removePlayer(Player player) {

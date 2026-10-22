@@ -71,8 +71,19 @@ public class VisualTaskEffectManager {
     this.arena = arena;
   }
 
+  private boolean isSpectator(Player player) {
+    if(player == null) {
+      return true;
+    }
+    try {
+      return arena.getPlugin().getUserManager().getUser(player).isSpectator();
+    } catch(Throwable ignored) {
+      return false;
+    }
+  }
+
   public void startVisualSession(Player player, TaskType taskType, Location stationLoc) {
-    if(player == null || taskType == null || !taskType.isVisual() || !arena.isVisualTasksEnabled()) {
+    if(player == null || taskType == null || !taskType.isVisual() || !arena.isVisualTasksEnabled() || isSpectator(player)) {
       return;
     }
     stopVisualSession(player);
@@ -103,7 +114,7 @@ public class VisualTaskEffectManager {
   }
 
   public void triggerStepEffect(Player player, TaskType taskType, int currentStep, int totalSteps) {
-    if(player == null || taskType == null || !taskType.isVisual() || !arena.isVisualTasksEnabled()) {
+    if(player == null || taskType == null || !taskType.isVisual() || !arena.isVisualTasksEnabled() || isSpectator(player)) {
       return;
     }
     ActiveVisualSession session = activeSessions.get(player.getUniqueId());
@@ -151,7 +162,7 @@ public class VisualTaskEffectManager {
       cleanupSessionEntities(session);
     }
 
-    if(!taskType.isVisual() || !arena.isVisualTasksEnabled()) {
+    if(!taskType.isVisual() || !arena.isVisualTasksEnabled() || isSpectator(player)) {
       return;
     }
 

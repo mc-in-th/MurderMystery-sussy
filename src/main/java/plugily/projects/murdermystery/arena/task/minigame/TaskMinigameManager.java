@@ -46,6 +46,10 @@ public class TaskMinigameManager {
     registerMinigame(new SubmitScanMinigame(arena));
     registerMinigame(new EmptyGarbageMinigame(arena));
     registerMinigame(new ClearAsteroidsMinigame(arena));
+    registerMinigame(new CleanWindshieldMinigame(arena));
+    registerMinigame(new UnlockManifoldsMinigame(arena));
+    registerMinigame(new ChargeBatteryMinigame(arena));
+    registerMinigame(new CleanAirFilterMinigame(arena));
   }
 
   public void registerMinigame(TaskMinigame minigame) {

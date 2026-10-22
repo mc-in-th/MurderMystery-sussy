@@ -348,6 +348,13 @@ In-Game:
           Check-Engine-Oil: "เช็คน้ำมันเครื่อง"
           Check-Tire-Pressure: "เช็คลมยาง"
           Check-Steering-Fluid: "เช็คน้ำมันพวงมาลัย"
+          Submit-Scan: "สแกนร่างกายยืนยันตัวตน"
+          Empty-Garbage: "ทิ้งขยะออกนอกรถบัส"
+          Clear-Asteroids: "ยิงสกัดสิ่งกีดขวาง"
+          Clean-Windshield: "เช็ดคราบโคลนกระจกหน้ารถ"
+          Unlock-Manifolds: "ปลดล็อกท่อแรงดัน"
+          Charge-Battery: "พ่วงชาร์จแบตเตอรี่รถบัส"
+          Clean-Air-Filter: "ทำความสะอาดไส้กรองอากาศ"
       Voting:
         Cooldown: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่"
         Body-Reported: "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน"

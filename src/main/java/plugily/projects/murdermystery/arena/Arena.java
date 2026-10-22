@@ -928,7 +928,7 @@ public class Arena extends PluginArena {
     if(tasksPerPlayer > 0) {
       return tasksPerPlayer;
     }
-    return Math.max(1, plugin.getConfig().getInt("Tasks.Per-Player", 3));
+    return Math.max(1, plugin.getConfig().getInt("Tasks.Per-Player", 5));
   }
 
   public boolean isVisualTasksEnabled() {

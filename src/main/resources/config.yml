@@ -27,7 +27,7 @@ Scoreboard:
   Display: true
 
 Tasks:
-  Per-Player: 3
+  Per-Player: 5
   Complete-Range: 3.0
   Visual-Effects: true
 
