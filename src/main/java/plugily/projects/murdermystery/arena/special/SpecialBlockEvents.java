@@ -171,7 +171,7 @@ public class SpecialBlockEvents implements Listener {
     IUser user = plugin.getUserManager().getUser(player);
 
     if(!Role.isRole(Role.MURDERER, user, arena)) {
-      player.sendMessage(HalloweenChat.color("<#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่แอบมุดผ่านไปได้..."));
+      player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sewer Vent<#5A4E7C>] <#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่มุดผ่านได้"));
       return;
     }
 
@@ -203,9 +203,9 @@ public class SpecialBlockEvents implements Listener {
 
     if(slot == SabotageManager.SABOTAGE_REMOTE_SLOT || (item != null && arena.getSabotageManager() != null && arena.getSabotageManager().isSabotageRemote(item))) {
       arena.getSabotageManager().openSabotageGUI(player);
-    } else if(slot == 0 || slot == 3 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("<<"))) {
+    } else if(slot == 0 || slot == 3 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("ห้องก่อนหน้า"))) {
       arena.getVentManager().previousVent(player);
-    } else if(slot == 8 || slot == 5 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains(">>"))) {
+    } else if(slot == 8 || slot == 5 || (item != null && item.getType() == Material.SPECTRAL_ARROW && item.hasItemMeta() && HalloweenChat.strip(item.getItemMeta().getDisplayName()).contains("ห้องถัดไป"))) {
       arena.getVentManager().nextVent(player);
     } else if(slot == 4 || (item != null && item.getType() == Material.IRON_TRAPDOOR)) {
       arena.getVentManager().exitVent(player);

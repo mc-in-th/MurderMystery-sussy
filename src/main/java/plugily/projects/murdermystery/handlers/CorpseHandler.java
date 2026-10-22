@@ -128,7 +128,7 @@ public class CorpseHandler implements Listener {
       arena.addHead(new Stand(null, hitboxStand));
 
       TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-        "<gradient:#D90429:#FF5400><bold>ร่างไร้วิญญาณของ</bold></gradient> <#C77DFF><bold>" + player.getName() + "</bold>\n<#FFB703>[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+        "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<#5A4E7C>)");
 
       List<ArmorStand> corpseStands = new ArrayList<>();
       corpseStands.add(stand);
@@ -142,7 +142,7 @@ public class CorpseHandler implements Listener {
     //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
     arena.addCorpse(new Corpse(hologram, corpse));
     TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-      "<gradient:#D90429:#FF5400><bold>ร่างไร้วิญญาณของ</bold></gradient> <#C77DFF><bold>" + player.getName() + "</bold>\n<#FFB703>[คลิกขวาหรือโจมตีเพื่อรายงานศพ / Report]");
+      "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<#5A4E7C>)");
     arena.getVotingManager().registerDeadBody(player.getName(), deathLoc, new ArrayList<>(), td, hologram);
   }
 

@@ -109,7 +109,7 @@ public class VotingManager {
     }
   }
 
-  public static final String VOTE_GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>โหวตหาคนร้ายรอบกองไฟ</bold></gradient> <#5A4E7C>]");
+  public static final String VOTE_GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>โหวตหาคนร้ายรอบกองไฟ<#5A4E7C>]");
   public static final int VOTE_MENU_ITEM_SLOT = 4;
 
   private static final int INFO_SLOT = 4;
@@ -274,12 +274,12 @@ public class VotingManager {
       }
       if(voteState == VoteState.DISCUSSION) {
         td.setText(HalloweenChat.color(
-          "<gradient:#FF5400:#FFB703><bold>" + player.getName() + "</bold></gradient>\n<#B8B0C8>[กำลังปรึกษาหารือ]"));
+          "<#FFB703>" + player.getName() + "\n<#5A4E7C>(<#B8B0C8>กำลังปรึกษาหารือ<#5A4E7C>)"));
       } else if(voteState == VoteState.VOTING) {
         boolean locked = hasLockedVote(player);
         td.setText(HalloweenChat.color(
-          "<gradient:#FF5400:#FFB703><bold>" + player.getName() + "</bold></gradient>\n"
-            + (locked ? "<gradient:#38B000:#9EF01A><bold>[โหวตแล้ว]</bold></gradient>" : "<#B8B0C8>[กำลังตัดสินใจ...]")));
+          "<#FFB703>" + player.getName() + "\n"
+            + (locked ? "<#5A4E7C>[<#6EEB83>โหวตแล้ว<#5A4E7C>]" : "<#5A4E7C>(<#B8B0C8>กำลังตัดสินใจ<#5A4E7C>)")));
       }
     }
   }
@@ -288,10 +288,10 @@ public class VotingManager {
     ItemStack item = XMaterial.NETHER_STAR.parseItem();
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เปิดเมนูโหวตหาคนร้าย (Voting GUI)</bold></gradient> <#5A4E7C>]"));
+      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>เปิดเมนูโหวตหาคนร้าย<#5A4E7C>]"));
       meta.setLore(colorLines(Arrays.asList(
         "<#B8B0C8>คลิกขวาเพื่อเปิดหน้าต่างโหวตคัดคนร้ายออก",
-        "<#B8B0C8>สามารถปิดหน้าต่างเพื่อคุยแชทแล้วกดเปิดใหม่ได้ตลอด"
+        "<#5A4E7C>(<#B8B0C8>ปิดหน้าต่างเพื่อพิมพ์แชทแล้วกดเปิดใหม่ได้ตลอด<#5A4E7C>)"
       )));
       item.setItemMeta(meta);
     }
@@ -361,12 +361,12 @@ public class VotingManager {
 
     if(victimName != null) {
       musicManager.playBodyReportSound();
-      broadcastArenaMessage("<gradient:#D90429:#FF5400><bold>[รายงานศพ]</bold></gradient> <#C77DFF>" + reportingPlayer.getName()
-        + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName + " <#F4F1DE>และเรียกประชุมด่วนรอบกองไฟ!");
+      broadcastArenaMessage("<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#FFB703>" + reportingPlayer.getName()
+        + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName + " <#F4F1DE>และเรียกประชุมด่วน");
     } else {
       musicManager.playEmergencyMeetingSound();
-      broadcastArenaMessage("<gradient:#FF5400:#FFB703><bold>[ประชุมฉุกเฉิน]</bold></gradient> <#C77DFF>" + reportingPlayer.getName()
-        + " <#F4F1DE>ได้เรียกประชุมฉุกเฉินรอบกองไฟ!");
+      broadcastArenaMessage("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FFB703>" + reportingPlayer.getName()
+        + " <#F4F1DE>ได้เรียกประชุมฉุกเฉินรอบกองไฟ");
     }
 
     Location center = arena.getCampfireLocation();
@@ -402,7 +402,7 @@ public class VotingManager {
 
       TextDisplay statusTd = arena.spawnTextDisplay(
         circleSpot.clone().add(0.0, 2.25, 0.0),
-        "<gradient:#FF5400:#FFB703><bold>" + player.getName() + "</bold></gradient>\n<#B8B0C8>[กำลังปรึกษาหารือ]"
+        "<#FFB703>" + player.getName() + "\n<#5A4E7C>(<#B8B0C8>กำลังปรึกษาหารือ<#5A4E7C>)"
       );
       if(statusTd != null) {
         circleStatusDisplays.put(player.getUniqueId(), statusTd);
@@ -419,13 +419,13 @@ public class VotingManager {
 
       if(victimName != null) {
         HalloweenChat.sendTitles(player,
-          HalloweenChat.color("<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>รายงานศพผู้เสียชีวิต!</bold></gradient> <#5A4E7C>]"),
-          HalloweenChat.color("<#C77DFF>" + reportingPlayer.getName() + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName),
+          HalloweenChat.color("<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]"),
+          HalloweenChat.color("<#FFB703>" + reportingPlayer.getName() + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName),
           10, 60, 10);
       } else {
         HalloweenChat.sendTitles(player,
-          HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เรียกประชุมฉุกเฉินรอบกองไฟ!</bold></gradient> <#5A4E7C>]"),
-          HalloweenChat.color("<#C77DFF>" + reportingPlayer.getName() + " <#F4F1DE>เรียกทุกคนมารวมตัวกันที่กองไฟ"),
+          HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]"),
+          HalloweenChat.color("<#FFB703>" + reportingPlayer.getName() + " <#F4F1DE>เรียกประชุมฉุกเฉินรอบกองไฟ"),
           10, 60, 10);
       }
     }
@@ -441,8 +441,8 @@ public class VotingManager {
     voteTimer = arena.getPlugin().getConfig().getInt("Voting.Discussion-Time", 15);
     arena.updateCampfireHologram();
 
-    broadcastArenaMessage("<gradient:#FF5400:#FFB703><bold>[รอบกองไฟ]</bold></gradient> <#F4F1DE>เริ่มเวลาปรึกษาหารือเป็นเวลา <#FF3B47>"
-      + voteTimer + " วินาที <#B8B0C8>(พูดคุยในแชทเพื่อหาตัวคนร้าย)");
+    broadcastArenaMessage("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#F4F1DE>เริ่มเวลาปรึกษาหารือ <#FFB703>"
+      + voteTimer + " วิ <#5A4E7C>(<#B8B0C8>พูดคุยในแชทเพื่อหาตัวคนร้าย<#5A4E7C>)");
 
     return true;
   }
@@ -493,12 +493,12 @@ public class VotingManager {
           updateCircleStatusDisplays();
           openVotingGUIForAll();
 
-          broadcastArenaMessage("<gradient:#9D4EDD:#FF7518><bold>[เปิดโหวต]</bold></gradient> <#F4F1DE>เปิดให้ลงคะแนนโหวตแล้ว! มีเวลาตัดสินใจ <#FFB703>"
-            + voteTimer + " วินาที");
+          broadcastArenaMessage("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เปิดให้ลงคะแนนโหวตแล้ว เวลาตัดสินใจ <#FFB703>"
+            + voteTimer + " วิ");
         } else {
           refreshOpenVotingGUIs();
-          String barMsg = HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[รอบกองไฟ]</bold></gradient> <#F4F1DE>เวลาปรึกษา: <#FFB703>"
-            + voteTimer + " วินาที <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อดูรายชื่อ)");
+          String barMsg = HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#F4F1DE>เวลาปรึกษา <#FFB703>"
+            + voteTimer + " วิ <#5A4E7C>(<#B8B0C8>คลิกขวาไอเทมในมือเพื่อดูรายชื่อ<#5A4E7C>)");
           for(Player player : arena.getPlayersLeft()) {
             HalloweenChat.sendActionBar(player, barMsg);
           }
@@ -513,9 +513,9 @@ public class VotingManager {
           refreshOpenVotingGUIs();
           int totalVoted = votes.size() + skipVotes.size();
           int totalAlive = arena.getPlayersLeft().size();
-          String barMsg = HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[เวลาโหวต]</bold></gradient> <#F4F1DE>เหลือ <#FFB703>"
-            + voteTimer + " วินาที <#5A4E7C>| <#6EEB83>ยืนยันโหวตแล้ว " + totalVoted + "/" + totalAlive
-            + " คน <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวต)");
+          String barMsg = HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เหลือ <#FFB703>"
+            + voteTimer + " วิ <#5A4E7C>| <#6EEB83>โหวตแล้ว " + totalVoted + "/" + totalAlive
+            + " <#5A4E7C>(<#B8B0C8>คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวต<#5A4E7C>)");
           for(Player player : arena.getPlayersLeft()) {
             if(voteTimer <= 5) {
               XSound.BLOCK_NOTE_BLOCK_HAT.play(player.getLocation(), 0.6F, 1.6F);
@@ -634,31 +634,31 @@ public class VotingManager {
     ItemStack campfireInfo = XMaterial.CAMPFIRE.parseItem();
     ItemMeta cMeta = campfireInfo.getItemMeta();
     if(cMeta != null) {
-      cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>การประชุมรอบกองไฟ (Campfire Meeting)</bold></gradient> <#5A4E7C>]"));
+      cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]"));
       List<String> infoLore = new ArrayList<>();
       if(reportedVictimName != null) {
-        infoLore.add("<#FF3B47>รายงานศพของ: <#F4F1DE>" + reportedVictimName);
+        infoLore.add("<#F4F1DE>รายงานศพของ <#FF3B47>" + reportedVictimName);
       } else {
-        infoLore.add("<#FFB703>ประเภท: <#F4F1DE>เรียกประชุมฉุกเฉินที่กองไฟ");
+        infoLore.add("<#F4F1DE>ประเภท <#FFB703>ประชุมฉุกเฉินรอบกองไฟ");
       }
       if(reporter != null) {
-        infoLore.add("<#FFB703>ผู้เรียกประชุม: <#C77DFF>" + reporter.getName());
+        infoLore.add("<#F4F1DE>ผู้เรียกประชุม <#FFB703>" + reporter.getName());
       }
       infoLore.add(" ");
       if(voteState == VoteState.DISCUSSION) {
-        infoLore.add("<#F4F1DE>สถานะ: <#FFB703>กำลังปรึกษาหารือ (รอเปิดโหวต)");
-        infoLore.add("<#F4F1DE>จะเปิดให้โหวตในอีก: <#FF7518>" + voteTimer + " วินาที");
+        infoLore.add("<#F4F1DE>สถานะ <#FFB703>กำลังปรึกษาหารือ");
+        infoLore.add("<#F4F1DE>เปิดโหวตในอีก <#FFB703>" + voteTimer + " วิ");
       } else if(voteState == VoteState.VOTING) {
-        infoLore.add("<#F4F1DE>สถานะ: <#6EEB83>เปิดให้ลงคะแนนโหวตแล้ว! (โหวตแบบลับ)");
-        infoLore.add("<#F4F1DE>เวลาโหวตที่เหลือ: <#FF3B47>" + voteTimer + " วินาที");
+        infoLore.add("<#F4F1DE>สถานะ <#6EEB83>เปิดให้ลงคะแนนโหวต");
+        infoLore.add("<#F4F1DE>เวลาที่เหลือ <#FF3B47>" + voteTimer + " วิ");
       } else {
-        infoLore.add("<#F4F1DE>สถานะ: <gradient:#FF5400:#FFB703><bold>เปิดเผยผลคะแนนโหวตทั้งหมด!</bold></gradient>");
+        infoLore.add("<#F4F1DE>สถานะ <#FFB703>สรุปผลคะแนนโหวต");
       }
-      infoLore.add("<#F4F1DE>ยืนยันโหวตแล้ว: <#6EEB83>" + totalVoted + " <#5A4E7C>/ <#F4F1DE>" + alivePlayers.size() + " คน");
+      infoLore.add("<#F4F1DE>โหวตแล้ว <#6EEB83>" + totalVoted + "<#5A4E7C>/<#F4F1DE>" + alivePlayers.size() + " คน");
       if(isResultPhase) {
-        infoLore.add("<#F4F1DE>คนโหวตข้าม (Skip): <#72EFDD>" + skipVotes.size() + " คน");
+        infoLore.add("<#F4F1DE>ข้ามการโหวต <#72EFDD>" + skipVotes.size() + " คน");
       } else {
-        infoLore.add("<#B8B0C8>(ผลคะแนนโหวตจะเปิดเผยพร้อมกันเมื่อทุกคนโหวตครบ)");
+        infoLore.add("<#5A4E7C>(<#B8B0C8>ผลคะแนนจะเปิดเผยเมื่อทุกคนโหวตครบ<#5A4E7C>)");
       }
       cMeta.setLore(colorLines(infoLore));
       campfireInfo.setItemMeta(cMeta);
@@ -683,20 +683,20 @@ public class VotingManager {
         meta = VersionUtils.setPlayerHead(target, meta);
 
         boolean targetHasVoted = hasLockedVote(target);
-        String votedBadge = targetHasVoted ? " <#6EEB83>[โหวตแล้ว]" : " <#B8B0C8>[รอโหวต...]";
+        String votedBadge = targetHasVoted ? " <#5A4E7C>[<#6EEB83>โหวตแล้ว<#5A4E7C>]" : " <#5A4E7C>(<#B8B0C8>รอโหวต<#5A4E7C>)";
 
         IUser targetUser = arena.getPlugin().getUserManager().getUser(target);
         if(viewerIsMurderer && Role.isRole(Role.MURDERER, targetUser, arena)) {
-          meta.setDisplayName(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>" + target.getName() + " (คนร้าย)</bold></gradient>" + votedBadge));
+          meta.setDisplayName(HalloweenChat.color("<#FF3B47>" + target.getName() + " <#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]" + votedBadge));
         } else {
-          meta.setDisplayName(HalloweenChat.color("<gradient:#FF7518:#FFB703><bold>" + target.getName() + "</bold></gradient>" + votedBadge));
+          meta.setDisplayName(HalloweenChat.color("<#FFB703>" + target.getName() + votedBadge));
         }
 
         List<String> lore = new ArrayList<>();
         if(target.equals(reporter)) {
-          lore.add("<#FF7518>[ผู้เรียกประชุมในรอบนี้]");
+          lore.add("<#5A4E7C>[<#FF7518>ผู้เรียกประชุม<#5A4E7C>]");
         }
-        lore.add("<#B8B0C8>สถานะการลงคะแนน: " + (targetHasVoted ? "<#6EEB83>ยืนยันโหวตแล้ว" : "<#FFB703>กำลังตัดสินใจ..."));
+        lore.add("<#F4F1DE>สถานะ " + (targetHasVoted ? "<#6EEB83>โหวตแล้ว" : "<#B8B0C8>กำลังตัดสินใจ"));
 
         if(isResultPhase) {
           List<String> votersForTarget = new ArrayList<>();
@@ -706,26 +706,26 @@ public class VotingManager {
             }
           }
           lore.add(" ");
-          lore.add("<#FF7518>ผลคะแนนโหวตที่ได้รับ: <#FF3B47>" + votersForTarget.size() + " โหวต");
+          lore.add("<#F4F1DE>ผลโหวต <#FF3B47>" + votersForTarget.size() + " โหวต");
           for(String voterName : votersForTarget) {
-            lore.add("  <#FF3B47>- <#C77DFF>" + voterName);
+            lore.add("<#5A4E7C>- <#FFB703>" + voterName);
           }
         } else {
-          lore.add("<#5A4E7C>(คะแนนโหวตถูกซ่อนไว้จนกว่าจะหมดเวลาโหวต)");
+          lore.add("<#5A4E7C>(<#B8B0C8>ซ่อนผลโหวตจนกว่าจะหมดเวลา<#5A4E7C>)");
         }
 
         lore.add(" ");
         if(target.equals(viewerLockedTarget)) {
-          lore.add("<gradient:#38B000:#9EF01A><bold>คุณได้ยืนยันโหวตผู้เล่นคนนี้แล้ว!</bold></gradient>");
+          lore.add("<#6EEB83>คุณโหวตผู้เล่นคนนี้แล้ว");
         } else if(viewerLocked) {
-          lore.add("<#B8B0C8>คุณได้ยืนยันผลโหวตในรอบนี้ไปแล้ว");
+          lore.add("<#B8B0C8>คุณยืนยันผลโหวตไปแล้ว");
         } else if(voteState == VoteState.DISCUSSION) {
-          lore.add("<#FFB703>รอหมดเวลาปรึกษาอีก " + voteTimer + " วินาที จึงจะโหวตได้");
+          lore.add("<#FF3B47>รอหมดเวลาปรึกษาอีก " + voteTimer + " วิ");
         } else if(target.equals(viewerPendingTarget)) {
-          lore.add("<gradient:#FF5400:#FFB703><bold>> กำลังเลือกผู้เล่นคนนี้อยู่!</bold></gradient>");
-          lore.add("<#6EEB83>คลิกซ้ำอีกครั้ง หรือกดปุ่มสีเขียวด้านล่างเพื่อยืนยันโหวต");
+          lore.add("<#FFB703>กำลังเลือกผู้เล่นคนนี้");
+          lore.add("<#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยันโหวต<#5A4E7C>)");
         } else if(voteState == VoteState.VOTING) {
-          lore.add("<#FFB703>คลิกเพื่อเลือกโหวต <#C77DFF>" + target.getName());
+          lore.add("<#5A4E7C>(<#B8B0C8>คลิกเพื่อโหวต <#FFB703>" + target.getName() + "<#5A4E7C>)");
         }
 
         meta.setLore(colorLines(lore));
@@ -742,34 +742,34 @@ public class VotingManager {
     ItemMeta skipMeta = skipItem.getItemMeta();
     if(skipMeta != null) {
       if(viewerLockedSkip) {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>คุณยืนยันข้ามการโหวตแล้ว (Skipped)</bold></gradient> <#5A4E7C>]"));
+        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ข้ามการโหวตแล้ว<#5A4E7C>]"));
       } else if(viewerPendingSkip) {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>กำลังเลือกข้ามการโหวต - คลิกซ้ำเพื่อยืนยัน</bold></gradient> <#5A4E7C>]"));
+        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ยืนยันข้ามการโหวต<#5A4E7C>]"));
       } else {
-        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#00B4D8:#72EFDD><bold>ข้ามการโหวต (Skip Vote)</bold></gradient> <#5A4E7C>]"));
+        skipMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>Skip Vote<#5A4E7C>]"));
       }
       List<String> skipLore = new ArrayList<>();
-      skipLore.add("<#B8B0C8>เลือกที่จะไม่โหวตคัดใครออกในรอบนี้");
-      skipLore.add("<#B8B0C8>หากเสียง Skip มากที่สุด จะไม่มีใครถูกคัดออก");
+      skipLore.add("<#F4F1DE>ข้ามการโหวตในรอบนี้");
+      skipLore.add("<#B8B0C8>หากเสียงข้างมากเลือกข้าม จะไม่มีใครถูกคัดออก");
       if(isResultPhase) {
         skipLore.add(" ");
-        skipLore.add("<#F4F1DE>จำนวนคนโหวตข้ามทั้งหมด: <#72EFDD>" + skipVotes.size() + " คน");
+        skipLore.add("<#F4F1DE>โหวตข้าม <#72EFDD>" + skipVotes.size() + " คน");
         for(Player skipper : skipVotes) {
-          skipLore.add("  <#72EFDD>- <#C77DFF>" + skipper.getName());
+          skipLore.add("<#5A4E7C>- <#FFB703>" + skipper.getName());
         }
       }
       skipLore.add(" ");
       if(viewerLockedSkip) {
-        skipLore.add("<gradient:#38B000:#9EF01A><bold>คุณได้ยืนยันข้ามการโหวตแล้ว!</bold></gradient>");
+        skipLore.add("<#6EEB83>คุณยืนยันข้ามการโหวตแล้ว");
       } else if(viewerLocked) {
-        skipLore.add("<#B8B0C8>คุณได้ยืนยันผลโหวตในรอบนี้ไปแล้ว");
+        skipLore.add("<#B8B0C8>คุณยืนยันผลโหวตไปแล้ว");
       } else if(voteState == VoteState.DISCUSSION) {
-        skipLore.add("<#FFB703>รอหมดเวลาปรึกษาอีก " + voteTimer + " วินาที จึงจะกดข้ามได้");
+        skipLore.add("<#FF3B47>รอหมดเวลาปรึกษาอีก " + voteTimer + " วิ");
       } else if(viewerPendingSkip) {
-        skipLore.add("<gradient:#FF5400:#FFB703><bold>> กำลังเลือกข้ามการโหวตอยู่!</bold></gradient>");
-        skipLore.add("<#6EEB83>คลิกซ้ำอีกครั้ง หรือกดปุ่มสีเขียวด้านซ้ายเพื่อยืนยัน");
+        skipLore.add("<#FFB703>กำลังเลือกข้ามการโหวต");
+        skipLore.add("<#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยัน<#5A4E7C>)");
       } else if(voteState == VoteState.VOTING) {
-        skipLore.add("<#72EFDD>คลิกเพื่อเลือกข้ามการโหวต (Skip Vote)");
+        skipLore.add("<#5A4E7C>(<#B8B0C8>คลิกเพื่อข้ามการโหวต<#5A4E7C>)");
       }
       skipMeta.setLore(colorLines(skipLore));
       skipItem.setItemMeta(skipMeta);
@@ -780,17 +780,17 @@ public class VotingManager {
     gui.setItem(SKIP_SLOT, skipItem);
 
     if(voteState == VoteState.VOTING && !viewerLocked && (viewerPendingTarget != null || viewerPendingSkip)) {
-      String choiceLabel = viewerPendingSkip ? "ข้ามการโหวต (Skip)" : viewerPendingTarget.getName();
+      String choiceLabel = viewerPendingSkip ? "ข้ามการโหวต" : viewerPendingTarget.getName();
 
       ItemStack confirmBtn = XMaterial.EMERALD_BLOCK.parseItem();
       ItemMeta confirmMeta = confirmBtn.getItemMeta();
       if(confirmMeta != null) {
-        confirmMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>ยืนยันผลโหวต:</bold></gradient> <#FFB703><bold>" + choiceLabel + "</bold> <#5A4E7C>]"));
+        confirmMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ยืนยันผลโหวต<#5A4E7C>] <#FFB703>" + choiceLabel));
         confirmMeta.setLore(colorLines(Arrays.asList(
-          "<#B8B0C8>คุณกำลังเลือก: <#FFB703>" + choiceLabel,
-          "<#FF3B47>เมื่อกดยืนยันแล้วจะไม่สามารถเปลี่ยนใจได้!",
+          "<#F4F1DE>ตัวเลือก <#FFB703>" + choiceLabel,
+          "<#FF3B47>เมื่อยืนยันแล้วไม่สามารถเปลี่ยนได้",
           " ",
-          "<#6EEB83>คลิกที่นี่เพื่อล็อกผลโหวตทันที!"
+          "<#5A4E7C>(<#B8B0C8>คลิกเพื่อยืนยันผลโหวต<#5A4E7C>)"
         )));
         confirmBtn.setItemMeta(confirmMeta);
       }
@@ -800,10 +800,10 @@ public class VotingManager {
       ItemStack cancelBtn = XMaterial.REDSTONE_BLOCK.parseItem();
       ItemMeta cancelMeta = cancelBtn.getItemMeta();
       if(cancelMeta != null) {
-        cancelMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>ยกเลิกตัวเลือกที่เลือกไว้</bold></gradient> <#5A4E7C>]"));
+        cancelMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ยกเลิกตัวเลือก<#5A4E7C>]"));
         cancelMeta.setLore(colorLines(Arrays.asList(
-          "<#B8B0C8>ยกเลิกการเลือก <#FFB703>" + choiceLabel,
-          "<#B8B0C8>เพื่อกลับไปพิจารณาผู้เล่นคนอื่นใหม่"
+          "<#F4F1DE>ยกเลิกการเลือก <#FFB703>" + choiceLabel,
+          "<#5A4E7C>(<#B8B0C8>คลิกเพื่อเลือกใหม่<#5A4E7C>)"
         )));
         cancelBtn.setItemMeta(cancelMeta);
       }
@@ -813,10 +813,10 @@ public class VotingManager {
     ItemStack closeChat = XMaterial.OAK_SIGN.parseItem();
     ItemMeta closeMeta = closeChat.getItemMeta();
     if(closeMeta != null) {
-      closeMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#9D4EDD:#FF7518><bold>ปิดหน้าต่างเพื่อพิมพ์แชท</bold></gradient> <#5A4E7C>]"));
+      closeMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>ปิดหน้าต่างเพื่อพิมพ์แชท<#5A4E7C>]"));
       closeMeta.setLore(colorLines(Arrays.asList(
         "<#B8B0C8>ซ่อนหน้าต่างโหวตชั่วคราวเพื่อพิมพ์คุยกับผู้เล่นอื่น",
-        "<#FFB703>คลิกขวาไอเทมรูปดาวในมือเพื่อกลับมาเปิดเมนูโหวต!"
+        "<#5A4E7C>(<#B8B0C8>คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง<#5A4E7C>)"
       )));
       closeChat.setItemMeta(closeMeta);
     }
@@ -827,13 +827,13 @@ public class VotingManager {
     if(rawSlot == CHAT_CLOSE_SLOT) {
       voter.closeInventory();
       XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.7F, 1.2F);
-      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#6EEB83>ปิดหน้าต่างโหวตชั่วคราว <#B8B0C8>(คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง)"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#6EEB83>ปิดหน้าต่างโหวตชั่วคราว <#5A4E7C>(<#B8B0C8>คลิกขวาไอเทมในมือเพื่อเปิดเมนูโหวตอีกครั้ง<#5A4E7C>)"));
       return true;
     }
 
     if(voteState == VoteState.DISCUSSION) {
       XSound.ENTITY_VILLAGER_NO.play(voter.getLocation(), 0.8F, 1.0F);
-      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>กรุณารอหมดเวลาปรึกษาอีก <#FF3B47>" + voteTimer + " วินาที <#FFB703>จึงจะลงคะแนนโหวตได้!"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FF3B47>รอหมดเวลาปรึกษาอีก <#FFB703>" + voteTimer + " วิ"));
       return true;
     }
 
@@ -842,7 +842,7 @@ public class VotingManager {
     }
 
     if(hasLockedVote(voter)) {
-      voter.sendMessage(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[โหวต]</bold></gradient> <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!"));
+      voter.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว"));
       XSound.ENTITY_VILLAGER_NO.play(voter.getLocation(), 0.8F, 1.0F);
       return true;
     }
@@ -860,7 +860,7 @@ public class VotingManager {
       pendingVotes.remove(voter);
       pendingSkips.remove(voter);
       XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.8F, 0.8F);
-      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>ยกเลิกตัวเลือกแล้ว สามารถเลือกผู้เล่นใหม่ได้"));
+      HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#B8B0C8>ยกเลิกตัวเลือกแล้ว สามารถเลือกผู้เล่นใหม่ได้"));
       refreshOpenVotingGUIs();
       return true;
     }
@@ -872,7 +872,7 @@ public class VotingManager {
         pendingVotes.remove(voter);
         pendingSkips.add(voter);
         XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.9F, 1.3F);
-        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#72EFDD>[ข้ามการโหวต] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
+        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เลือก <#72EFDD>ข้ามการโหวต <#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยัน<#5A4E7C>)"));
         refreshOpenVotingGUIs();
       }
       return true;
@@ -895,7 +895,7 @@ public class VotingManager {
         pendingSkips.remove(voter);
         pendingVotes.put(voter, target);
         XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.9F, 1.3F);
-        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#FFB703>เลือก <#C77DFF>[" + target.getName() + "] <#FFB703>- คลิกซ้ำอีกครั้งหรือกดปุ่มสีเขียวเพื่อยืนยัน!"));
+        HalloweenChat.sendActionBar(voter, HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เลือก <#FFB703>" + target.getName() + " <#5A4E7C>(<#B8B0C8>คลิกซ้ำเพื่อยืนยัน<#5A4E7C>)"));
         refreshOpenVotingGUIs();
       }
       return true;
@@ -913,9 +913,9 @@ public class VotingManager {
 
     int totalVoted = votes.size() + skipVotes.size();
     int totalAlive = arena.getPlayersLeft().size();
-    broadcastArenaMessage("<gradient:#9D4EDD:#FF7518><bold>[โหวต]</bold></gradient> <#C77DFF>" + voter.getName()
-      + " <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว <#B8B0C8>(" + totalVoted + "/" + totalAlive + ")");
-    voter.sendMessage(HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>[โหวต]</bold></gradient> <#F4F1DE>คุณได้ยืนยัน <#72EFDD>ข้ามการโหวต (Skip Vote) <#F4F1DE>เรียบร้อยแล้ว!"));
+    broadcastArenaMessage("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FFB703>" + voter.getName()
+      + " <#F4F1DE>ลงคะแนนโหวตแล้ว <#5A4E7C>(<#B8B0C8>" + totalVoted + "/" + totalAlive + "<#5A4E7C>)");
+    voter.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>คุณยืนยัน <#72EFDD>ข้ามการโหวต <#F4F1DE>เรียบร้อยแล้ว"));
 
     updateCircleStatusDisplays();
     refreshOpenVotingGUIs();
@@ -937,9 +937,9 @@ public class VotingManager {
 
     int totalVoted = votes.size() + skipVotes.size();
     int totalAlive = arena.getPlayersLeft().size();
-    broadcastArenaMessage("<gradient:#9D4EDD:#FF7518><bold>[โหวต]</bold></gradient> <#C77DFF>" + voter.getName()
-      + " <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว <#B8B0C8>(" + totalVoted + "/" + totalAlive + ")");
-    voter.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[โหวต]</bold></gradient> <#F4F1DE>คุณได้ยืนยันลงคะแนนโหวตให้ <#FFB703>" + target.getName() + " <#F4F1DE>เรียบร้อยแล้ว!"));
+    broadcastArenaMessage("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FFB703>" + voter.getName()
+      + " <#F4F1DE>ลงคะแนนโหวตแล้ว <#5A4E7C>(<#B8B0C8>" + totalVoted + "/" + totalAlive + "<#5A4E7C>)");
+    voter.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>คุณยืนยันโหวตให้ <#FFB703>" + target.getName() + " <#F4F1DE>เรียบร้อยแล้ว"));
 
     updateCircleStatusDisplays();
     refreshOpenVotingGUIs();
@@ -977,29 +977,27 @@ public class VotingManager {
       if(td != null && td.isValid()) {
         List<String> voters = votersByTarget.getOrDefault(player, new ArrayList<>());
         String voteText = voters.isEmpty()
-          ? "<#B8B0C8>[0 โหวต]"
-          : "<gradient:#D90429:#FF5400><bold>[" + voters.size() + " โหวต]</bold></gradient>";
+          ? "<#5A4E7C>(<#B8B0C8>0 โหวต<#5A4E7C>)"
+          : "<#5A4E7C>[<#FF3B47>" + voters.size() + " โหวต<#5A4E7C>]";
         td.setText(HalloweenChat.color(
-          "<gradient:#FF5400:#FFB703><bold>" + player.getName() + "</bold></gradient>\n" + voteText));
+          "<#FFB703>" + player.getName() + "\n" + voteText));
       }
     }
 
-    String header = HalloweenChat.color("<#5A4E7C>================= [ <gradient:#FF5400:#FFB703><bold>เปิดเผยผลโหวตรอบกองไฟ</bold></gradient> <#5A4E7C>] =================");
-    String footer = HalloweenChat.color("<#5A4E7C>=============================================================");
+    String header = HalloweenChat.color("<#5A4E7C>[<#FF7518>สรุปผลคะแนนโหวต<#5A4E7C>]");
     for(Player p : arena.getPlayers()) {
       p.sendMessage(header);
       for(Player alive : arena.getPlayersLeft()) {
         List<String> voters = votersByTarget.getOrDefault(alive, new ArrayList<>());
         if(!voters.isEmpty()) {
-          p.sendMessage(HalloweenChat.color("<#FFB703>- <#C77DFF>" + alive.getName() + " <#F4F1DE>ได้รับ <#FF3B47><bold>" + voters.size() + " โหวต</bold> <#B8B0C8>(" + String.join(", ", voters) + ")"));
+          p.sendMessage(HalloweenChat.color(" <#5A4E7C>- <#FFB703>" + alive.getName() + " <#F4F1DE>ได้รับ <#FF3B47>" + voters.size() + " โหวต <#5A4E7C>(<#B8B0C8>" + String.join(", ", voters) + "<#5A4E7C>)"));
         }
       }
       if(skipCount > 0) {
-        p.sendMessage(HalloweenChat.color("<#72EFDD>- ข้ามการโหวต (Skip): <#F4F1DE><bold>" + skipCount + " โหวต</bold> <#B8B0C8>(" + String.join(", ", skipperNames) + ")"));
+        p.sendMessage(HalloweenChat.color(" <#5A4E7C>- <#72EFDD>ข้ามการโหวต <#F4F1DE>" + skipCount + " โหวต <#5A4E7C>(<#B8B0C8>" + String.join(", ", skipperNames) + "<#5A4E7C>)"));
       } else {
-        p.sendMessage(HalloweenChat.color("<#72EFDD>- ข้ามการโหวต (Skip): <#B8B0C8>0 โหวต"));
+        p.sendMessage(HalloweenChat.color(" <#5A4E7C>- <#72EFDD>ข้ามการโหวต <#B8B0C8>0 โหวต"));
       }
-      p.sendMessage(footer);
     }
 
     refreshOpenVotingGUIs();
@@ -1023,10 +1021,10 @@ public class VotingManager {
       pendingEjectedPlayer = topCandidate;
     }
 
-    String revealTitle = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เปิดเผยผลคะแนนโหวต!</bold></gradient> <#5A4E7C>]");
+    String revealTitle = HalloweenChat.color("<#5A4E7C>[<#FF7518>สรุปผลคะแนนโหวต<#5A4E7C>]");
     String revealSub = pendingEjectedPlayer != null
-      ? HalloweenChat.color("<#FFB703>เสียงส่วนใหญ่ชี้ไปที่ <#FF3B47><bold>" + pendingEjectedPlayer.getName() + "</bold> <#B8B0C8>(" + maxVotes + " โหวต)")
-      : HalloweenChat.color("<#72EFDD>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม (Skip)");
+      ? HalloweenChat.color("<#F4F1DE>เสียงส่วนใหญ่ชี้ไปที่ <#FF3B47>" + pendingEjectedPlayer.getName() + " <#5A4E7C>(<#FFB703>" + maxVotes + " โหวต<#5A4E7C>)")
+      : HalloweenChat.color("<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม");
 
     for(Player p : arena.getPlayers()) {
       XSound.BLOCK_NOTE_BLOCK_PLING.play(p.getLocation(), 1.0F, 1.2F);
@@ -1042,9 +1040,9 @@ public class VotingManager {
     }
 
     if(pendingEjectedPlayer == null || !pendingEjectedPlayer.isOnline()) {
-      broadcastArenaMessage("<gradient:#FF5400:#FFB703><bold>[ผลการโหวต]</bold></gradient> <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#B8B0C8>(คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)");
+      broadcastArenaMessage("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#5A4E7C>(<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<#5A4E7C>)");
 
-      String noEjectTitle = HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ไม่มีใครถูกโหวตออก</bold></gradient>");
+      String noEjectTitle = HalloweenChat.color("<#5A4E7C>[<#FF7518>ไม่มีใครถูกโหวตออก<#5A4E7C>]");
       String noEjectSub = HalloweenChat.color("<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม");
       for(Player player : arena.getPlayers()) {
         XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 1.0F, 0.8F);
@@ -1069,13 +1067,13 @@ public class VotingManager {
     }
 
     String roleReveal = wasMurderer
-      ? "<gradient:#38B000:#9EF01A><bold>(เขาคือคนร้าย!)</bold></gradient>"
-      : "<gradient:#D90429:#FF5400><bold>(เขาไม่ใช่คนร้าย...)</bold></gradient>";
+      ? "<#5A4E7C>(<#6EEB83>เขาคือฆาตกร<#5A4E7C>)"
+      : "<#5A4E7C>(<#FF3B47>เขาไม่ใช่ฆาตกร<#5A4E7C>)";
 
-    broadcastArenaMessage("<gradient:#D90429:#FF5400><bold>[ผลการโหวต]</bold></gradient> <#C77DFF>" + ejectedPlayer.getName()
+    broadcastArenaMessage("<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>" + ejectedPlayer.getName()
       + " <#F4F1DE>ถูกโหวตคัดออกรอบกองไฟ " + roleReveal);
 
-    String ejectTitle = HalloweenChat.color("<gradient:#D90429:#FF5400><bold>" + ejectedPlayer.getName() + " ถูกโหวตคัดออก!</bold></gradient>");
+    String ejectTitle = HalloweenChat.color("<#5A4E7C>[<#FF3B47>" + ejectedPlayer.getName() + " ถูกโหวตคัดออก<#5A4E7C>]");
     String ejectSub = HalloweenChat.color(roleReveal);
     for(Player player : arena.getPlayers()) {
       XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.9F, 1.0F);

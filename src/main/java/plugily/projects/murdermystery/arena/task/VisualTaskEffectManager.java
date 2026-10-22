@@ -179,8 +179,9 @@ public class VisualTaskEffectManager {
     XSound.BLOCK_BEACON_ACTIVATE.play(playerCenter, 0.9F, 1.6F);
 
     Location verifyLoc = player.getLocation().clone().add(0.0, 2.35, 0.0);
-    String verifyText = "<gradient:#38B000:#9EF01A><bold>[/] ยืนยันผู้บริสุทธิ์ (VISUAL TASK VERIFIED)</bold></gradient>\n"
-      + "<#6EEB83>" + player.getName() + " <#F4F1DE>ทำภารกิจ <#FFB703>" + taskType.getDisplayName() + " <#F4F1DE>สำเร็จ!";
+    String verifyText = "<#5A4E7C>[<#6EEB83>Visual Task<#5A4E7C>]\n\n"
+      + "<#FFB703>" + player.getName() + " <#F4F1DE>ยืนยันตัวตนแล้ว\n\n"
+      + "<#5A4E7C>(<#B8B0C8>ทำภารกิจ " + taskType.getDisplayName() + " สำเร็จ<#5A4E7C>)";
     TextDisplay verifyDisplay = arena.spawnTextDisplay(verifyLoc, verifyText, true);
     if(verifyDisplay != null) {
       completionDisplays.add(verifyDisplay);
@@ -419,21 +420,11 @@ public class VisualTaskEffectManager {
   }
 
   private String buildStatusText(ActiveVisualSession session) {
-    int bars = 8;
-    int filled = session.totalSteps <= 0 ? 0 : Math.min(bars, (int) Math.round(((double) session.currentStep / session.totalSteps) * bars));
-    StringBuilder bar = new StringBuilder("<#5A4E7C>[");
-    for(int i = 0; i < bars; i++) {
-      if(i < filled) {
-        bar.append("<#6EEB83>■");
-      } else {
-        bar.append("<#5A4E7C>□");
-      }
-    }
-    bar.append("<#5A4E7C>]");
     int percent = session.totalSteps <= 0 ? 0 : Math.min(100, (int) Math.round(((double) session.currentStep / session.totalSteps) * 100.0));
-    return "<#72EFDD><bold>[VISUAL TASK - ยืนยันตัวตน]</bold>\n"
-      + "<#6EEB83>" + session.playerName + " <#F4F1DE>กำลังทำ: <#FFB703>" + session.taskType.getDisplayName() + "\n"
-      + bar + " <#6EEB83>" + percent + "%";
+    return "<#5A4E7C>[<#72EFDD>Visual Task<#5A4E7C>]\n\n"
+      + "<#F4F1DE>" + session.taskType.getDisplayName() + "\n"
+      + "<#FFB703>" + percent + "%\n\n"
+      + "<#5A4E7C>(<#B8B0C8>กำลังยืนยันตัวตน<#5A4E7C>)";
   }
 
   private Particle resolveDustParticle() {

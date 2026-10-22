@@ -243,27 +243,27 @@ public class TaskManager {
       String activeText;
       String completedText;
       if(types.isEmpty()) {
-        activeText = "<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK POINT) v</bold></gradient>\n<#F4F1DE>คลิกขวาเพื่อเริ่มทำภารกิจ";
-        completedText = "<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#B8B0C8>(ทำภารกิจจุดนี้เรียบร้อยแล้ว)";
+        activeText = "<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n<#F4F1DE>จุดทำภารกิจ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)";
+        completedText = "<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n<#6EEB83>ทำภารกิจเสร็จแล้ว\n\n<#5A4E7C>(<#B8B0C8>จุดทำภารกิจนี้เสร็จสิ้นแล้ว<#5A4E7C>)";
       } else if(types.size() == 1) {
         TaskType t = types.iterator().next();
-        activeText = "<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK) v</bold></gradient>\n" + t.getHologramTitle() + "\n<#F4F1DE>(คลิกขวาเพื่อทำภารกิจ)";
-        completedText = "<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#5A4E7C>[ <#6EEB83>" + t.getIcon() + " " + t.getDisplayName() + " <#5A4E7C>]\n<#6EEB83>[/] สำเร็จเรียบร้อยแล้ว (Done)";
+        activeText = "<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n" + t.getHologramTitle() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)";
+        completedText = "<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n<#B8B0C8>" + t.getDisplayName() + "\n<#6EEB83>ทำภารกิจเสร็จแล้ว";
       } else {
-        StringBuilder sbActive = new StringBuilder("<gradient:#FF5400:#FFB703><bold>v จุดทำภารกิจ (TASK STATION) v</bold></gradient>\n");
-        StringBuilder sbDone = new StringBuilder("<gradient:#38B000:#9EF01A><bold>[/] ภารกิจเสร็จสิ้น (COMPLETED) [/]</bold></gradient>\n<#5A4E7C>[ ");
+        StringBuilder sbActive = new StringBuilder("<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n");
+        StringBuilder sbDone = new StringBuilder("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n");
         int count = 0;
         for(TaskType t : types) {
           if(count > 0) {
-            sbActive.append(" <#5A4E7C>| ");
-            sbDone.append(" <#5A4E7C>| ");
+            sbActive.append("\n");
+            sbDone.append("\n");
           }
-          sbActive.append("<#FF7518><bold>").append(t.getIcon()).append(" ").append(t.getDisplayName()).append("</bold>");
-          sbDone.append("<#6EEB83>").append(t.getIcon()).append(" ").append(t.getDisplayName());
+          sbActive.append("<#F4F1DE>").append(t.getDisplayName());
+          sbDone.append("<#B8B0C8>").append(t.getDisplayName());
           count++;
         }
-        sbActive.append("\n<#F4F1DE>(คลิกขวาเพื่อทำภารกิจ)");
-        sbDone.append(" <#5A4E7C>]\n<#6EEB83>[/] สำเร็จเรียบร้อยแล้ว (Done)");
+        sbActive.append("\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)");
+        sbDone.append("\n<#6EEB83>ทำภารกิจเสร็จแล้ว");
         activeText = sbActive.toString();
         completedText = sbDone.toString();
       }
@@ -287,11 +287,10 @@ public class TaskManager {
       ItemStack compass = new ItemStack(Material.COMPASS);
       ItemMeta meta = compass.getItemMeta();
       if(meta != null) {
-        meta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>เข็มทิศนำทางภารกิจ (Task Pointer)</bold></gradient>"));
+        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task Compass<#5A4E7C>]"));
         meta.setLore(Arrays.asList(
-          HalloweenChat.color("<#B8B0C8>ชี้ตรงไปยังจุดทำภารกิจถัดไปของคุณ"),
-          HalloweenChat.color("<#B8B0C8>เดินตามลูกศรเพื่อไปยังจุดทำภารกิจ"),
-          HalloweenChat.color("<#FFB703>> เมื่อถึงจุด ให้คลิกขวาที่บล็อกเพื่อเปิดมินิเกม")
+          HalloweenChat.color("<#F4F1DE>ชี้ไปยังจุดทำภารกิจถัดไปของคุณ"),
+          HalloweenChat.color("<#5A4E7C>(<#B8B0C8>เดินตามเข็มทิศแล้วกดคลิกขวาที่จุดภารกิจ<#5A4E7C>)")
         ));
         compass.setItemMeta(meta);
       }
@@ -306,30 +305,20 @@ public class TaskManager {
       return;
     }
 
-    String border = HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>========================================</bold></gradient>");
     player.sendMessage(" ");
-    player.sendMessage(border);
-    player.sendMessage(HalloweenChat.color(" <gradient:#FF5400:#FFB703><bold>ภารกิจซ่อมรถบัสของคุณ (YOUR TASKS)</bold></gradient>"));
-    player.sendMessage(border);
+    player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>]"));
     for(GameTask task : tasks) {
       String taskName = task.getTaskType().getDisplayName();
       String visualTag = (task.getTaskType().isVisual() && arena.isVisualTasksEnabled())
-        ? " <#72EFDD>[Visual ยืนยันตัวตน]"
+        ? " <#5A4E7C>(<#72EFDD>ยืนยันตัวตน<#5A4E7C>)"
         : "";
       if(task.isCompleted()) {
-        player.sendMessage(HalloweenChat.color("<#FFB703> > <#6EEB83><strikethrough>" + taskName + "</strikethrough>" + visualTag + " <#6EEB83>[/] (เสร็จสิ้น)"));
+        player.sendMessage(HalloweenChat.color("<#5A4E7C>- <#6EEB83>" + taskName + visualTag + " <#5A4E7C>(<#6EEB83>เสร็จแล้ว<#5A4E7C>)"));
       } else {
-        player.sendMessage(HalloweenChat.color("<#FFB703> > <#F4F1DE>" + taskName + visualTag));
+        player.sendMessage(HalloweenChat.color("<#5A4E7C>- <#F4F1DE>" + taskName + visualTag));
       }
     }
-    player.sendMessage(HalloweenChat.color("<#5A4E7C>----------------------------------------"));
-    player.sendMessage(HalloweenChat.color(" <gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ (How to play):</bold></gradient>"));
-    player.sendMessage(HalloweenChat.color("<#F4F1DE> 1. ดูตำแหน่งภารกิจ <#FFB703>[!] <#F4F1DE>บนแผนที่ย่อในมือซ้าย หรือเดินตามเข็มทิศ"));
-    player.sendMessage(HalloweenChat.color("<#F4F1DE> 2. จุดทำภารกิจจะมีบล็อกเรืองแสงและป้ายชื่อลอยอยู่"));
-    player.sendMessage(HalloweenChat.color("<#F4F1DE> 3. เดินเข้าไปใกล้ๆ แล้ว <#FFB703>คลิกขวาที่บล็อก <#F4F1DE>เพื่อเปิดมินิเกม"));
-    player.sendMessage(HalloweenChat.color("<#F4F1DE> 4. อ่านวิธีเล่นที่ <#FFB703>ไอคอนหนังสือ <#F4F1DE>ภายในแต่ละมินิเกม"));
-    player.sendMessage(HalloweenChat.color("<#6EEB83>* ผู้โดยสารทุกคนต้องช่วยกันซ่อมรถบัสให้ครบ 100% เพื่อชนะเกม!"));
-    player.sendMessage(border);
+    player.sendMessage(HalloweenChat.color("<#5A4E7C>(<#B8B0C8>เดินตามเข็มทิศหรือแผนที่ไปกดคลิกขวาที่จุดภารกิจ<#5A4E7C>)"));
     player.sendMessage(" ");
   }
 
@@ -357,15 +346,15 @@ public class TaskManager {
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage(HalloweenChat.color("<#B8B0C8>ภารกิจของคุณเหลืออีก <#FFB703>" + remaining + " <#B8B0C8>อย่างที่ต้องทำ!"));
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName));
           }
         } else {
-          player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <#5A4E7C>(<#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<#5A4E7C>)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว"));
         }
 
         updatePlayerStationVisibility(player);
@@ -380,7 +369,7 @@ public class TaskManager {
 
     for(Location loc : arena.getAllTaskLocations()) {
       if(player.getWorld().equals(loc.getWorld()) && player.getLocation().distanceSquared(loc) <= (range * range)) {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ หรือทำเสร็จไปแล้ว! (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
         break;
       }
     }
@@ -463,9 +452,9 @@ public class TaskManager {
           }
         }
         if(wasCompletedHere) {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] คุณทำภารกิจจุดนี้เสร็จสิ้นแล้ว! (Completed)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว"));
         } else {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[ภารกิจ] คุณไม่มีภารกิจที่จุดนี้ (ตรวจดูภารกิจของคุณในสกอร์บอร์ด)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
         }
         return true;
       }
@@ -498,15 +487,15 @@ public class TaskManager {
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage(HalloweenChat.color("<#B8B0C8>ภารกิจของคุณเหลืออีก <#FFB703>" + remaining + " <#B8B0C8>อย่างที่ต้องทำ!"));
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>ภารกิจถัดไป:</gradient> <#6EEB83>" + nextName));
+            HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName));
           }
         } else {
-          player.sendMessage(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>คุณทำภารกิจส่วนตัวครบทั้งหมดแล้ว!</bold></gradient> <#B8B0C8>(รอเพื่อนร่วมทีมทำภารกิจให้ครบ)"));
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>ภารกิจของคุณเสร็จสิ้นทั้งหมดแล้ว!</bold></gradient>"));
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <#5A4E7C>(<#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<#5A4E7C>)"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว"));
         }
 
         updatePlayerStationVisibility(player);
@@ -568,11 +557,10 @@ public class TaskManager {
 
   private String formatBossBarTitle() {
     return HalloweenChat.color(
-      "<gradient:#FF5400:#FFB703><bold>ซ่อมแซมรถบัส:</bold></gradient> <#6EEB83>"
+      "<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>ซ่อมรถบัส <#FFB703>"
         + completedTasks
-        + "<#5A4E7C>/<#6EEB83>"
+        + "<#5A4E7C>/<#FFB703>"
         + totalTasks
-        + " <#FFB703>(Bus Repair)"
     );
   }
 

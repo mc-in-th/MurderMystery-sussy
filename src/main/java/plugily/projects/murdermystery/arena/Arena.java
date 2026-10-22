@@ -346,7 +346,7 @@ public class Arena extends PluginArena {
         }
         Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
         removeNearbyDisplays(ventLoc, 1.2, 1.8, 1.2, false);
-        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[<#FF3B47>ท่อระบายน้ำ / Sewer Vent<#5A4E7C>]\n<#5A4E7C>(<#B8B0C8>กด <#FFB703>SHIFT <#B8B0C8>หรือคลิกขวาเพื่อมุดท่อ<#5A4E7C>)", false);
+        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[<#FF3B47>Sewer Vent<#5A4E7C>]\n\n<#F4F1DE>ท่อระบายน้ำ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาหรือ <#FFB703>SHIFT <#B8B0C8>เพื่อมุดท่อ<#5A4E7C>)", false);
         block.setTextDisplay(td);
         if(td != null) {
           ventDisplays.add(td);

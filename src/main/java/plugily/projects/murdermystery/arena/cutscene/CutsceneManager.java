@@ -146,8 +146,8 @@ public class CutsceneManager {
       preparePlayerForCutscene(player, participants, initialEyeLoc, cameraRig);
       HalloweenChat.sendTitles(
         player,
-        HalloweenChat.color("<gradient:#9D4EDD:#FF7518><bold>" + arena.getMapName() + "</bold></gradient>"),
-        HalloweenChat.color("<#B8B0C8>โปรดระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ..."),
+        HalloweenChat.color("<#5A4E7C>[<#FF7518>" + arena.getMapName() + "<#5A4E7C>]"),
+        HalloweenChat.color("<#B8B0C8>ระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ"),
         15,
         45,
         15
@@ -483,7 +483,7 @@ public class CutsceneManager {
         session.latestFrame = CutsceneFrame.fromLocation(player.getLocation());
         int currentFrames = recorded.size();
         if(currentFrames >= MAX_RECORDING_FRAMES) {
-          player.sendMessage(HalloweenChat.color("<#FFB703>[!] บันทึกครบเวลาสูงสุด (60 วินาที @ 60FPS) ระบบทำการบันทึกให้อัตโนมัติ!"));
+          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Cutscene<#5A4E7C>] <#FFB703>บันทึกครบเวลาสูงสุด ระบบทำการบันทึกให้อัตโนมัติ"));
           stopRecording(plugin, player, true);
           cancel();
           return;
@@ -493,11 +493,11 @@ public class CutsceneManager {
           HalloweenChat.sendActionBar(
             player,
             HalloweenChat.color(
-              "<gradient:#D90429:#FF5400><bold>[REC 60FPS]</bold></gradient> <#F4F1DE>ห้อง <#FFB703>"
+              "<#5A4E7C>[<#FF3B47>Recording<#5A4E7C>] <#F4F1DE>ห้อง <#FFB703>"
                 + arena.getId()
                 + " <#5A4E7C>| <#6EEB83>"
                 + String.format(Locale.US, "%.1fs", seconds)
-                + " <#B8B0C8>(" + currentFrames + " เฟรม @ 60FPS) <#5A4E7C>| <#FFB703>/mma stopcutscene"
+                + " <#5A4E7C>(<#B8B0C8>/mma stopcutscene<#5A4E7C>)"
             )
           );
         }
@@ -549,7 +549,7 @@ public class CutsceneManager {
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
         HalloweenChat.sendActionBar(
           player,
-          HalloweenChat.color("<#6EEB83><bold>[SAVED 60FPS]</bold> บันทึก Cutscene ห้อง <#FFB703>" + arena.getId() + " <#6EEB83>สำเร็จ!")
+          HalloweenChat.color("<#5A4E7C>[<#6EEB83>Cutscene<#5A4E7C>] <#F4F1DE>บันทึกฉากเปิดตัวห้อง <#FFB703>" + arena.getId() + " <#6EEB83>สำเร็จ")
         );
       }
     }
@@ -653,7 +653,7 @@ public class CutsceneManager {
         HalloweenChat.sendActionBar(
           player,
           HalloweenChat.color(
-            "<gradient:#9D4EDD:#FF7518><bold>[PREVIEW 60FPS]</bold></gradient> <#F4F1DE>ห้อง <#FFB703>"
+            "<#5A4E7C>[<#FF7518>Preview<#5A4E7C>] <#F4F1DE>ห้อง <#FFB703>"
               + arena.getId()
               + " <#5A4E7C>| <#6EEB83>เหลือ "
               + String.format(Locale.US, "%.1fs", remaining)

@@ -84,9 +84,9 @@ public enum TaskType {
 
   public String getHologramTitle() {
     if(visual) {
-      return "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>" + getDisplayName() + "</bold></gradient> <#5A4E7C>] <#72EFDD><bold>[VISUAL]</bold>";
+      return "<#F4F1DE>" + getDisplayName() + "\n<#72EFDD>ยืนยันตัวตนได้";
     }
-    return "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>" + getDisplayName() + "</bold></gradient> <#5A4E7C>]";
+    return "<#F4F1DE>" + getDisplayName();
   }
 
   public static TaskType fromInput(String input) {
