@@ -110,7 +110,8 @@ public class VotingManager {
     }
   }
 
-  public static final String VOTE_GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String VOTE_GUI_RAW_TITLE = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>";
+  public static final String VOTE_GUI_TITLE = HalloweenChat.color(VOTE_GUI_RAW_TITLE);
   public static final int VOTE_MENU_ITEM_SLOT = 4;
 
   private static final int GUI_SIZE = 45;
@@ -284,7 +285,7 @@ public class VotingManager {
     ItemStack item = XMaterial.NETHER_STAR.parseItem();
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>");
       HalloweenChat.setItemLore(meta, Arrays.asList(
         "",
         "<#F4F1DE>เมนูโหวตหาคนร้าย",
@@ -301,7 +302,33 @@ public class VotingManager {
       return false;
     }
     String stripped = HalloweenChat.strip(item.getItemMeta().getDisplayName());
-    return stripped.contains("Emergency Campfire") || stripped.contains("เปิดเมนูโหวตหาคนร้าย");
+    return stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("เปิดเมนูโหวตหาคนร้าย");
+  }
+
+  private void playBusHornSound() {
+    for(Player player : arena.getPlayers()) {
+      if(player != null && player.isOnline()) {
+        try {
+          player.playSound(player.getLocation(), "item.goat_horn.sound.0", 0.85F, 1.45F);
+          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.189F);
+          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.498F);
+          player.playSound(player.getLocation(), "block.note_block.flute", 0.75F, 0.794F);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
+      for(Player player : arena.getPlayers()) {
+        if(player != null && player.isOnline()) {
+          try {
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.189F);
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.498F);
+            player.playSound(player.getLocation(), "block.note_block.flute", 0.75F, 0.794F);
+          } catch(Throwable ignored) {
+          }
+        }
+      }
+    }, 7L);
   }
 
   public boolean startVoting(Player reportingPlayer) {
@@ -317,14 +344,14 @@ public class VotingManager {
       if(arena.getSabotageManager() != null && arena.getSabotageManager().hasActiveSabotage()) {
         XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
         HalloweenChat.send(reportingPlayer,
-          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถเรียกประชุมฉุกเฉินได้ขณะเกิดการก่อวินาศกรรม!");
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถบีบแตรเรียกประชุมฉุกเฉินได้ขณะเกิดการก่อวินาศกรรม!");
         arena.updateCampfireHologram();
         return false;
       }
       if(remainingEmergencyMeetings <= 0) {
         XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
         HalloweenChat.send(reportingPlayer,
-          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถเรียกประชุมฉุกเฉินได้อีก (ใช้ครบจำนวนรอบแล้ว)");
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถบีบแตรเรียกประชุมฉุกเฉินได้อีก (ใช้ครบจำนวนรอบแล้ว)");
         arena.updateCampfireHologram();
         return false;
       }
@@ -332,7 +359,7 @@ public class VotingManager {
       if(remainSec > 0) {
         XSound.ENTITY_VILLAGER_NO.play(reportingPlayer.getLocation(), 0.8F, 1.0F);
         HalloweenChat.send(reportingPlayer,
-          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารออีก <#FFB703>" + remainSec + " วิ");
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>แตรรถบัสยังติดคูลดาวน์อยู่ กรุณารออีก <#FFB703>" + remainSec + " วิ");
         arena.updateCampfireHologram();
         return false;
       }
@@ -370,9 +397,10 @@ public class VotingManager {
       broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + reportingPlayer.getName()
         + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName + " <#F4F1DE>และเรียกประชุมด่วน");
     } else {
+      playBusHornSound();
       musicManager.playEmergencyMeetingSound();
-      broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + reportingPlayer.getName()
-        + " <#F4F1DE>ได้เรียกประชุมฉุกเฉินรอบกองไฟ");
+      broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + reportingPlayer.getName()
+        + " <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน");
     }
 
     Location center = arena.getCampfireLocation();
@@ -430,8 +458,8 @@ public class VotingManager {
           10, 60, 10);
       } else {
         HalloweenChat.sendTitles(player,
-          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>",
-          "<#FFB703>" + reportingPlayer.getName() + " <#F4F1DE>เรียกประชุมฉุกเฉินรอบกองไฟ",
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>",
+          "<#FFB703>" + reportingPlayer.getName() + " <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน",
           10, 60, 10);
       }
     }
@@ -447,7 +475,10 @@ public class VotingManager {
     voteTimer = arena.getPlugin().getConfig().getInt("Voting.Discussion-Time", 15);
     arena.updateCampfireHologram();
 
-    broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เริ่มเวลาปรึกษาหารือ <#FFB703>"
+    String meetingPrefix = victimName != null
+      ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow>"
+      : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>";
+    broadcastArenaMessage(meetingPrefix + " <#F4F1DE>เริ่มเวลาปรึกษาหารือ <#FFB703>"
       + voteTimer + " วิ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>พูดคุยในแชทเพื่อหาตัวคนร้าย<shadow:#000000FF><#5A4E7C>)</shadow>");
 
     return true;
@@ -503,7 +534,10 @@ public class VotingManager {
             + voteTimer + " วิ");
         } else {
           refreshOpenVotingGUIs();
-          String barMsg = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>"
+          String discPrefix = reportedVictimName != null
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>";
+          String barMsg = discPrefix + " <#F4F1DE>เวลาปรึกษา <#FFB703>"
             + voteTimer + " วิ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกขวาไอเทมในมือเพื่อดูรายชื่อ<shadow:#000000FF><#5A4E7C>)</shadow>";
           for(Player player : arena.getPlayersLeft()) {
             HalloweenChat.sendActionBar(player, barMsg);
@@ -576,7 +610,12 @@ public class VotingManager {
     if(voteState != VoteState.DISCUSSION && voteState != VoteState.VOTING && voteState != VoteState.RESULT) {
       return;
     }
-    Inventory gui = Bukkit.createInventory(null, GUI_SIZE, VOTE_GUI_TITLE);
+    Inventory gui;
+    try {
+      gui = Bukkit.createInventory(null, GUI_SIZE, HalloweenChat.component(VOTE_GUI_RAW_TITLE));
+    } catch(Throwable t) {
+      gui = Bukkit.createInventory(null, GUI_SIZE, VOTE_GUI_TITLE);
+    }
     populateVotingGUI(gui, viewer);
     viewer.openInventory(gui);
     XSound.UI_BUTTON_CLICK.play(viewer.getLocation(), 0.7F, 1.2F);
@@ -691,13 +730,16 @@ public class VotingManager {
     int totalVoted = votes.size() + skipVotes.size();
     boolean isResultPhase = (voteState == VoteState.RESULT);
 
-    ItemStack campfireInfo = (reportedVictimName != null ? XMaterial.SOUL_CAMPFIRE : XMaterial.CAMPFIRE).parseItem();
-    ItemMeta cMeta = campfireInfo.getItemMeta();
+    ItemStack meetingInfo = (reportedVictimName != null ? XMaterial.SKELETON_SKULL : XMaterial.BELL).parseItem();
+    if(meetingInfo == null) {
+      meetingInfo = new ItemStack(org.bukkit.Material.BELL);
+    }
+    ItemMeta cMeta = meetingInfo.getItemMeta();
     if(cMeta != null) {
       HalloweenChat.setItemName(cMeta,
         reportedVictimName != null
           ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow>"
-          : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>"
+          : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>"
       );
       List<String> infoLore = new ArrayList<>();
       infoLore.add("");
@@ -725,9 +767,9 @@ public class VotingManager {
         infoLore.add("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังดำเนินการตามผลโหวต<shadow:#000000FF><#5A4E7C>)</shadow>");
       }
       HalloweenChat.setItemLore(cMeta, infoLore);
-      campfireInfo.setItemMeta(cMeta);
+      meetingInfo.setItemMeta(cMeta);
     }
-    gui.setItem(INFO_SLOT, campfireInfo);
+    gui.setItem(INFO_SLOT, meetingInfo);
 
     IUser viewerUser = arena.getPlugin().getUserManager().getUser(viewer);
     boolean viewerIsMurderer = Role.isRole(Role.MURDERER, viewerUser, arena);
@@ -1152,7 +1194,7 @@ public class VotingManager {
       : "<shadow:#000000FF><#5A4E7C>(</shadow><#FF3B47>เขาไม่ใช่ฆาตกร<shadow:#000000FF><#5A4E7C>)</shadow>";
 
     broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + pendingEjectedName
-      + " <#F4F1DE>ถูกโหวตคัดออกรอบกองไฟ " + roleReveal);
+      + " <#F4F1DE>ถูกโหวตคัดออก " + roleReveal);
 
     String ejectTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>" + pendingEjectedName + " ถูกโหวตคัดออก<shadow:#000000FF><#5A4E7C>]</shadow>";
     for(Player player : arena.getPlayers()) {
@@ -1240,7 +1282,7 @@ public class VotingManager {
       return false;
     }
     String stripped = HalloweenChat.strip(title);
-    return VOTE_GUI_TITLE.equals(title) || stripped.contains("Emergency Campfire") || stripped.contains("โหวตหาคนร้ายรอบกองไฟ");
+    return VOTE_GUI_TITLE.equals(title) || stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("โหวตหาคนร้าย");
   }
 
   public void handlePlayerLeave(Player player) {

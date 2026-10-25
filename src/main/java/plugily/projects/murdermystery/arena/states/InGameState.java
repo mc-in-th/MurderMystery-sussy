@@ -24,11 +24,9 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginInGameState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
-import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
@@ -76,8 +74,7 @@ public class InGameState extends PluginInGameState {
     }
 
     distributeMurdererSword(pluginArena);
-    //every 30 secs survive reward
-    givePlayerSurviveReward(pluginArena);
+    announceTimeLeft(pluginArena);
     addInnocentLocator(pluginArena);
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer() + 1) {
       addMurdererSpeed(pluginArena);
@@ -127,14 +124,10 @@ public class InGameState extends PluginInGameState {
     }
   }
 
-  private void givePlayerSurviveReward(Arena pluginArena) {
+  private void announceTimeLeft(Arena pluginArena) {
     if(pluginArena.getTimer() % 30 == 0) {
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").arena(pluginArena).sendArena();
-      for(Player p : pluginArena.getPlayersLeft()) {
-        IUser user = getPlugin().getUserManager().getUser(p);
-        if(Role.isRole(Role.INNOCENT, user, pluginArena)) {
-          ArenaUtils.addScore(user, ArenaUtils.ScoreAction.SURVIVE_TIME, 0);
-        }
+      for(Player p : pluginArena.getPlayers()) {
+        HalloweenChat.sendTitleEntry(p, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").asKey().player(p).arena(pluginArena).build());
       }
     }
   }

@@ -238,8 +238,8 @@ public class TaskAndVentArgument {
           msg(player, "<#72EFDD>เอฟเฟกต์ยืนยันตัวตน (Visual Tasks): "
             + (arena.isVisualTasksEnabled() ? "<#6EEB83>เปิดใช้งาน (ON)" : "<#FF3B47>ปิดใช้งาน (OFF)"));
           Location cf = arena.getCampfireLocation();
-          msg(player, "<#FF7518>จุดกองไฟประชุมฉุกเฉิน (Campfire): "
-            + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setcampfire " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
+          msg(player, "<#FF7518>จุดแตรรถบัสฉุกเฉิน (Bus Horn): "
+            + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbushorn " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
           msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene 60FPS): "
             + (arena.getCutsceneManager().hasCutscene()
               ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม @ 60FPS)"
@@ -425,41 +425,16 @@ public class TaskAndVentArgument {
     registry.mapArgument(
       "murdermysteryadmin",
       new LabeledCommandArgument(
-        "setcampfire",
+        "setbushorn",
         "murdermystery.admin.addtask",
         CommandArgument.ExecutorType.PLAYER,
         new LabelData(
-          "/mma setcampfire <arena>",
-          "/mma setcampfire <arena>",
-          "&7ตั้งจุดกองไฟกลางแมพสำหรับรวมตัวประชุมและโหวตหาคนร้าย\n&6Permission: &7murdermystery.admin.addtask")) {
+          "/mma setbushorn <arena>",
+          "/mma setbushorn <arena>",
+          "&7ตั้งจุดแตรรถบัสสำหรับเรียกประชุมฉุกเฉินและโหวตหาคนร้าย\n&6Permission: &7murdermystery.admin.addtask")) {
         @Override
         public void execute(CommandSender sender, String[] args) {
-          Player player = (Player) sender;
-          if(args.length < 2) {
-            msg(player, "<#FF3B47>การใช้งาน: /mma setcampfire <ชื่อห้อง/arena>");
-            return;
-          }
-          String arenaId = args[1];
-          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
-          if(arena == null) {
-            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
-            return;
-          }
-
-          Block targetBlock = player.getTargetBlock(null, 5);
-          Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-            ? targetBlock.getLocation()
-            : player.getLocation().getBlock().getLocation();
-
-          FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
-          String serialized = LocationSerializer.locationToString(loc);
-          config.set("instances." + arenaId + ".campfire", serialized);
-          ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
-
-          arena.setCampfireLocation(loc);
-
-          msg(player, "<#6EEB83>[+] ตั้งจุดกองไฟประชุมฉุกเฉิน (Campfire) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
-            + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+          handleSetBusHorn(registry, (Player) sender, args, "setbushorn");
         }
       }
     );
@@ -467,34 +442,42 @@ public class TaskAndVentArgument {
     registry.mapArgument(
       "murdermysteryadmin",
       new LabeledCommandArgument(
-        "clearcampfire",
+        "clearbushorn",
         "murdermystery.admin.cleartasks",
         CommandArgument.ExecutorType.PLAYER,
         new LabelData(
-          "/mma clearcampfire <arena>",
-          "/mma clearcampfire <arena>",
-          "&7ล้างจุดกองไฟประชุมฉุกเฉินของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
+          "/mma clearbushorn <arena>",
+          "/mma clearbushorn <arena>",
+          "&7ล้างจุดแตรรถบัสประชุมฉุกเฉินของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
         @Override
         public void execute(CommandSender sender, String[] args) {
-          Player player = (Player) sender;
-          if(args.length < 2) {
-            msg(player, "<#FF3B47>การใช้งาน: /mma clearcampfire <ชื่อห้อง/arena>");
-            return;
-          }
-          String arenaId = args[1];
-          Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
-          if(arena == null) {
-            msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
-            return;
-          }
+          handleClearBusHorn(registry, (Player) sender, args, "clearbushorn");
+        }
+      }
+    );
 
-          FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
-          config.set("instances." + arenaId + ".campfire", null);
-          ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new CommandArgument(
+        "setcampfire",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetBusHorn(registry, (Player) sender, args, "setbushorn");
+        }
+      }
+    );
 
-          arena.setCampfireLocation(null);
-
-          msg(player, "<#FF3B47>[!] ล้างจุดกองไฟประชุมฉุกเฉินของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new CommandArgument(
+        "clearcampfire",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearBusHorn(registry, (Player) sender, args, "clearbushorn");
         }
       }
     );
@@ -1000,6 +983,57 @@ public class TaskAndVentArgument {
     msg(player, "<#6EEB83>[+] ตั้งบล็อกแก้ Sabotage <#FF3B47>" + type.getIcon() + " " + type.getDisplayName()
       + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+  }
+
+  private static void handleSetBusHorn(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma " + subcommand + " <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    Block targetBlock = player.getTargetBlock(null, 5);
+    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
+      ? targetBlock.getLocation()
+      : player.getLocation().getBlock().getLocation();
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    String serialized = LocationSerializer.locationToString(loc);
+    config.set("instances." + arenaId + ".bushorn", serialized);
+    config.set("instances." + arenaId + ".campfire", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.setCampfireLocation(loc);
+
+    msg(player, "<#6EEB83>[+] ตั้งจุดแตรรถบัสฉุกเฉิน (Bus Horn) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
+      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+  }
+
+  private static void handleClearBusHorn(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma " + subcommand + " <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".bushorn", null);
+    config.set("instances." + arenaId + ".campfire", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.setCampfireLocation(null);
+
+    msg(player, "<#FF3B47>[!] ล้างจุดแตรรถบัสฉุกเฉินของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
   }
 
   private static void removeBlockFromConfigTasks(FileConfiguration config, String arenaId, Location targetLoc) {

@@ -41,7 +41,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
-import plugily.projects.murdermystery.arena.ArenaUtils;
+
 import plugily.projects.murdermystery.arena.role.Role;
 
 /**
@@ -185,7 +185,7 @@ public class PluginEvents implements Listener {
     victim.damage(100.0);
     attackerUser.adjustStatistic("LOCAL_KILLS", 1);
     attackerUser.adjustStatistic("KILLS", 1);
-    ArenaUtils.addScore(attackerUser, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
+
   }
 
   @EventHandler(priority = EventPriority.HIGH)

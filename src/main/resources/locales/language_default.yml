@@ -264,21 +264,6 @@ In-Game:
           Murderer: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>กำจัดผู้โดยสารทุกคนและขัดขวางการซ่อมรถบัส"
           Detective: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>นักสืบ<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร"
           Innocent: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ร่วมมือกันซ่อมรถบัสในป่าและเปิดโปงฆาตกร"
-        Score:
-          Bonus: "<#6EEB83>+%number% คะแนน <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>%value%<shadow:#000000FF><#5A4E7C>)</shadow>"
-          Gold: "<#FFB703>เก็บเศษทองคำได้"
-          Action:
-            Kill:
-              Player: "สังหารผู้โดยสาร"
-              Murderer: "ปราบฆาตกรสำเร็จ"
-              Innocent: "โจมตีผู้บริสุทธิ์"
-            Pickup:
-              Gold: "เก็บทองคำ"
-            Surviving:
-              Time: "เอาชีวิตรอดครบ 30 วินาที"
-              End: "เอาชีวิตรอดจนจบเกม"
-            Win: "ชนะในรอบนี้"
-            Detective: "ผู้โดยสารรอดชีวิต %number% คน"
         Sword:
           Soon: "%plugin_prefix% <#FF3B47>ฆาตกรจะได้รับอาวุธสังหารในอีก <#FFB703>%number% วินาที"
         Special-Blocks:
@@ -335,11 +320,11 @@ In-Game:
           Charge-Battery: "พ่วงชาร์จแบตเตอรี่รถบัส"
           Clean-Air-Filter: "ทำความสะอาดไส้กรองอากาศ"
       Voting:
-        Cooldown: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่"
+        Cooldown: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>แตรรถบัสยังติดคูลดาวน์อยู่"
         Body-Reported: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน"
-        Discussion-Start: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ"
+        Discussion-Start: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ"
         Vote-Now: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>%number% วิ<shadow:#000000FF><#5A4E7C>)</shadow>"
-        Discussion-Timer: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ"
+        Discussion-Timer: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ"
         Vote-Timer: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ"
         Already-Voted: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว"
         Player-Voted: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว"
@@ -438,7 +423,6 @@ Leaderboard:
     Next-Level-Exp: "ประสบการณ์สู่เลเวลถัดไป ▸ %number%"
     Kills: "จำนวนการสังหาร ▸ %number%"
     Deaths: "จำนวนครั้งที่เสียชีวิต ▸ %number%"
-    Highest-Score: "คะแนนสูงสุด ▸ %number%"
     Murderer-Pass: "บัตรฆาตกร ▸ %number%"
     Detective-Pass: "บัตรนักสืบ ▸ %number%"
     Murderer-Contribution: "แต้มสะสมโอกาสฆาตกร ▸ %number%"

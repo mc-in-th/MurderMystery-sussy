@@ -55,7 +55,6 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaEvents;
 import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
@@ -225,7 +224,6 @@ public class ArenaEvents extends PluginArenaEvents {
 
     user.adjustStatistic("KILLS", 1);
     user.adjustStatistic("LOCAL_KILLS", 1);
-    ArenaUtils.addScore(user, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
   }
 
 
@@ -279,13 +277,11 @@ public class ArenaEvents extends PluginArenaEvents {
     userAttacker.adjustStatistic("KILLS", 1);
     if(Role.isRole(Role.MURDERER, userAttacker)) {
       userAttacker.adjustStatistic("LOCAL_KILLS", 1);
-      ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
     }
 
     HalloweenChat.sendTitles(victim, new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().build(), null, 5, 40, 50);
 
     if(Role.isRole(Role.MURDERER, userVictim)) {
-      ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.KILL_MURDERER, 0);
       arena.adjustContributorValue(Role.MURDERER, userAttacker, plugin.getRandom().nextInt(2));
     } else if(plugin.getConfigPreferences().getOption("BOW_KILL_DETECTIVE") && Role.isRole(Role.INNOCENT, userVictim)) {
       if(Role.isRole(Role.MURDERER, userAttacker)) {
@@ -298,7 +294,6 @@ public class ArenaEvents extends PluginArenaEvents {
         HalloweenChat.sendSubTitle(attacker, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY").asKey().build(), 5, 40, 5);
 
         attacker.damage(100.0);
-        ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.INNOCENT_KILL, 0);
       }
     }
   }
@@ -671,6 +666,25 @@ public class ArenaEvents extends PluginArenaEvents {
       event.setCancelled(true);
       if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
         arena.getVotingManager().openVotingGUI(player);
+      }
+      return;
+    }
+
+    if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
+      Block leftBlock = event.getClickedBlock();
+      Location leftLoc = leftBlock != null ? leftBlock.getLocation() : null;
+      ItemStack leftHand = player.getInventory().getItemInMainHand();
+      ItemStack murdererSword = plugin.getSwordSkinManager().getMurdererSword(player);
+      boolean holdingSword = Role.isRole(Role.MURDERER, user, arena)
+        && leftHand != null
+        && murdererSword != null
+        && leftHand.getType() == murdererSword.getType();
+      Location busHornLoc = arena.getCampfireLocation();
+      if(!holdingSword && busHornLoc != null && leftLoc != null && leftLoc.getWorld() != null && leftLoc.getWorld().equals(busHornLoc.getWorld())) {
+        if(leftLoc.getBlockX() == busHornLoc.getBlockX() && leftLoc.getBlockY() == busHornLoc.getBlockY() && leftLoc.getBlockZ() == busHornLoc.getBlockZ()) {
+          event.setCancelled(true);
+          arena.getVotingManager().startVoting(player, null);
+        }
       }
       return;
     }

@@ -142,6 +142,7 @@ public class ArenaMinimap {
           "<#B8B0C8>แสดงตำแหน่งท่อและจุดทำภารกิจทั้งหมด",
           "<#FF3B47>[V] <#F4F1DE>ท่อระบายน้ำ",
           "<#FFB703>[!] <#F4F1DE>จุดภารกิจของผู้โดยสาร",
+          "<#FF7518>[H] <#F4F1DE>แตรรถบัสฉุกเฉิน",
           "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
           "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<shadow:#000000FF><#5A4E7C>)</shadow>"
         );
@@ -151,6 +152,7 @@ public class ArenaMinimap {
           "<#B8B0C8>แสดงตำแหน่งภารกิจซ่อมรถบัสของคุณ",
           "<#FFB703>[!] <#F4F1DE>ภารกิจที่ยังไม่เสร็จ",
           "<#6EEB83>[/] <#F4F1DE>ภารกิจที่เสร็จแล้ว",
+          "<#FF7518>[H] <#F4F1DE>แตรรถบัสฉุกเฉิน",
           "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
           "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<shadow:#000000FF><#5A4E7C>)</shadow>"
         );
@@ -463,7 +465,7 @@ public class ArenaMinimap {
         g.drawOval(cx - 4, cy - 4, 8, 8);
         g.setFont(new Font("SansSerif", Font.BOLD, 6));
         g.setColor(Color.WHITE);
-        g.drawString("C", cx - 2, cy + 3);
+        g.drawString("H", cx - 2, cy + 3);
       }
 
       if(arena.getSabotageManager().hasActiveSabotage()) {

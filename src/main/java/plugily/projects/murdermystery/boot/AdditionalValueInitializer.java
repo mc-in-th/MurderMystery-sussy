@@ -46,13 +46,11 @@ public class AdditionalValueInitializer {
   private void registerStatistics() {
     getStatsStorage().registerStatistic("KILLS", new StatisticType("kills", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("DEATHS", new StatisticType("deaths", true, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("HIGHEST_SCORE", new StatisticType("highest_score", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("CONTRIBUTION_DETECTIVE", new StatisticType("contribution_detective", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("CONTRIBUTION_MURDERER", new StatisticType("contribution_murderer", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("PASS_MURDERER", new StatisticType("pass_murderer", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("PASS_DETECTIVE", new StatisticType("pass_detective", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_PRAISES", new StatisticType("local_praises", false, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("LOCAL_SCORE", new StatisticType("local_score", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_PRAY", new StatisticType("local_pray", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_GOLD", new StatisticType("local_gold", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_KILLS", new StatisticType("local_kills", false, "int(11) NOT NULL DEFAULT '0'"));

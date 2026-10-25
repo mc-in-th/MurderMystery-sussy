@@ -1130,7 +1130,7 @@ public class Arena extends PluginArena {
     boolean sabotageActive = sabotageManager != null && sabotageManager.hasActiveSabotage();
 
     StringBuilder sb = new StringBuilder();
-    sb.append("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
+    sb.append("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
     if(remainingUses > 0) {
       sb.append("<#F4F1DE>กดได้อีก <#FFB703>").append(remainingUses).append(" <#F4F1DE>รอบ");
       if(sabotageActive) {
@@ -1141,7 +1141,7 @@ public class Arena extends PluginArena {
     } else {
       sb.append("<#FF3B47>กดได้อีก 0 รอบ");
     }
-    sb.append("\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อเรียกประชุมฉุกเฉิน<shadow:#000000FF><#5A4E7C>)</shadow>");
+    sb.append("\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อบีบแตรเรียกประชุมฉุกเฉิน<shadow:#000000FF><#5A4E7C>)</shadow>");
     return sb.toString();
   }
 

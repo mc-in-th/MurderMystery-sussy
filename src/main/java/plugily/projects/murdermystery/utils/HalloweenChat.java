@@ -465,6 +465,15 @@ public final class HalloweenChat {
       defField.setAccessible(true);
       FileConfiguration defaultConfig = (FileConfiguration) defField.get(languageManager);
 
+      if(languageConfig != null) {
+        languageConfig.set("In-Game.Messages.Arena.Playing.Score", null);
+        languageConfig.set("Leaderboard.Statistics.Highest-Score", null);
+      }
+      if(defaultConfig != null) {
+        defaultConfig.set("In-Game.Messages.Arena.Playing.Score", null);
+        defaultConfig.set("Leaderboard.Statistics.Highest-Score", null);
+      }
+
       if(languageConfig != null && defaultConfig != null) {
         for(String key : defaultConfig.getKeys(true)) {
           if(defaultConfig.isConfigurationSection(key)) {
@@ -478,6 +487,8 @@ public final class HalloweenChat {
             hasStaleGradient = existingStr.contains("<gradient:")
                 || existingStr.contains("MurderMystery")
                 || existingStr.contains("%plugin_name%")
+                || existingStr.contains("Emergency Campfire")
+                || existingStr.contains("กองไฟ")
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             for(Object item : (List<?>) existing) {
@@ -486,6 +497,8 @@ public final class HalloweenChat {
                 if(itemStr.contains("<gradient:")
                     || itemStr.contains("MurderMystery")
                     || itemStr.contains("%plugin_name%")
+                    || itemStr.contains("Emergency Campfire")
+                    || itemStr.contains("กองไฟ")
                     || (itemStr.contains("<#5A4E7C>") && !itemStr.contains("<shadow:"))) {
                   hasStaleGradient = true;
                   break;

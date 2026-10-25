@@ -146,11 +146,14 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
-    String campfireStr = section.getString(id + ".campfire");
-    if(campfireStr != null && !campfireStr.isEmpty()) {
-      Location campfireLoc = LocationSerializer.getLocation(campfireStr);
-      if(campfireLoc != null) {
-        ((Arena) arena).setCampfireLocation(campfireLoc);
+    String busHornStr = section.getString(id + ".bushorn");
+    if(busHornStr == null || busHornStr.isEmpty()) {
+      busHornStr = section.getString(id + ".campfire");
+    }
+    if(busHornStr != null && !busHornStr.isEmpty()) {
+      Location busHornLoc = LocationSerializer.getLocation(busHornStr);
+      if(busHornLoc != null) {
+        ((Arena) arena).setCampfireLocation(busHornLoc);
       }
     }
 

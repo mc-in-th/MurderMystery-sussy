@@ -89,11 +89,6 @@ public class ArenaManager extends PluginArenaManager {
       pluginArena.removeDeathPlayer(player);
     }
 
-    int localScore = user.getStatistic("LOCAL_SCORE");
-    if(localScore > user.getStatistic("HIGHEST_SCORE")) {
-      user.setStatistic("HIGHEST_SCORE", localScore);
-    }
-
     if(playerHasMurdererRole) {
       pluginArena.removeFromMurdererList(player);
     }

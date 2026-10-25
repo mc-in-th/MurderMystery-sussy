@@ -33,7 +33,6 @@ import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
@@ -88,10 +87,6 @@ public class ArenaUtils extends PluginArenaUtils {
   public static void onMurdererDeath(Arena arena) {
     for(Player player : arena.getPlayers()) {
       HalloweenChat.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
-      IUser loopUser = getPlugin().getUserManager().getUser(player);
-      if(Role.isRole(Role.INNOCENT, loopUser, arena)) {
-        addScore(loopUser, ScoreAction.SURVIVE_GAME, 0);
-      }
     }
     //we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTask(getPlugin(), () -> getPlugin().getArenaManager().stopGame(false, arena));
@@ -191,118 +186,6 @@ public class ArenaUtils extends PluginArenaUtils {
       }
       VersionUtils.updateNameTagsVisibility(
         p, players, "MMHide", arena.getArenaState() != IArenaState.IN_GAME);
-    }
-  }
-
-  public static void addScore(IUser user, ScoreAction action, int amount) {
-    XSound.matchXSound(XSound.ENTITY_EXPERIENCE_ORB_PICKUP.parseSound())
-      .play(user.getPlayer().getLocation(), 1F, 2F);
-
-    if(action == ScoreAction.GOLD_PICKUP && amount > 1) {
-      int score = action.points * amount;
-      HalloweenChat.send(user.getPlayer(), new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(score)
-        .value(action.action)
-        .build());
-      user.adjustStatistic("LOCAL_SCORE", score);
-      return;
-    }
-
-    if(action == ScoreAction.DETECTIVE_WIN_GAME) {
-      int innocents = 0;
-      Arena arena = (Arena) user.getArena();
-
-      for(Player p : arena.getPlayersLeft()) {
-        if(Role.isRole(Role.INNOCENT, getPlugin().getUserManager().getUser(p), arena)) {
-          innocents++;
-        }
-      }
-
-      int overallInnocents = 100 * innocents;
-
-      user.adjustStatistic("LOCAL_SCORE", overallInnocents);
-      HalloweenChat.send(user.getPlayer(), new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(overallInnocents)
-        .value(new MessageBuilder(action.action).integer(innocents).build())
-        .build());
-      return;
-    }
-    String msg =
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(action.points)
-        .value(action.action)
-        .build();
-
-    if(action.points < 0) {
-      msg = msg.replace("+", "");
-    }
-
-    user.adjustStatistic("LOCAL_SCORE", action.points);
-    HalloweenChat.send(user.getPlayer(), msg);
-  }
-
-  public enum ScoreAction {
-    KILL_PLAYER(
-      100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_PLAYER")
-        .asKey()
-        .build()),
-    KILL_MURDERER(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_MURDERER")
-        .asKey()
-        .build()),
-    GOLD_PICKUP(
-      15,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_PICKUP_GOLD")
-        .asKey()
-        .build()),
-    SURVIVE_TIME(
-      150,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_TIME")
-        .asKey()
-        .build()),
-    SURVIVE_GAME(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_END")
-        .asKey()
-        .build()),
-    WIN_GAME(
-      100, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_WIN").asKey().build()),
-    DETECTIVE_WIN_GAME(
-      0,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_DETECTIVE")
-        .asKey()
-        .build()),
-    INNOCENT_KILL(
-      -100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_INNOCENT")
-        .asKey()
-        .build());
-
-    int points;
-    String action;
-
-    ScoreAction(int points, String action) {
-      this.points = points;
-      this.action = action;
-    }
-
-    public int getPoints() {
-      return points;
-    }
-
-    public String getAction() {
-      return action;
     }
   }
 }

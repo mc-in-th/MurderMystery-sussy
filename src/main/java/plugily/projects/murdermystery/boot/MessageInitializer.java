@@ -70,16 +70,6 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER", new Message("In-Game.Messages.Arena.Playing.Role.Murderer", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_DETECTIVE", new Message("In-Game.Messages.Arena.Playing.Role.Detective", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT", new Message("In-Game.Messages.Arena.Playing.Role.Innocent", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS", new Message("In-Game.Messages.Arena.Playing.Score.Bonus", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_GOLD", new Message("In-Game.Messages.Arena.Playing.Score.Gold", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_PLAYER", new Message("In-Game.Messages.Arena.Playing.Score.Action.Kill.Player", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_MURDERER", new Message("In-Game.Messages.Arena.Playing.Score.Action.Kill.Murderer", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_INNOCENT", new Message("In-Game.Messages.Arena.Playing.Score.Action.Kill.Innocent", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_PICKUP_GOLD", new Message("In-Game.Messages.Arena.Playing.Score.Action.Pickup.Gold", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_TIME", new Message("In-Game.Messages.Arena.Playing.Score.Action.Surviving.Time", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_END", new Message("In-Game.Messages.Arena.Playing.Score.Action.Surviving.End", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_WIN", new Message("In-Game.Messages.Arena.Playing.Score.Action.Win", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_DETECTIVE", new Message("In-Game.Messages.Arena.Playing.Score.Action.Detective", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SWORD_SOON", new Message("In-Game.Messages.Arena.Playing.Sword.Soon", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_CAULDRON_POTION", new Message("In-Game.Messages.Arena.Playing.Special-Blocks.Cauldron.Potion", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_SPECIAL_BLOCKS_CAULDRON_HOLOGRAM", new Message("In-Game.Messages.Arena.Playing.Special-Blocks.Cauldron.Hologram", ""));
@@ -109,7 +99,6 @@ public class MessageInitializer {
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_PASS_MURDERER", new Message("Leaderboard.Statistics.Murderer-Pass", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_KILLS", new Message("Leaderboard.Statistics.Kills", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_DEATHS", new Message("Leaderboard.Statistics.Deaths", ""));
-    getMessageManager().registerMessage("LEADERBOARD_STATISTICS_HIGHEST_SCORE", new Message("Leaderboard.Statistics.Highest-Score", ""));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR", new Message("In-Game.Messages.Arena.Task.Bossbar",
         HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Repair<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>%value%")));
@@ -134,15 +123,15 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", new Message("In-Game.Messages.Arena.Task.Types.Clean-Air-Filter", "ทำความสะอาดไส้กรองอากาศ"));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown",
-        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>แตรรถบัสยังติดคูลดาวน์อยู่")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_BODY_REPORTED", new Message("In-Game.Messages.Arena.Voting.Body-Reported",
         HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_START", new Message("In-Game.Messages.Arena.Voting.Discussion-Start",
-        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_NOW", new Message("In-Game.Messages.Arena.Voting.Vote-Now",
         HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>%number% วิ<shadow:#000000FF><#5A4E7C>)</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_TIMER", new Message("In-Game.Messages.Arena.Voting.Discussion-Timer",
-        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_TIMER", new Message("In-Game.Messages.Arena.Voting.Vote-Timer",
         HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_ALREADY_VOTED", new Message("In-Game.Messages.Arena.Voting.Already-Voted",
