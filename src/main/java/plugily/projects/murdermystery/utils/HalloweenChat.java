@@ -468,10 +468,16 @@ public final class HalloweenChat {
       if(languageConfig != null) {
         languageConfig.set("In-Game.Messages.Arena.Playing.Score", null);
         languageConfig.set("Leaderboard.Statistics.Highest-Score", null);
+        languageConfig.set("In-Game.Messages.Arena.Pass", null);
+        languageConfig.set("Leaderboard.Statistics.Murderer-Pass", null);
+        languageConfig.set("Leaderboard.Statistics.Detective-Pass", null);
       }
       if(defaultConfig != null) {
         defaultConfig.set("In-Game.Messages.Arena.Playing.Score", null);
         defaultConfig.set("Leaderboard.Statistics.Highest-Score", null);
+        defaultConfig.set("In-Game.Messages.Arena.Pass", null);
+        defaultConfig.set("Leaderboard.Statistics.Murderer-Pass", null);
+        defaultConfig.set("Leaderboard.Statistics.Detective-Pass", null);
       }
 
       if(languageConfig != null && defaultConfig != null) {
@@ -489,6 +495,8 @@ public final class HalloweenChat {
                 || existingStr.contains("%plugin_name%")
                 || existingStr.contains("Emergency Campfire")
                 || existingStr.contains("กองไฟ")
+                || existingStr.contains(">Event<")
+                || existingStr.contains("คำสั่ง Event")
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             boolean hasServerIp = false;
@@ -503,6 +511,8 @@ public final class HalloweenChat {
                     || itemStr.contains("%plugin_name%")
                     || itemStr.contains("Emergency Campfire")
                     || itemStr.contains("กองไฟ")
+                    || itemStr.contains(">Event<")
+                    || itemStr.contains("คำสั่ง Event")
                     || (itemStr.contains("<#5A4E7C>") && !itemStr.contains("<shadow:"))) {
                   hasStaleGradient = true;
                   break;

@@ -49,13 +49,13 @@ Commands:
     Adjust-Statistic: "%plugin_prefix% ค่าสถิติ %value% ของ %player% เปลี่ยนเป็น %number% แล้ว"
     Reload-Success: "%plugin_prefix% รีโหลดข้อมูลห้องเกมเรียบร้อยแล้ว"
     List:
-      Header: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>รายชื่อห้องเกม <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ชื่อ สถานะ ผู้เล่น<shadow:#000000FF><#5A4E7C>)</shadow>"
+      Header: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>รายชื่อห้องเกม <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ชื่อ สถานะ ผู้เล่น<shadow:#000000FF><#5A4E7C>)</shadow>"
       Format: "<#FFB703>%arena_name% <shadow:#000000FF><#5A4E7C>|</shadow> %arena_state_placeholder% <shadow:#000000FF><#5A4E7C>|</shadow> <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%"
       No-Arenas: "%color_chat_issue%%plugin_prefix% ยังไม่มีห้องเกมที่สร้างไว้"
     Spychat:
       Toggled: "%plugin_prefix% เปลี่ยนสถานะแชทผู้ดูแลเป็น %value%"
   Main:
-    Header: "<shadow:#000000FF><#5A4E7C>----------------[</shadow><#FF7518> คำสั่ง Event <shadow:#000000FF><#5A4E7C>]----------------</shadow>"
+    Header: "<shadow:#000000FF><#5A4E7C>-------------[</shadow><#FF7518> คำสั่ง Haunted Bus <shadow:#000000FF><#5A4E7C>]-------------</shadow>"
     Description:
       - "<#FFB703>คำสั่งผู้เล่น:"
       - "<#72EFDD>/%plugin_short_command% stats <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดูสถิติการเล่นของคุณ"
@@ -75,7 +75,7 @@ Commands:
 # Placeholders:
 # https://wiki.plugily.xyz/REPLACEWITHPROJECTNAME/placeholders/language
 Scoreboard:
-  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
+  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow>"
   Roles:
     Detective: "<#72EFDD>นักสืบ"
     Murderer: "<#FF3B47>ฆาตกร"
@@ -148,25 +148,25 @@ Scoreboard:
 #
 # Bossbar needs to be enabled on config.yml
 Bossbar:
-  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
+  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow>"
   Content:
     Waiting:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
     Starting:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
     In-Game:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>บทบาทของคุณ %arena_player_role%"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>บทบาทของคุณ %arena_player_role%"
     Ending:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>เกมจบลงแล้ว"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>เกมจบลงแล้ว"
     Restarting:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
 
 #
 # In-Game Messages
 #
 In-Game:
   #Used in most game messages.
-  Plugin-Prefix: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
+  Plugin-Prefix: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow>"
   Game-Chat-Format: "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>%user_statistic_level%<shadow:#000000FF><#5A4E7C>]</shadow> <#C77DFF>%player% <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>%message%"
   You-Leveled-Up: "%plugin_prefix% <#6EEB83>เลเวลอัปแล้ว ตอนนี้คุณอยู่เลเวล <#FFB703>%number%"
   Commands-Blocked: "%color_chat_issue%%plugin_prefix% ไม่สามารถใช้คำสั่งอื่นขณะอยู่ในเกมได้ ใช้ได้เฉพาะ /%plugin_short_command% leave เพื่อออกจากห้อง"
@@ -221,7 +221,7 @@ In-Game:
     Game-End:
       Summary:
         - "<shadow:#000000FF><#5A4E7C>--------------------------------------------------</shadow>"
-        - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>สรุปผลการเอาชีวิตรอด"
+        - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>สรุปผลการเอาชีวิตรอด"
         - ""
         - "%arena_summary%"
         - "%arena_summary_player%"
