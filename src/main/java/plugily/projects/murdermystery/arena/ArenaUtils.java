@@ -156,6 +156,10 @@ public class ArenaUtils extends PluginArenaUtils {
 
     ArmorStandHologram hologram =
       new ArmorStandHologram(victim.getLocation()).appendItem(new ItemStack(Material.BOW, 1));
+    hologram.getArmorStands().forEach(stand -> stand.setPersistent(false));
+    if(hologram.getEntityItem() != null) {
+      hologram.getEntityItem().setPersistent(false);
+    }
 
     arena.setBowHologram(hologram);
     addBowLocator(arena, hologram.getLocation());

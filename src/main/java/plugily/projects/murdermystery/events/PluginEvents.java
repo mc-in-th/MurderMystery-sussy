@@ -33,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
@@ -63,12 +64,17 @@ public class PluginEvents implements Listener {
     }
     Player attacker = event.getPlayer();
     Arena arena = plugin.getArenaRegistry().getArena(attacker);
-    if(arena == null) {
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
+      return;
+    }
+    if(arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(attacker))) {
       return;
     }
 
     IUser attackerUser = plugin.getUserManager().getUser(attacker);
-    if(!Role.isRole(Role.MURDERER, attackerUser, arena)) {
+    if(attackerUser == null || attackerUser.isSpectator() || arena.isDeathPlayer(attacker) || !Role.isRole(Role.MURDERER, attackerUser, arena)) {
       return;
     }
 
@@ -84,7 +90,7 @@ public class PluginEvents implements Listener {
     if(attackerUser.getCooldown("sword_shoot") > 0) {
       return;
     }
-    createFlyingSword(attacker, attackerUser);
+    createFlyingSword(arena, attacker, attackerUser);
 
     int swordFlyCooldown = plugin.getConfig().getInt("Sword.Cooldown.Fly", 5);
     if(swordFlyCooldown <= 0) {
@@ -99,13 +105,14 @@ public class PluginEvents implements Listener {
     plugin.getBukkitHelper().applyActionBarCooldown(attacker, swordFlyCooldown);
   }
 
-  private void createFlyingSword(Player attacker, IUser attackerUser) {
+  private void createFlyingSword(Arena sourceArena, Player attacker, IUser attackerUser) {
     Location loc = attacker.getLocation();
     Vector vec = loc.getDirection();
     vec.normalize().multiply(plugin.getConfig().getDouble("Sword.Speed", 0.65));
     Location standStart = plugin.getBukkitHelper().rotateAroundAxisY(new Vector(1.0D, 0.0D, 0.0D), loc.getYaw()).toLocation(attacker.getWorld()).add(loc);
     standStart.setYaw(loc.getYaw());
     ArmorStand stand = (ArmorStand) attacker.getWorld().spawnEntity(standStart, EntityType.ARMOR_STAND);
+    stand.setPersistent(false);
     stand.setVisible(false);
     if(ServerVersion.Version.isCurrentHigher(ServerVersion.Version.v1_8_8)) {
       stand.setInvulnerable(true);
@@ -131,6 +138,12 @@ public class PluginEvents implements Listener {
     new BukkitRunnable() {
       @Override
       public void run() {
+        if(!stand.isValid() || sourceArena.getArenaState() != IArenaState.IN_GAME
+          || sourceArena.getVotingManager().isVotingActive() || sourceArena.getCutsceneManager().isPlaying()) {
+          cancel();
+          stand.remove();
+          return;
+        }
         VersionUtils.teleport(stand, standStart.add(vec));
         initialise.add(vec);
         initialise.getWorld().getNearbyEntities(initialise, maxHitRange, maxHitRange, maxHitRange)
@@ -138,7 +151,7 @@ public class PluginEvents implements Listener {
             if(entity instanceof Player) {
               Player victim = (Player) entity;
               Arena arena = plugin.getArenaRegistry().getArena(victim);
-              if(arena == null) {
+              if(arena == null || arena != sourceArena) {
                 return;
               }
               if(!plugin.getUserManager().getUser(victim).isSpectator() && !victim.equals(attacker)) {

@@ -137,22 +137,22 @@ public class ArenaMinimap {
       }
 
       if(isMurderer) {
-        meta.setDisplayName(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>เรดาร์ฆาตกร (Impostor Radar)</bold></gradient>"));
+        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Impostor Radar<#5A4E7C>] <#F4F1DE>เรดาร์ฆาตกร"));
         meta.setLore(HalloweenChat.colorLines(
           "<#B8B0C8>แสดงตำแหน่งท่อและจุดทำภารกิจทั้งหมด",
-          "<#FF3B47>* [V] สีแดง: ท่อระบายน้ำ (Vents)",
-          "<#FFB703>* [!] สีเหลือง: จุดภารกิจของผู้โดยสาร (Tasks)",
-          "<#72EFDD>^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
-          "<#5A4E7C>(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
+          "<#FF3B47>[V] <#F4F1DE>ท่อระบายน้ำ",
+          "<#FFB703>[!] <#F4F1DE>จุดภารกิจของผู้โดยสาร",
+          "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
+          "<#5A4E7C>(<#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<#5A4E7C>)"
         ));
       } else {
-        meta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>แผนที่ภารกิจ (Task Minimap)</bold></gradient>"));
+        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task Minimap<#5A4E7C>] <#F4F1DE>แผนที่ภารกิจ"));
         meta.setLore(HalloweenChat.colorLines(
           "<#B8B0C8>แสดงตำแหน่งภารกิจซ่อมรถบัสของคุณ",
-          "<#FFB703>* [!] สีเหลือง: ภารกิจที่ยังไม่เสร็จ (Unfinished)",
-          "<#6EEB83>* [[/]] สีเขียว: ภารกิจที่เสร็จแล้ว (Completed)",
-          "<#72EFDD>^ ลูกศรสีฟ้า: ตำแหน่งและทิศทางของคุณ",
-          "<#5A4E7C>(ถือไว้ในมือซ้าย Offhand เพื่อดูเป็น Minimap)"
+          "<#FFB703>[!] <#F4F1DE>ภารกิจที่ยังไม่เสร็จ",
+          "<#6EEB83>[/] <#F4F1DE>ภารกิจที่เสร็จแล้ว",
+          "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
+          "<#5A4E7C>(<#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<#5A4E7C>)"
         ));
       }
       item.setItemMeta(meta);
@@ -179,11 +179,6 @@ public class ArenaMinimap {
   }
 
   public void cleanup() {
-    if(mapView != null && renderer != null) {
-      mapView.removeRenderer(renderer);
-    }
-    mapView = null;
-    renderer = null;
     cachedBounds = null;
   }
 

@@ -87,9 +87,18 @@ public class Main extends PluginMain {
 
   @Override
   public void onDisable() {
+    plugily.projects.murdermystery.arena.cutscene.CutsceneManager.shutdownAll(this);
     if(arenaRegistry != null) {
       for(Arena arena : arenaRegistry.getPluginArenas()) {
+        if(arena.getVentManager() != null) {
+          arena.getVentManager().cleanup();
+        }
+        arena.getCutsceneManager().cleanup();
+        arena.getVotingManager().cleanup();
+        arena.getSabotageManager().cleanup();
+        arena.getTaskManager().cleanup();
         arena.clearTextDisplays();
+        arena.clearGlowEntries();
       }
     }
     if(voiceChatManager != null) {

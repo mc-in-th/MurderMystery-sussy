@@ -35,12 +35,20 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MurderMysteryVoiceChatPlugin implements VoicechatPlugin {
 
   private final Main plugin;
+  private volatile boolean active = true;
 
   public MurderMysteryVoiceChatPlugin(Main plugin) {
     this.plugin = plugin;
+  }
+
+  public void deactivate() {
+    this.active = false;
   }
 
   public static Object register(Main plugin) {
@@ -68,75 +76,88 @@ public class MurderMysteryVoiceChatPlugin implements VoicechatPlugin {
   }
 
   private void onMicrophonePacket(MicrophonePacketEvent event) {
-    VoicechatConnection senderConnection = event.getSenderConnection();
-    if(senderConnection == null || senderConnection.getPlayer() == null) {
+    if(!active) {
       return;
     }
-    if(!(senderConnection.getPlayer().getPlayer() instanceof Player)) {
-      return;
-    }
-    Player speaker = (Player) senderConnection.getPlayer().getPlayer();
-    Arena arena = plugin.getArenaRegistry().getArena(speaker);
-    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
-      return;
-    }
-
-    if(!isDeadOrSpectator(speaker, arena)) {
-      return;
-    }
-
-    event.cancel();
-
-    VoicechatServerApi api = event.getVoicechat();
-    StaticSoundPacket spectatorPacket = event.getPacket().toStaticSoundPacket();
-    for(Player target : arena.getPlayers()) {
-      if(target.equals(speaker)) {
-        continue;
+    try {
+      VoicechatConnection senderConnection = event.getSenderConnection();
+      if(senderConnection == null || senderConnection.getPlayer() == null) {
+        return;
       }
-      if(!isDeadOrSpectator(target, arena)) {
-        continue;
+      if(!(senderConnection.getPlayer().getPlayer() instanceof Player)) {
+        return;
       }
-      VoicechatConnection targetConnection = api.getConnectionOf(target.getUniqueId());
-      if(targetConnection != null && targetConnection.isConnected() && !targetConnection.isDisabled()) {
-        api.sendStaticSoundPacketTo(targetConnection, spectatorPacket);
+      Player speaker = (Player) senderConnection.getPlayer().getPlayer();
+      Arena arena = plugin.getArenaRegistry().getArena(speaker);
+      if(arena == null || arena.getArenaState() != IArenaState.IN_GAME) {
+        return;
       }
+
+      if(!isDeadOrSpectator(speaker, arena)) {
+        return;
+      }
+
+      event.cancel();
+
+      VoicechatServerApi api = event.getVoicechat();
+      StaticSoundPacket spectatorPacket = event.getPacket().toStaticSoundPacket();
+      List<Player> arenaPlayers = new ArrayList<>(arena.getPlayers());
+      for(Player target : arenaPlayers) {
+        if(target == null || target.equals(speaker)) {
+          continue;
+        }
+        if(!isDeadOrSpectator(target, arena)) {
+          continue;
+        }
+        VoicechatConnection targetConnection = api.getConnectionOf(target.getUniqueId());
+        if(targetConnection != null && targetConnection.isConnected() && !targetConnection.isDisabled()) {
+          api.sendStaticSoundPacketTo(targetConnection, spectatorPacket);
+        }
+      }
+    } catch(Throwable ignored) {
     }
   }
 
   private void onSoundPacket(SoundPacketEvent<?> event) {
-    VoicechatConnection senderConnection = event.getSenderConnection();
-    VoicechatConnection receiverConnection = event.getReceiverConnection();
-    if(senderConnection == null || receiverConnection == null) {
+    if(!active) {
       return;
     }
-    if(senderConnection.getPlayer() == null || receiverConnection.getPlayer() == null) {
-      return;
-    }
-    if(!(senderConnection.getPlayer().getPlayer() instanceof Player)
-        || !(receiverConnection.getPlayer().getPlayer() instanceof Player)) {
-      return;
-    }
+    try {
+      VoicechatConnection senderConnection = event.getSenderConnection();
+      VoicechatConnection receiverConnection = event.getReceiverConnection();
+      if(senderConnection == null || receiverConnection == null) {
+        return;
+      }
+      if(senderConnection.getPlayer() == null || receiverConnection.getPlayer() == null) {
+        return;
+      }
+      if(!(senderConnection.getPlayer().getPlayer() instanceof Player)
+          || !(receiverConnection.getPlayer().getPlayer() instanceof Player)) {
+        return;
+      }
 
-    Player speaker = (Player) senderConnection.getPlayer().getPlayer();
-    Player listener = (Player) receiverConnection.getPlayer().getPlayer();
-    Arena speakerArena = plugin.getArenaRegistry().getArena(speaker);
-    Arena listenerArena = plugin.getArenaRegistry().getArena(listener);
+      Player speaker = (Player) senderConnection.getPlayer().getPlayer();
+      Player listener = (Player) receiverConnection.getPlayer().getPlayer();
+      Arena speakerArena = plugin.getArenaRegistry().getArena(speaker);
+      Arena listenerArena = plugin.getArenaRegistry().getArena(listener);
 
-    if(speakerArena == null && listenerArena == null) {
-      return;
-    }
+      if(speakerArena == null && listenerArena == null) {
+        return;
+      }
 
-    if(speakerArena != listenerArena) {
-      event.cancel();
-      return;
-    }
+      if(speakerArena != listenerArena) {
+        event.cancel();
+        return;
+      }
 
-    if(speakerArena.getArenaState() != IArenaState.IN_GAME) {
-      return;
-    }
+      if(speakerArena.getArenaState() != IArenaState.IN_GAME) {
+        return;
+      }
 
-    if(isDeadOrSpectator(speaker, speakerArena) && !isDeadOrSpectator(listener, speakerArena)) {
-      event.cancel();
+      if(isDeadOrSpectator(speaker, speakerArena) && !isDeadOrSpectator(listener, speakerArena)) {
+        event.cancel();
+      }
+    } catch(Throwable ignored) {
     }
   }
 

@@ -76,9 +76,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author Tigerpanzer_02
@@ -89,8 +92,8 @@ public class Arena extends PluginArena {
 
   private static Main plugin;
 
-  private final List<Player> spectators = new ArrayList<>();
-  private final List<Player> deaths = new ArrayList<>();
+  private final List<Player> spectators = new CopyOnWriteArrayList<>();
+  private final List<Player> deaths = new CopyOnWriteArrayList<>();
   private final List<Player> detectives = new ArrayList<>();
   private final List<Player> murderers = new ArrayList<>();
   private final List<Item> goldSpawned = new ArrayList<>();
@@ -105,6 +108,7 @@ public class Arena extends PluginArena {
   private boolean murdererLocatorReceived;
   private boolean hideChances;
   private boolean goldVisuals = false;
+  private boolean sabotageWin = false;
   private final Map<CharacterType, Player> gameCharacters = new EnumMap<>(CharacterType.class);
   private final MapRestorerManager mapRestorerManager;
   private ArmorStandHologram bowHologram;
@@ -368,6 +372,23 @@ public class Arena extends PluginArena {
   private final List<TextDisplay> ventDisplays = new ArrayList<>();
   private final List<BlockDisplay> blockDisplays = new ArrayList<>();
   private final List<BlockDisplay> ventBlockDisplays = new ArrayList<>();
+  private final Set<String> glowEntries = new HashSet<>();
+
+  public boolean isSabotageWin() {
+    return sabotageWin;
+  }
+
+  public void setSabotageWin(boolean sabotageWin) {
+    this.sabotageWin = sabotageWin;
+  }
+
+  public boolean isMurdererVictory() {
+    if(sabotageWin) {
+      return true;
+    }
+    int aliveMurds = aliveMurderer();
+    return aliveMurds > 0 && getPlayersLeft().size() == aliveMurds;
+  }
 
   public void removeNearbyDisplays(Location loc, double rx, double ry, double rz, boolean textOnly) {
     if(loc == null || loc.getWorld() == null) {
@@ -383,6 +404,7 @@ public class Arena extends PluginArena {
         } else if(!textOnly && entity instanceof BlockDisplay) {
           blockDisplays.remove(entity);
           ventBlockDisplays.remove(entity);
+          removeEntityGlowColor(entity);
           entity.remove();
         }
       }
@@ -472,6 +494,7 @@ public class Arena extends PluginArena {
         teamName = teamName.substring(0, 16);
       }
       String entry = entity.getUniqueId().toString();
+      glowEntries.add(entry);
 
       Scoreboard mainSb = Bukkit.getScoreboardManager().getMainScoreboard();
       Team mainTeam = mainSb.getTeam(teamName);
@@ -501,6 +524,103 @@ public class Arena extends PluginArena {
       }
     } catch(Throwable ignored) {
     }
+  }
+
+  public void removeEntityGlowColor(Entity entity) {
+    if(entity == null) {
+      return;
+    }
+    removeGlowEntry(entity.getUniqueId().toString());
+  }
+
+  private void removeGlowEntry(String entry) {
+    glowEntries.remove(entry);
+    try {
+      Scoreboard mainSb = Bukkit.getScoreboardManager().getMainScoreboard();
+      for(Team t : mainSb.getTeams()) {
+        if(t.getName().startsWith("MM_GLOW_") && t.hasEntry(entry)) {
+          t.removeEntry(entry);
+        }
+      }
+      for(Player p : Bukkit.getOnlinePlayers()) {
+        Scoreboard sb = p.getScoreboard();
+        if(sb != null && !sb.equals(mainSb)) {
+          for(Team t : sb.getTeams()) {
+            if(t.getName().startsWith("MM_GLOW_") && t.hasEntry(entry)) {
+              t.removeEntry(entry);
+            }
+          }
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
+  public void clearGlowEntries() {
+    if(glowEntries.isEmpty()) {
+      return;
+    }
+    Set<String> snapshot = new HashSet<>(glowEntries);
+    glowEntries.clear();
+    try {
+      Scoreboard mainSb = Bukkit.getScoreboardManager().getMainScoreboard();
+      for(Team t : mainSb.getTeams()) {
+        if(t.getName().startsWith("MM_GLOW_")) {
+          for(String entry : snapshot) {
+            if(t.hasEntry(entry)) {
+              t.removeEntry(entry);
+            }
+          }
+        }
+      }
+      for(Player p : Bukkit.getOnlinePlayers()) {
+        Scoreboard sb = p.getScoreboard();
+        if(sb != null && !sb.equals(mainSb)) {
+          for(Team t : sb.getTeams()) {
+            if(t.getName().startsWith("MM_GLOW_")) {
+              for(String entry : snapshot) {
+                if(t.hasEntry(entry)) {
+                  t.removeEntry(entry);
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
+  public void clearVentDisplays() {
+    for(SpecialBlock sb : specialBlocks) {
+      if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
+        sb.setTextDisplay(null);
+        if(sb.getLocation() != null) {
+          removeNearbyDisplays(sb.getLocation().clone().add(0.5, 1.2, 0.5), 1.2, 1.8, 1.2, false);
+        }
+      }
+    }
+    for(TextDisplay td : new ArrayList<>(ventDisplays)) {
+      textDisplays.remove(td);
+      if(td != null) {
+        try {
+          td.remove();
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(BlockDisplay bd : new ArrayList<>(ventBlockDisplays)) {
+      blockDisplays.remove(bd);
+      if(bd != null) {
+        removeEntityGlowColor(bd);
+        try {
+          bd.remove();
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    ventDisplays.clear();
+    ventBlockDisplays.clear();
   }
 
   public void showVentDisplays(Player player) {
@@ -592,6 +712,7 @@ public class Arena extends PluginArena {
     ventDisplays.clear();
     blockDisplays.clear();
     ventBlockDisplays.clear();
+    clearGlowEntries();
     campfireDisplay = null;
   }
 
@@ -800,7 +921,8 @@ public class Arena extends PluginArena {
     int contributor = user.getStatistic("CONTRIBUTION_" + role.name());
     int increase = plugin.getPermissionsManager().getPermissionCategoryValue(role.name() + "_BOOSTER", player);
     int multiplicator = plugin.getPermissionsManager().getPermissionCategoryValue("CHANCES_BOOSTER", player);
-    int calculatedContributor = (contributor + increase) * (multiplicator == 0 ? 1 :multiplicator);
+    long rawContributor = ((long) contributor + (long) increase) * (multiplicator == 0 ? 1L : (long) multiplicator);
+    int calculatedContributor = (int) Math.max(1L, Math.min(Integer.MAX_VALUE - 1L, rawContributor));
     if(role == Role.MURDERER) {
       murdererContributions.put(user, calculatedContributor);
     } else {

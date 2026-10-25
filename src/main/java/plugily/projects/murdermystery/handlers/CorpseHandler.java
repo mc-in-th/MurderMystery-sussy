@@ -106,6 +106,7 @@ public class CorpseHandler implements Listener {
       head.setItemMeta(meta);
 
       stand.setVisible(false);
+      stand.setPersistent(false);
       if(ServerVersion.Version.isCurrentEqualOrHigher(ServerVersion.Version.v1_16)) {
         stand.getEquipment().setHelmet(head);
       } else {
@@ -117,6 +118,7 @@ public class CorpseHandler implements Listener {
 
       ArmorStand hitboxStand = deathLoc.getWorld().spawn(deathLoc.clone().add(0.0D, -0.2D, 0.0D), ArmorStand.class);
       hitboxStand.setVisible(false);
+      hitboxStand.setPersistent(false);
       hitboxStand.setGravity(false);
       hitboxStand.setCustomNameVisible(false);
 
@@ -150,6 +152,9 @@ public class CorpseHandler implements Listener {
     ArmorStandHologram hologram = new ArmorStandHologram(player.getLocation());
     hologram.appendLine(new MessageBuilder(plugin.getLastWordsManager().getHologramTitle()).player(player).build());
     hologram.appendLine(plugin.getLastWordsManager().getRandomLastWord(player));
+    for(ArmorStand stand : hologram.getArmorStands()) {
+      stand.setPersistent(false);
+    }
     return hologram;
   }
 

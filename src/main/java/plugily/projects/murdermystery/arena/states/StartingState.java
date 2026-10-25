@@ -74,6 +74,7 @@ public class StartingState extends PluginStartingState {
 
       Set<Player> playersToSet = new HashSet<>(arena.getPlayersLeft());
 
+      pluginArena.setSabotageWin(false);
       getMaxRolesToSet(pluginArena);
 
       addRole(pluginArena, Role.MURDERER, playersToSet);
@@ -148,6 +149,7 @@ public class StartingState extends PluginStartingState {
   }
 
   private void getMaxRolesToSet(Arena arena) {
+    maxmurderer = 1;
     int playersSize = arena.getPlayersLeft().size();
     arena.getPlugin().getDebugger().debug("Before: Arena: {0} | Murders = {1}, Players = {2} | Configured: Murders = {3}", arena.getId(), maxmurderer, playersSize, arena.getArenaOption("MURDERER_DIVIDER"));
     if(arena.getArenaOption("MURDERER_DIVIDER") > 1 && playersSize > arena.getArenaOption("MURDERER_DIVIDER")) {

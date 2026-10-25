@@ -52,20 +52,20 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
 
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<gradient:#9D4EDD:#FF7518>----------------</gradient>"));
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
       lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + (isMurderer
-        ? "<gradient:#D90429:#FF5400><bold>ฆาตกร (Impostor)</bold></gradient>"
-        : "<gradient:#FF7518:#FFB703><bold>ผู้โดยสาร (Passenger)</bold></gradient>")));
+        ? "<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]"
+        : "<#5A4E7C>[<#FFB703>ผู้โดยสาร<#5A4E7C>]")));
       lines.add(HalloweenChat.color("<#F4F1DE>เวลา: <#FFB703>%arena_time%"));
       lines.add(HalloweenChat.color("<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"));
       lines.add("");
 
       if(isMurderer) {
-        lines.add(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>ภารกิจหลอก (Fake Tasks):</bold></gradient>"));
+        lines.add(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ภารกิจหลอก<#5A4E7C>]"));
         List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
           for(GameTask task : sampleTasks) {
-            lines.add(HalloweenChat.color("<#B8B0C8>- <#C77DFF>" + task.getTaskType().getDisplayName()));
+            lines.add(HalloweenChat.color("<#B8B0C8>- <#F4F1DE>" + task.getTaskType().getDisplayName()));
           }
         } else {
           lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจในห้องนี้"));
@@ -74,7 +74,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         List<GameTask> tasks = gameArena.getTaskManager().getPlayerTasks(player);
         int completed = gameArena.getTaskManager().getPlayerCompletedTasks(player);
         int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
-        lines.add(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>ภารกิจของคุณ</bold></gradient> <#B8B0C8>(" + completed + "/" + total + "):"));
+        lines.add(HalloweenChat.color("<#5A4E7C>[<#FF7518>ภารกิจของคุณ<#5A4E7C>] <#FFB703>" + completed + "<#5A4E7C>/<#FFB703>" + total));
         if(tasks != null && !tasks.isEmpty()) {
           for(GameTask task : tasks) {
             String visualTag = (task.getTaskType().isVisual() && gameArena.isVisualTasksEnabled())
@@ -90,7 +90,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
           lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจ"));
         }
       }
-      lines.add(HalloweenChat.color("<gradient:#FF7518:#9D4EDD>----------------</gradient>"));
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
       return lines;
     }
     return super.getScoreboardLines(player);

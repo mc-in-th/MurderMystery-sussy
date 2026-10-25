@@ -55,6 +55,7 @@ public class ArenaRegistry extends PluginArenaRegistry {
     for(Arena arena : getPluginArenas()) {
       arena.clearTextDisplays();
     }
+    plugily.projects.murdermystery.utils.HalloweenChat.applyToLanguageConfig(plugin);
     super.registerArenas();
   }
 

@@ -206,11 +206,11 @@ public class PlaceholderInitializer {
         }
         String summaryEnding;
 
-        if(pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())
-            && pluginArena.getMurdererList().contains(player)) {
+        boolean murderWon = pluginArena.isMurdererVictory();
+        boolean isMurderer = pluginArena.getMurdererList().contains(player);
+        if(murderWon && isMurderer) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_WIN").asKey().arena(pluginArena).build();
-        } else if(!pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())
-            && !pluginArena.getMurdererList().contains(player)) {
+        } else if(!murderWon && !isMurderer) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_WIN").asKey().arena(pluginArena).build();
         } else {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_LOSE").asKey().arena(pluginArena).build();
@@ -237,7 +237,7 @@ public class PlaceholderInitializer {
         }
         String summaryEnding;
 
-        if(pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())) {
+        if(pluginArena.isMurdererVictory()) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL").asKey().arena(pluginArena).build();
         } else {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().arena(pluginArena).build();

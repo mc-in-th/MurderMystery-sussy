@@ -174,7 +174,13 @@ public class ArenaEvents extends PluginArenaEvents {
     e.setCancelled(true);
 
     Arena checkArena = plugin.getArenaRegistry().getArena(attacker);
-    if(checkArena != null && (checkArena.getVotingManager().isVotingActive() || checkArena.getCutsceneManager().isPlaying())) {
+    if(checkArena == null || checkArena.getArenaState() != IArenaState.IN_GAME
+      || checkArena.getVotingManager().isVotingActive() || checkArena.getCutsceneManager().isPlaying()
+      || (checkArena.getVentManager() != null && checkArena.getVentManager().isInsideVent(attacker))) {
+      return;
+    }
+
+    if(userAttacker.isSpectator() || userVictim.isSpectator() || checkArena.isDeathPlayer(attacker) || checkArena.isDeathPlayer(victim)) {
       return;
     }
 
@@ -256,7 +262,10 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     Arena arena = plugin.getArenaRegistry().getArena(attacker);
-    if(arena == null || arena.getVotingManager().isVotingActive()) {
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME || arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+      return;
+    }
+    if(userAttacker.isSpectator() || userVictim.isSpectator() || arena.isDeathPlayer(attacker) || arena.isDeathPlayer(victim)) {
       return;
     }
     //we need to set it before the victim die, because of hero character
@@ -336,9 +345,15 @@ public class ArenaEvents extends PluginArenaEvents {
     }
     //we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
+      if(!player.isOnline() || plugin.getArenaRegistry().getArena(player) != arena) {
+        return;
+      }
       player.spigot().respawn();
+      if(arena.getArenaState() != IArenaState.IN_GAME) {
+        return;
+      }
       plugin.getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
-      if(arena.getTaskManager().hasAssignedTasks(player)) {
+      if(arena.getTaskManager().hasAssignedTasks(player) && arena.getPlayersLeft().size() > arena.aliveMurderer()) {
         arena.getTaskManager().giveTaskPointer(player);
         if(arena.getMinimap() != null) {
           player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
@@ -477,6 +492,11 @@ public class ArenaEvents extends PluginArenaEvents {
         }
         if(arena.getTaskManager().getMinigameManager().isMinigameGUI(player, title)) {
           event.setCancelled(true);
+          if(arena.getVotingManager().isVotingActive()) {
+            arena.getTaskManager().getMinigameManager().handleClose(player, title);
+            player.closeInventory();
+            return;
+          }
           arena.getTaskManager().getMinigameManager().handleClick(player, title, event.getRawSlot(), event.getClick());
           return;
         }

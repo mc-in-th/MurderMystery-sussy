@@ -70,34 +70,49 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena == null) {
       return;
     }
+    IUser user = plugin.getUserManager().getUser(player);
+    boolean wasSpectator = user.isSpectator() || pluginArena.isDeathPlayer(player) || pluginArena.isSpectatorPlayer(player);
+    boolean wasPlayingCutscene = pluginArena.getCutsceneManager().isPlaying();
+    boolean wasPendingEjected = pluginArena.getVotingManager().isPendingEjected(player);
+    boolean playerHasMurdererRole = Role.isRole(Role.MURDERER, user, arena);
+
+    if(pluginArena.getVentManager() != null && pluginArena.getVentManager().isInsideVent(player)) {
+      pluginArena.getVentManager().exitVent(player);
+    }
+    pluginArena.getCutsceneManager().handlePlayerLeave(player);
+    player.setInvisible(false);
+    player.setWalkSpeed(0.2f);
+
     pluginArena.cleanUpBossBars(player);
     super.leaveAttempt(player, arena);
     pluginArena.cleanUpBossBars(player);
     if(pluginArena.isDeathPlayer(player)) {
       pluginArena.removeDeathPlayer(player);
     }
-    IUser user = plugin.getUserManager().getUser(player);
 
     int localScore = user.getStatistic("LOCAL_SCORE");
     if(localScore > user.getStatistic("HIGHEST_SCORE")) {
       user.setStatistic("HIGHEST_SCORE", localScore);
     }
 
-    boolean playerHasMurdererRole = Role.isRole(Role.MURDERER, user, arena);
     if(playerHasMurdererRole) {
       pluginArena.removeFromMurdererList(player);
     }
+    plugin.getSwordSkinManager().removeMurdererSword(player);
     pluginArena.getVotingManager().handlePlayerLeave(player);
-    pluginArena.getCutsceneManager().handlePlayerLeave(player);
     pluginArena.getTaskManager().removePlayer(player);
     pluginArena.getSabotageManager().removePlayerFromBossBar(player);
 
-    if(arena.getArenaState() == IArenaState.IN_GAME && !user.isSpectator()) {
+    if(arena.getArenaState() == IArenaState.IN_GAME && !wasSpectator) {
       List<Player> playersLeft = arena.getPlayersLeft();
 
       if(playersLeft.size() > 1) {
         if(playerHasMurdererRole) {
           if(pluginArena.getMurdererList().isEmpty()) {
+            if(wasPendingEjected) {
+              ArenaUtils.onMurdererDeath(pluginArena);
+              return;
+            }
             List<Player> players = new ArrayList<>();
             for(Player gamePlayer : playersLeft) {
               IUser userGamePlayer = plugin.getUserManager().getUser(gamePlayer);
@@ -107,28 +122,39 @@ public class ArenaManager extends PluginArenaManager {
               players.add(gamePlayer);
             }
 
-            Player newMurderer = players.get(players.size() == 1 ? 0 : ThreadLocalRandom.current().nextInt(players.size()));
+            Player newMurderer = players.isEmpty() ? null : players.get(players.size() == 1 ? 0 : ThreadLocalRandom.current().nextInt(players.size()));
             if(newMurderer != null) {
               plugin.getDebugger().debug("A murderer left the game. New murderer: {0}", newMurderer.getName());
-              pluginArena.setCharacter(Arena.CharacterType.MURDERER, newMurderer);
+              pluginArena.setCharacter(Role.MURDERER, newMurderer);
               pluginArena.addToMurdererList(newMurderer);
               pluginArena.getTaskManager().removePlayer(newMurderer);
               pluginArena.getTaskManager().addPlayerToBossBar(newMurderer);
             }
 
-            new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).sendArena();
-            if(newMurderer != null) {
-              new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).sendPlayer();
-              ArenaUtils.playRoleRevealSound(newMurderer, true);
-              HalloweenChat.sendActionBar(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().build());
-              ItemPosition.setItem(plugin.getUserManager().getUser(newMurderer), ItemPosition.MURDERER_SWORD, plugin.getSwordSkinManager().getRandomSwordSkin(player));
-              pluginArena.getSabotageManager().giveSabotageRemote(newMurderer);
+            if(!wasPlayingCutscene) {
+              pluginArena.updateVentDisplaysVisibility();
+              new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).sendArena();
+              if(newMurderer != null) {
+                new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).sendPlayer();
+                ArenaUtils.playRoleRevealSound(newMurderer, true);
+                HalloweenChat.sendActionBar(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().build());
+                if(pluginArena.getMinimap() != null) {
+                  pluginArena.getMinimap().giveMap(newMurderer);
+                }
+                pluginArena.getSabotageManager().giveSabotageRemote(newMurderer);
+                int inGameLength = plugin.getConfig().getInt("Time-Manager.In-Game", 270);
+                if(pluginArena.getTimer() <= (inGameLength - 14)) {
+                  ItemPosition.setItem(plugin.getUserManager().getUser(newMurderer), ItemPosition.MURDERER_SWORD, plugin.getSwordSkinManager().getRandomSwordSkin(newMurderer));
+                }
+              }
             }
           } else {
             plugin.getDebugger().debug("No new murderer added as there are some");
           }
         }
-        plugin.getCorpseHandler().spawnCorpse(player, pluginArena);
+        if(!wasPlayingCutscene) {
+          plugin.getCorpseHandler().spawnCorpse(player, pluginArena);
+        }
       } else {
         stopGame(false, arena);
       }
@@ -141,18 +167,24 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena == null) {
       return;
     }
+    if(pluginArena.getVentManager() != null) {
+      pluginArena.getVentManager().cleanup();
+    }
     pluginArena.getTaskManager().cleanup();
     pluginArena.getSabotageManager().cleanup();
     pluginArena.getVotingManager().cleanup();
     pluginArena.getCutsceneManager().cleanup();
     pluginArena.clearPluginBossBars();
+    for(Player p : pluginArena.getPlayers()) {
+      plugin.getSwordSkinManager().removeMurdererSword(p);
+    }
     for(SpecialBlock specialBlock : pluginArena.getSpecialBlocks()) {
       if(specialBlock.getArmorStandHologram() != null) {
         specialBlock.getArmorStandHologram().delete();
       }
     }
     ((MapRestorerManager) pluginArena.getMapRestorerManager()).removeBowHolo();
-    boolean murderWon = arena.getPlayersLeft().size() == pluginArena.aliveMurderer();
+    boolean murderWon = pluginArena.isMurdererVictory();
     for(Player player : arena.getPlayersLeft()) {
       if(!quickStop) {
         IUser user = plugin.getUserManager().getUser(player);

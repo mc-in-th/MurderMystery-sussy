@@ -44,6 +44,9 @@ public class VoiceChatManager {
   public void unregister() {
     if(voiceChatPlugin != null) {
       try {
+        if(voiceChatPlugin instanceof MurderMysteryVoiceChatPlugin) {
+          ((MurderMysteryVoiceChatPlugin) voiceChatPlugin).deactivate();
+        }
         plugin.getServer().getServicesManager().unregister(voiceChatPlugin);
       } catch(Throwable ignored) {
       }

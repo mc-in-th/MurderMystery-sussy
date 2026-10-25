@@ -62,25 +62,16 @@ public class InGameState extends PluginInGameState {
     pluginArena.updateCampfireHologram();
 
     // winner checks
+    if(pluginArena.getTaskManager().areAllTasksCompleted()) {
+      pluginArena.getTaskManager().triggerTaskVictory();
+      return;
+    }
     if(pluginArena.getTimer() <= 0) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
-      return;
-    }
-
-    if(pluginArena.getTaskManager().areAllTasksCompleted()) {
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
-        .asKey().arena(pluginArena).sendArena();
-      for(Player p : pluginArena.getPlayers()) {
-        HalloweenChat.sendTitles(p,
-          new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE").asKey().build(),
-          new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
-          10, 60, 10);
-      }
-      ArenaUtils.onMurdererDeath(pluginArena);
       return;
     }
 
