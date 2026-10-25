@@ -81,6 +81,9 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   }
 
   public void clearCorpses() {
+    if(arena.getPlugin().getCorpseHandler() != null) {
+      arena.getPlugin().getCorpseHandler().clearArenaCorpses(arena);
+    }
     if(!arena.getPlugin().getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
       for(Stand stand : arena.getStands()) {
         if(stand == null) {

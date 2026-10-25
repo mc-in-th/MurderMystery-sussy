@@ -60,6 +60,10 @@
             <id>maxhenkel</id>
             <url>https://maven.maxhenkel.de/repository/public</url>
         </repository>
+        <repository>
+            <id>fancyinnovations</id>
+            <url>https://repo.fancyinnovations.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -73,6 +77,12 @@
             <groupId>de.maxhenkel.voicechat</groupId>
             <artifactId>voicechat-api</artifactId>
             <version>2.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.oliver</groupId>
+            <artifactId>FancyNpcs</artifactId>
+            <version>2.9.2</version>
             <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jetbrains/annotations -->

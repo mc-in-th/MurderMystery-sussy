@@ -150,6 +150,9 @@ public class Main extends PluginMain {
         arena.clearGlowEntries();
       }
     }
+    if(corpseHandler != null) {
+      corpseHandler.shutdown();
+    }
     if(voiceChatManager != null) {
       voiceChatManager.unregister();
     }

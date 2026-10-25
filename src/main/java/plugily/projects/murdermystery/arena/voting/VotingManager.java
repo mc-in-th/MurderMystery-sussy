@@ -59,14 +59,20 @@ public class VotingManager {
     private final List<ArmorStand> stands;
     private final TextDisplay textDisplay;
     private final ArmorStandHologram hologram;
+    private final Runnable cleanupAction;
     private final long spawnTimeMs;
 
     public DeadBody(String victimName, Location location, List<ArmorStand> stands, TextDisplay textDisplay, ArmorStandHologram hologram) {
+      this(victimName, location, stands, textDisplay, hologram, null);
+    }
+
+    public DeadBody(String victimName, Location location, List<ArmorStand> stands, TextDisplay textDisplay, ArmorStandHologram hologram, Runnable cleanupAction) {
       this.victimName = victimName;
       this.location = location;
       this.stands = stands;
       this.textDisplay = textDisplay;
       this.hologram = hologram;
+      this.cleanupAction = cleanupAction;
       this.spawnTimeMs = System.currentTimeMillis();
     }
 
@@ -87,6 +93,12 @@ public class VotingManager {
     }
 
     public void remove(Arena arena) {
+      if(cleanupAction != null) {
+        try {
+          cleanupAction.run();
+        } catch(Throwable ignored) {
+        }
+      }
       if(hologram != null && !hologram.isDeleted()) {
         try {
           hologram.delete();
@@ -188,7 +200,11 @@ public class VotingManager {
   }
 
   public void registerDeadBody(String victimName, Location location, List<ArmorStand> stands, TextDisplay textDisplay, ArmorStandHologram hologram) {
-    activeBodies.add(new DeadBody(victimName, location, stands, textDisplay, hologram));
+    registerDeadBody(victimName, location, stands, textDisplay, hologram, null);
+  }
+
+  public void registerDeadBody(String victimName, Location location, List<ArmorStand> stands, TextDisplay textDisplay, ArmorStandHologram hologram, Runnable cleanupAction) {
+    activeBodies.add(new DeadBody(victimName, location, stands, textDisplay, hologram, cleanupAction));
   }
 
   public List<DeadBody> getActiveBodies() {

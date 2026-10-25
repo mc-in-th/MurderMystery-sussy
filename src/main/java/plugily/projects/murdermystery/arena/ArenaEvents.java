@@ -719,7 +719,7 @@ public class ArenaEvents extends PluginArenaEvents {
       for(Stand corpseStand : arena.getStands()) {
         if(stand.equals(corpseStand.getStand())) {
           event.setCancelled(true);
-          arena.getVotingManager().startVoting(player);
+          arena.getVotingManager().tryReportNearbyBody(player, stand.getLocation());
           return;
         }
       }

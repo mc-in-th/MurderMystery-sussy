@@ -62,6 +62,7 @@ public class HookManager {
   }
 
   public enum HookFeature {
+    FANCY_NPCS(Hook.FANCY_NPCS),
     CORPSES(Hook.CORPSE_REBORN),
     VOICE_CHAT(Hook.SIMPLE_VOICE_CHAT);
 
@@ -77,6 +78,7 @@ public class HookManager {
   }
 
   public enum Hook {
+    FANCY_NPCS("FancyNpcs"),
     CORPSE_REBORN("CorpseReborn"),
     SIMPLE_VOICE_CHAT("voicechat");
 
