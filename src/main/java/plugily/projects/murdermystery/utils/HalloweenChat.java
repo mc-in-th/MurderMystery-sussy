@@ -35,6 +35,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import net.md_5.bungee.api.ChatMessageType;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -78,6 +79,7 @@ public final class HalloweenChat {
   private static final Pattern BUKKIT_HEX_PATTERN = Pattern.compile("(?i)[§&]x([§&][0-9a-f]){6}");
   private static final Pattern AMPERSAND_HEX_PATTERN = Pattern.compile("(?i)(?<![<:/])&?#([0-9a-f]{6})");
   private static final Pattern LEGACY_CODE_PATTERN = Pattern.compile("(?i)[§&]([0-9a-fk-or])");
+  private static final Pattern MINI_TAG_PATTERN = Pattern.compile("<[^>]+>");
   private static final Pattern THAI_COMBINING_PREFIX_PATTERN = Pattern.compile(
       "(?i)(?:[§&]x(?:[§&][0-9a-f]){6}|[§&][0-9a-fk-or])+(?=[\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E])"
   );
@@ -279,7 +281,7 @@ public final class HalloweenChat {
   }
 
   public static void sendTitles(Player player, String title, String subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
-    if(player == null) {
+    if(player == null || (title == null && subtitle == null)) {
       return;
     }
     try {
@@ -288,12 +290,19 @@ public final class HalloweenChat {
           Duration.ofMillis(stayTicks * 50L),
           Duration.ofMillis(fadeOutTicks * 50L)
       );
-      Title advTitle = Title.title(
-          title == null ? Component.empty() : component(title),
-          subtitle == null ? Component.empty() : component(subtitle),
-          times
-      );
-      player.showTitle(advTitle);
+      if(title != null && subtitle != null) {
+        Component titleComponent = stripFormattingCodes(title).trim().isEmpty() ? Component.empty() : component(title);
+        Component subComponent = stripFormattingCodes(subtitle).trim().isEmpty() ? Component.empty() : component(subtitle);
+        player.showTitle(Title.title(titleComponent, subComponent, times));
+      } else if(title != null) {
+        Component titleComponent = stripFormattingCodes(title).trim().isEmpty() ? Component.empty() : component(title);
+        player.sendTitlePart(TitlePart.TIMES, times);
+        player.sendTitlePart(TitlePart.TITLE, titleComponent);
+      } else {
+        Component subComponent = stripFormattingCodes(subtitle).trim().isEmpty() ? Component.empty() : component(subtitle);
+        player.sendTitlePart(TitlePart.TIMES, times);
+        player.sendTitlePart(TitlePart.SUBTITLE, subComponent);
+      }
     } catch(Throwable t) {
       String coloredTitle = title == null ? "" : color(title);
       String coloredSub = subtitle == null ? "" : color(subtitle);
@@ -315,17 +324,32 @@ public final class HalloweenChat {
     int fadeOut = 10;
     String title;
     String subtitle = "";
-    if(parts.length >= 2 && parts[0].matches("\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*")) {
-      String[] nums = parts[0].split(",", 3);
+    String cleanHeader = parts.length >= 2 ? stripFormattingCodes(parts[0]).trim() : "";
+    if(parts.length >= 2 && cleanHeader.matches("\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+")) {
+      String[] nums = cleanHeader.split(",", 3);
       fadeIn = Integer.parseInt(nums[0].trim());
       stay = Integer.parseInt(nums[1].trim());
       fadeOut = Integer.parseInt(nums[2].trim());
       title = parts[1];
       subtitle = parts.length >= 3 ? parts[2] : "";
+    } else if(parts.length == 2) {
+      title = parts[0];
+      subtitle = parts[1];
     } else {
       title = rawEntry;
     }
     sendTitles(player, title, subtitle, fadeIn, stay, fadeOut);
+  }
+
+  private static String stripFormattingCodes(String input) {
+    if(input == null || input.isEmpty()) {
+      return "";
+    }
+    String stripped = BUKKIT_HEX_PATTERN.matcher(input).replaceAll("");
+    stripped = AMPERSAND_HEX_PATTERN.matcher(stripped).replaceAll("");
+    stripped = LEGACY_CODE_PATTERN.matcher(stripped).replaceAll("");
+    stripped = MINI_TAG_PATTERN.matcher(stripped).replaceAll("");
+    return stripped;
   }
 
   public static String strip(String input) {
@@ -501,6 +525,7 @@ public final class HalloweenChat {
                 || existingStr.contains("อยู่ในห้องเกม")
                 || existingStr.contains("ออกจากขบวนรถบัส")
                 || ("Scoreboard.Roles.Dead".equals(key) && existingStr.contains("เสียชีวิต"))
+                || ("In-Game.Spectator.Menu.Settings.First-Person-Mode.Title".equals(key) && !existingStr.contains(";"))
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             boolean hasServerIp = false;

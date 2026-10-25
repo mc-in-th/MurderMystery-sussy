@@ -90,8 +90,10 @@ public class ArenaUtils extends PluginArenaUtils {
   }
 
   public static void onMurdererDeath(Arena arena) {
+    String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ผู้โดยสารเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+    String winSub = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build();
     for(Player player : arena.getPlayers()) {
-      HalloweenChat.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
+      HalloweenChat.sendTitles(player, winTitle, winSub, 10, 60, 10);
     }
     //we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTask(getPlugin(), () -> getPlugin().getArenaManager().stopGame(false, arena));

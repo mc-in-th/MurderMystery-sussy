@@ -652,7 +652,7 @@ public class TaskManager {
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
         10, 60, 10);
     }
-    ArenaUtils.onMurdererDeath(arena);
+    Bukkit.getScheduler().runTask(arena.getPlugin(), () -> arena.getPlugin().getArenaManager().stopGame(false, arena));
   }
 
   public GameTask getNextTask(Player player) {

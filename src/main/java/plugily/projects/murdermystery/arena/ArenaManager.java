@@ -61,6 +61,17 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena.getArenaState() == IArenaState.IN_GAME && pluginArena.getPlayers().contains(player)) {
       pluginArena.getTaskManager().addPlayerToBossBar(player);
       pluginArena.getSabotageManager().addPlayerToBossBar(player);
+    } else if(pluginArena.getPlayers().contains(player)) {
+      Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        if(player.isOnline()
+          && pluginArena.getPlayers().contains(player)
+          && !ArenaUtils.isSpectator(player, pluginArena)
+          && pluginArena.getArenaState() != IArenaState.IN_GAME
+          && pluginArena.getArenaState() != IArenaState.ENDING
+          && pluginArena.getArenaState() != IArenaState.RESTARTING) {
+          HalloweenChat.sendTitleEntry(player, new MessageBuilder("IN_GAME_JOIN_TITLE").asKey().arena(pluginArena).player(player).build());
+        }
+      }, 2L);
     }
   }
 
@@ -163,12 +174,15 @@ public class ArenaManager extends PluginArenaManager {
               pluginArena.updateVentDisplaysVisibility();
               String roleChangeEntry = new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).build();
               for(Player p : pluginArena.getPlayers()) {
+                if(p.equals(newMurderer)) {
+                  continue;
+                }
                 HalloweenChat.sendTitleEntry(p, roleChangeEntry);
               }
               if(newMurderer != null) {
                 HalloweenChat.sendTitleEntry(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).build());
                 ArenaUtils.playRoleRevealSound(newMurderer, true);
-                HalloweenChat.sendActionBar(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().build());
+                HalloweenChat.sendActionBar(newMurderer, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>บทบาทใหม่<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ฆาตกรคนเดิมลงจากรถบัส คุณได้รับเลือกเป็นฆาตกรแทน");
                 if(pluginArena.getMinimap() != null) {
                   pluginArena.getMinimap().giveMap(newMurderer);
                 }
@@ -196,6 +210,9 @@ public class ArenaManager extends PluginArenaManager {
   public void stopGame(boolean quickStop, @NotNull IPluginArena arena) {
     Arena pluginArena = (Arena) plugin.getArenaRegistry().getArena(arena.getId());
     if(pluginArena == null) {
+      return;
+    }
+    if(!quickStop && (arena.getArenaState() == IArenaState.ENDING || arena.getArenaState() == IArenaState.RESTARTING)) {
       return;
     }
     if(pluginArena.getVentManager() != null) {

@@ -67,10 +67,22 @@ public class InGameState extends PluginInGameState {
       return;
     }
     if(pluginArena.getTimer() <= 0) {
+      String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ผู้โดยสารเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String winSub = "<#F4F1DE>เอาชีวิตรอดจนหมดเวลาได้สำเร็จ";
+      for(Player p : pluginArena.getPlayers()) {
+        HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+      }
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
+      if(pluginArena.aliveMurderer() > 0) {
+        String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+        String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
+        for(Player p : pluginArena.getPlayers()) {
+          HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+        }
+      }
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }
@@ -135,7 +147,8 @@ public class InGameState extends PluginInGameState {
   }
 
   private void announceTimeLeft(Arena pluginArena) {
-    if(pluginArena.getTimer() % 30 == 0) {
+    int inGameLength = getPlugin().getConfig().getInt("Time-Manager.In-Game", 270);
+    if(pluginArena.getTimer() > 0 && pluginArena.getTimer() <= inGameLength - 15 && pluginArena.getTimer() % 30 == 0) {
       for(Player p : pluginArena.getPlayers()) {
         HalloweenChat.sendTitleEntry(p, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").asKey().player(p).arena(pluginArena).build());
       }

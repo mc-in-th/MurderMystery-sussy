@@ -1224,7 +1224,7 @@ public class VotingManager {
     }
 
     if(wasMurderer && arena.aliveMurderer() <= 0) {
-      ArenaUtils.onMurdererDeath(arena);
+      Bukkit.getScheduler().runTask(arena.getPlugin(), () -> arena.getPlugin().getArenaManager().stopGame(false, arena));
     }
   }
 

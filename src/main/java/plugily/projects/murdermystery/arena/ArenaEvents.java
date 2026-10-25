@@ -235,6 +235,15 @@ public class ArenaEvents extends PluginArenaEvents {
     XSound.ENTITY_PLAYER_DEATH.play(victim.getLocation());
     victim.damage(100.0);
 
+    if(!checkArena.getVotingManager().isVotingActive() && checkArena.getArenaState() == IArenaState.IN_GAME) {
+      HalloweenChat.sendTitles(
+        victim,
+        new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().player(victim).arena(checkArena).build(),
+        new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU").asKey().build(),
+        5, 50, 15
+      );
+    }
+
     IUser user = plugin.getUserManager().getUser(attacker);
 
     user.adjustStatistic("KILLS", 1);
@@ -294,21 +303,23 @@ public class ArenaEvents extends PluginArenaEvents {
       userAttacker.adjustStatistic("LOCAL_KILLS", 1);
     }
 
-    HalloweenChat.sendTitles(victim, new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().build(), null, 5, 40, 50);
-
     if(Role.isRole(Role.MURDERER, userVictim)) {
       arena.adjustContributorValue(Role.MURDERER, userAttacker, plugin.getRandom().nextInt(2));
     } else if(plugin.getConfigPreferences().getOption("BOW_KILL_DETECTIVE") && Role.isRole(Role.INNOCENT, userVictim)) {
-      if(Role.isRole(Role.MURDERER, userAttacker)) {
-        HalloweenChat.sendTitles(victim, null, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU").asKey().build(), 5, 40, 5);
-      } else {
-        HalloweenChat.sendTitles(victim, null, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU").asKey().build(), 5, 40, 5);
-      }
+      String deathTitle = new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().player(victim).arena(arena).build();
+      String victimSubtitle = Role.isRole(Role.MURDERER, userAttacker)
+        ? new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU").asKey().build()
+        : new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU").asKey().build();
+      HalloweenChat.sendTitles(victim, deathTitle, victimSubtitle, 5, 50, 15);
 
       if(Role.isRole(Role.INNOCENT, userAttacker)) {
-        HalloweenChat.sendSubTitle(attacker, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY").asKey().build(), 5, 40, 5);
-
         attacker.damage(100.0);
+        HalloweenChat.sendTitles(
+          attacker,
+          new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().player(attacker).arena(arena).build(),
+          new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY").asKey().build(),
+          5, 55, 15
+        );
       }
     }
   }
@@ -376,7 +387,11 @@ public class ArenaEvents extends PluginArenaEvents {
     boolean gameStopping = false;
     if(Role.isRole(Role.MURDERER, user, arena) && arena.lastAliveMurderer()) {
       gameStopping = true;
-      ArenaUtils.onMurdererDeath(arena);
+      if(arena.getVotingManager().isVotingActive()) {
+        Bukkit.getScheduler().runTask(plugin, () -> plugin.getArenaManager().stopGame(false, arena));
+      } else {
+        ArenaUtils.onMurdererDeath(arena);
+      }
     }
 
     user.adjustStatistic("DEATHS", 1);
