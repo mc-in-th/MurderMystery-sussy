@@ -18,6 +18,19 @@
 
 package plugily.projects.murdermystery.arena.task.minigame;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
+import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
+import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.task.TaskType;
+import plugily.projects.murdermystery.utils.HalloweenChat;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,23 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
-import plugily.projects.murdermystery.arena.Arena;
-import plugily.projects.murdermystery.arena.task.TaskType;
-import plugily.projects.murdermystery.utils.HalloweenChat;
 
 public class ClearAsteroidsMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>ป้อมปืนยิงสกัดสิ่งกีดขวาง (Weapons)</bold></gradient> <#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>ป้อมปืนยิงสกัดสิ่งกีดขวาง<#5A4E7C>]");
   private static final int TARGET_HITS = 8;
   private static final int[] GRID_SLOTS = {
     10, 11, 12, 13, 14, 15, 16,
@@ -110,14 +110,18 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_ACTIVATE.play(player.getLocation(), 0.8F, 1.5F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ป้อมปืน]</bold></gradient> <#FFB703>คลิกยิงทำลายอุกกาบาต/สิ่งกีดขวางให้ครบ 8 เป้า! (คนอื่นเห็นลำแสงปืนใหญ่)"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>คลิกยิงทำลายสิ่งกีดขวางในเรดาร์ให้ครบ 8 เป้าหมาย"));
   }
 
   private void buildGui(Inventory inv, AsteroidSession session) {
     ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>+ เรดาร์เล็งเป้า +"));
+      bgMeta.setDisplayName(" ");
+      try {
+        bgMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 45; i++) {
@@ -127,12 +131,13 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>วิธีทำภารกิจ: ป้อมปืนยิงสกัดสิ่งกีดขวาง (Visual Task)</bold></gradient>"));
+      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>Turret Defense<#5A4E7C>]"));
       iMeta.setLore(HalloweenChat.colorLines(
-        "<#72EFDD>[!] นี่คือภารกิจยืนยันตัวตน (Visual Task)!",
-        "<#B8B0C8>1. คลิกที่ลูกไฟสิ่งกีดขวางในจอเรดาร์เพื่อยิงเลเซอร์ทำลาย",
-        "<#B8B0C8>2. ยิงทำลายให้ครบทั้งหมด 8 เป้าหมาย",
-        "<#6EEB83>3. ทุกครั้งที่ยิง ป้อมปืนด้านนอกจะยิงลำแสงเลเซอร์ให้ผู้เล่นอื่นเห็น!"
+        "",
+        "<#F4F1DE>1. คลิกเป้าหมายลูกไฟในจอเรดาร์เพื่อยิงทำลาย",
+        "<#F4F1DE>2. ยิงสกัดสิ่งกีดขวางให้ครบทั้งหมด 8 เป้าหมาย",
+        "",
+        "<#5A4E7C>(<#72EFDD>Visual Task ยืนยันตัวตนต่อผู้เล่นรอบข้าง<#5A4E7C>)"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -141,8 +146,13 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
     ItemStack status = new ItemStack(Material.CROSSBOW);
     ItemMeta sMeta = status.getItemMeta();
     if(sMeta != null) {
-      sMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>เป้าหมายที่ทำลายแล้ว: <#6EEB83>" + session.hits + " / " + TARGET_HITS + "</bold></gradient>"));
-      sMeta.setLore(HalloweenChat.colorLines("<#B8B0C8>คลิกที่เป้าหมายในจอเรดาร์เพื่อยิงป้อมปืนเลเซอร์"));
+      sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>ระบบควบคุมป้อมปืน<#5A4E7C>]"));
+      sMeta.setLore(HalloweenChat.colorLines(
+        "",
+        "<#F4F1DE>เป้าหมายที่ทำลายแล้ว <#6EEB83>" + session.hits + "<#5A4E7C>/<#F4F1DE>" + TARGET_HITS,
+        "",
+        "<#5A4E7C>(<#B8B0C8>คลิกเป้าหมายในจอเรดาร์เพื่อยิง<#5A4E7C>)"
+      ));
       status.setItemMeta(sMeta);
     }
     inv.setItem(4, status);
@@ -152,8 +162,8 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
         ItemStack target = XMaterial.FIRE_CHARGE.parseItem();
         ItemMeta tMeta = target.getItemMeta();
         if(tMeta != null) {
-          tMeta.setDisplayName(HalloweenChat.color("<gradient:#D90429:#FF5400><bold>[+] เป้าหมายสิ่งกีดขวาง (คลิกเพื่อยิง!)</bold></gradient>"));
-          tMeta.setLore(HalloweenChat.colorLines("<#FFB703>> คลิกเพื่อยิงลำแสงเลเซอร์ทำลาย!"));
+          tMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>เป้าหมายสิ่งกีดขวาง<#5A4E7C>]"));
+          tMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อยิงสกัด<#5A4E7C>)"));
           target.setItemMeta(tMeta);
         }
         inv.setItem(slot, target);
@@ -161,7 +171,7 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
         ItemStack empty = XMaterial.GREEN_STAINED_GLASS_PANE.parseItem();
         ItemMeta eMeta = empty.getItemMeta();
         if(eMeta != null) {
-          eMeta.setDisplayName(HalloweenChat.color("<#2D8A4E>+ จอเรดาร์ป้อมปืน +"));
+          eMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>จอเรดาร์ปลอดโปร่ง<#5A4E7C>]"));
           empty.setItemMeta(eMeta);
         }
         inv.setItem(slot, empty);
@@ -179,6 +189,11 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
       return true;
     }
 
+    if(rawSlot == 0 || rawSlot == 4) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+      return true;
+    }
+
     if(session.activeSlots.remove(rawSlot)) {
       session.hits++;
       if(session.hits < TARGET_HITS) {
@@ -192,16 +207,18 @@ public class ClearAsteroidsMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทำลายสิ่งกีดขวางครบ 8 เป้าหมายแล้ว!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ยิงสกัดสิ่งกีดขวางครบ 8 เป้าหมายสำเร็จ"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-          if(player.isOnline()) {
-            player.closeInventory();
+          if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+            if(isGui(player.getOpenInventory().getTitle())) {
+              player.closeInventory();
+            }
             arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CLEAR_ASTEROIDS);
           }
-        }, 10L);
+        }, 8L);
       } else {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[ยิงเป้าสำเร็จ!] <#FFB703>ทำลายแล้ว " + session.hits + " / " + TARGET_HITS + " เป้าหมาย"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>ทำลายเป้าหมาย <#6EEB83>" + session.hits + "/" + TARGET_HITS));
       }
     }
     return true;

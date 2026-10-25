@@ -25,7 +25,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
@@ -40,7 +39,7 @@ import java.util.UUID;
 
 public class TirePressureMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>เช็คลมยางรถบัส</bold></gradient> <#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>เช็คลมยางรถบัส<#5A4E7C>]");
 
   private final Arena arena;
   private final Map<UUID, Integer> playerPsi = new HashMap<>();
@@ -87,15 +86,18 @@ public class TirePressureMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[เช็คลมยาง]</bold></gradient> <#FFB703>ปั๊มและปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์ว!"));
-    player.sendMessage(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>[ภารกิจเช็คลมยาง]</bold></gradient> <#FFB703>ปรับแรงดันลมยางให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์ว (ดูวิธีทำที่หนังสือช่อง 1)"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>ปรับแรงดันลมยางให้อยู่ในช่วง <#6EEB83>30-32 PSI <#F4F1DE>แล้วกดล็อควาล์ว"));
   }
 
   private void buildGui(Inventory inv, int psi) {
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
+      bgMeta.setDisplayName(" ");
+      try {
+        bgMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 27; i++) {
@@ -105,15 +107,14 @@ public class TirePressureMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<gradient:#FF5400:#FFB703><bold>วิธีทำภารกิจ: เช็คลมยางรถบัส (Instructions)</bold></gradient>"));
+      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Tire Pressure<#5A4E7C>]"));
       iMeta.setLore(HalloweenChat.colorLines(
-        "<#F4F1DE>ขั้นตอนการทำภารกิจ:",
-        "<#B8B0C8>1. ดูกล่องแรงดันปัจจุบันด้านบน",
-        "<#B8B0C8>2. ใช้ปั๊มหนัก (+5 PSI) หรือปั๊มละเอียด (+2 PSI) เพื่อเพิ่มลม",
-        "<#B8B0C8>3. หากเผลอปั๊มเกิน ให้ใช้วาล์วระบายลม (-3 PSI)",
-        "<#B8B0C8>4. ปรับให้อยู่ในช่วง <#6EEB83>30 - 32 PSI <#B8B0C8>(แถบสีเขียวพอดีเป๊ะ)",
-        "<#B8B0C8>5. เมื่อได้ 30-32 PSI ให้คลิก <#6EEB83>[ปิดล็อควาล์ว] <#B8B0C8>ด้านล่าง",
-        "<#FF3B47>[!] ระวัง: หากเกิน 34 PSI วาล์วจะระเบิดฉุกเฉินและลดเหลือ 16 PSI!"
+        "",
+        "<#F4F1DE>1. ใช้ปั๊มลมแรง (+5) หรือปั๊มละเอียด (+2)",
+        "<#F4F1DE>2. หากลมเกิน ให้ใช้วาล์วระบายลม (-3)",
+        "<#F4F1DE>3. ปรับให้อยู่ในช่วง <#6EEB83>30 - 32 PSI <#F4F1DE>แล้วล็อควาล์ว",
+        "",
+        "<#5A4E7C>(<#FF3B47>หากเกิน 34 PSI วาล์วนิรภัยจะปล่อยลมออก<#5A4E7C>)"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -144,30 +145,30 @@ public class TirePressureMinigame implements TaskMinigame {
         led = isActive ? XMaterial.EMERALD_BLOCK.parseItem() : XMaterial.LIME_STAINED_GLASS_PANE.parseItem();
       } else if(i < 4) {
         if(i == 0) {
-          led = isActive ? XMaterial.RED_CONCRETE.parseItem() : XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+          led = isActive ? XMaterial.RED_CONCRETE.parseItem() : XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
         } else if(i <= 2) {
-          led = isActive ? XMaterial.ORANGE_CONCRETE.parseItem() : XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+          led = isActive ? XMaterial.ORANGE_CONCRETE.parseItem() : XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
         } else {
-          led = isActive ? XMaterial.YELLOW_CONCRETE.parseItem() : XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+          led = isActive ? XMaterial.YELLOW_CONCRETE.parseItem() : XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
         }
       } else {
-        led = isActive ? XMaterial.RED_CONCRETE.parseItem() : XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+        led = isActive ? XMaterial.RED_CONCRETE.parseItem() : XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
       }
 
       ItemMeta ledMeta = led.getItemMeta();
       if(ledMeta != null) {
         if(i == 4) {
           ledMeta.setDisplayName(HalloweenChat.color(isActive
-            ? "<gradient:#38B000:#9EF01A><bold>[ เกณฑ์มาตรฐาน 30-32 PSI ] << คุณอยู่ตรงนี้!</bold></gradient>"
-            : "<#6EEB83>[ ค่าเป้าหมายมาตรฐาน 30-32 PSI ]"));
+            ? "<#5A4E7C>[<#6EEB83>มาตรฐาน 30-32 PSI<#5A4E7C>]"
+            : "<#5A4E7C>[<#B8B0C8>เป้าหมาย 30-32 PSI<#5A4E7C>]"));
         } else if(i < 4) {
           ledMeta.setDisplayName(HalloweenChat.color(isActive
-            ? "<#FFB703>* ลมยางอ่อน (" + psi + " PSI) << คุณอยู่ตรงนี้"
-            : "<#5A4E7C>ระดับแรงดันต่ำ"));
+            ? "<#5A4E7C>[<#FFB703>ลมยางอ่อน " + psi + " PSI<#5A4E7C>]"
+            : "<#5A4E7C>[<#B8B0C8>ระดับแรงดันต่ำ<#5A4E7C>]"));
         } else {
           ledMeta.setDisplayName(HalloweenChat.color(isActive
-            ? "<#FF3B47>* ลมยางเกิน (" + psi + " PSI) << คุณอยู่ตรงนี้!"
-            : "<#5A4E7C>ระดับแรงดันเกิน"));
+            ? "<#5A4E7C>[<#FF3B47>ลมยางเกิน " + psi + " PSI<#5A4E7C>]"
+            : "<#5A4E7C>[<#B8B0C8>ระดับแรงดันเกิน<#5A4E7C>]"));
         }
         led.setItemMeta(ledMeta);
       }
@@ -179,28 +180,32 @@ public class TirePressureMinigame implements TaskMinigame {
     ItemMeta meterMeta = meter.getItemMeta();
     if(meterMeta != null) {
       meterMeta.setDisplayName(HalloweenChat.color(inSweetSpot
-        ? "<gradient:#38B000:#9EF01A><bold>เกจวัด: " + psi + " PSI (พอดีแล้ว!) [/]</bold></gradient>"
-        : "<#FF7518><bold>เกจวัด: <#FFB703>" + psi + " PSI</bold>"));
+        ? "<#5A4E7C>[<#6EEB83>เกจวัด " + psi + " PSI<#5A4E7C>]"
+        : "<#5A4E7C>[<#FFB703>เกจวัด " + psi + " PSI<#5A4E7C>]"));
       meterMeta.setLore(HalloweenChat.colorLines(
-        "<#B8B0C8>แรงดันปัจจุบัน: <#FFB703>" + psi + " PSI",
-        "<#6EEB83>ค่าเป้าหมายมาตรฐาน: 30 - 32 PSI",
+        "",
+        "<#F4F1DE>แรงดันปัจจุบัน <#FFB703>" + psi + " PSI",
+        "<#F4F1DE>ค่ามาตรฐาน <#6EEB83>30 - 32 PSI",
+        "",
         inSweetSpot
-          ? "<#6EEB83>[/] แรงดันลมยางพอดีแล้ว! กดล็อควาล์วได้เลย"
-          : (psi < MIN_TARGET_PSI ? "<#FF3B47>^ ขาดอีก " + (MIN_TARGET_PSI - psi) + " PSI" : "<#FF3B47>v ลมเกินอยู่ " + (psi - MAX_TARGET_PSI) + " PSI (ปล่อยลมออก!)")
+          ? "<#5A4E7C>(<#6EEB83>แรงดันพอดีแล้ว กดล็อควาล์วด้านล่าง<#5A4E7C>)"
+          : (psi < MIN_TARGET_PSI
+            ? "<#5A4E7C>(<#FFB703>ขาดอีก " + (MIN_TARGET_PSI - psi) + " PSI<#5A4E7C>)"
+            : "<#5A4E7C>(<#FF3B47>เกินอยู่ " + (psi - MAX_TARGET_PSI) + " PSI<#5A4E7C>)")
       ));
       meter.setItemMeta(meterMeta);
     }
-    inv.setItem(0, meter);
     inv.setItem(8, meter);
 
     ItemStack heavy = XMaterial.PISTON.parseItem();
     ItemMeta hMeta = heavy.getItemMeta();
     if(hMeta != null) {
-      hMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>ปั๊มลมแรง (+5 PSI)</bold></gradient> <#5A4E7C>]"));
+      hMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>ปั๊มลมแรง +5 PSI<#5A4E7C>]"));
       hMeta.setLore(HalloweenChat.colorLines(
-        "<#B8B0C8>สูบลมแรงดันสูงเข้าไปในล้อ",
-        "<#6EEB83>> เพิ่มแรงดัน +5 PSI",
-        "<#B8B0C8>(ใช้เมื่อลมยางยังอ่อนมาก)"
+        "",
+        "<#F4F1DE>สูบลมแรงดันสูงเข้ายางรถบัส",
+        "",
+        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเพิ่ม +5 PSI<#5A4E7C>)"
       ));
       heavy.setItemMeta(hMeta);
     }
@@ -209,11 +214,12 @@ public class TirePressureMinigame implements TaskMinigame {
     ItemStack fine = XMaterial.TRIPWIRE_HOOK.parseItem();
     ItemMeta fMeta = fine.getItemMeta();
     if(fMeta != null) {
-      fMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#FF7518:#FFB703><bold>ปั๊มลมละเอียด (+2 PSI)</bold></gradient> <#5A4E7C>]"));
+      fMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ปั๊มลมละเอียด +2 PSI<#5A4E7C>]"));
       fMeta.setLore(HalloweenChat.colorLines(
-        "<#B8B0C8>สูบลมแบบปรับละเอียดเพื่อเข้าสู่เป้าหมาย",
-        "<#6EEB83>> เพิ่มแรงดัน +2 PSI",
-        "<#B8B0C8>(ใช้เมื่อใกล้ถึง 30-32 PSI)"
+        "",
+        "<#F4F1DE>สูบลมแบบปรับละเอียด",
+        "",
+        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเพิ่ม +2 PSI<#5A4E7C>)"
       ));
       fine.setItemMeta(fMeta);
     }
@@ -222,36 +228,35 @@ public class TirePressureMinigame implements TaskMinigame {
     ItemStack bleed = XMaterial.HOPPER.parseItem();
     ItemMeta bMeta = bleed.getItemMeta();
     if(bMeta != null) {
-      bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#D90429:#FF5400><bold>วาล์วระบายลม (-3 PSI)</bold></gradient> <#5A4E7C>]"));
+      bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>วาล์วระบายลม -3 PSI<#5A4E7C>]"));
       bMeta.setLore(HalloweenChat.colorLines(
-        "<#B8B0C8>เปิดวาล์วระบายลมส่วนเกินออก",
-        "<#FF3B47>> ลดแรงดัน -3 PSI",
-        "<#B8B0C8>(ใช้เมื่อเผลอปั๊มลมเกิน 32 PSI)"
+        "",
+        "<#F4F1DE>ระบายลมส่วนเกินออกจากล้อ",
+        "",
+        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อลด -3 PSI<#5A4E7C>)"
       ));
       bleed.setItemMeta(bMeta);
     }
     inv.setItem(BLEED_VALVE_SLOT, bleed);
 
-    ItemStack lockBtn;
-    if(inSweetSpot) {
-      lockBtn = XMaterial.EMERALD_BLOCK.parseItem();
-    } else {
-      lockBtn = XMaterial.IRON_BARS.parseItem();
-    }
+    ItemStack lockBtn = (inSweetSpot ? XMaterial.EMERALD_BLOCK : XMaterial.IRON_BARS).parseItem();
     ItemMeta lMeta = lockBtn.getItemMeta();
     if(lMeta != null) {
       if(inSweetSpot) {
-        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>ปิดล็อควาล์วเสร็จสิ้น (Confirm) [/]</bold></gradient> <#5A4E7C>]"));
+        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ปิดล็อควาล์วลมยาง<#5A4E7C>]"));
         lMeta.setLore(HalloweenChat.colorLines(
-          "<#B8B0C8>แรงดันอยู่ที่ <#6EEB83>" + psi + " PSI <#B8B0C8>(มาตรฐาน 30-32 PSI)",
-          "<#6EEB83>> คลิกเพื่อบันทึกและจบภารกิจ!"
+          "",
+          "<#F4F1DE>แรงดันมาตรฐาน <#6EEB83>" + psi + " PSI",
+          "",
+          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อบันทึกและจบภารกิจ<#5A4E7C>)"
         ));
       } else {
-        lMeta.setDisplayName(HalloweenChat.color("<#B8B0C8>[ ปิดล็อควาล์ว (ยังไม่พร้อม) ]"));
+        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#B8B0C8>ปิดล็อควาล์ว<#5A4E7C>]"));
         lMeta.setLore(HalloweenChat.colorLines(
-          "<#FF3B47>แรงดันต้องอยู่ระหว่าง 30 - 32 PSI เท่านั้น!",
-          "<#F4F1DE>ปัจจุบัน: <#FFB703>" + psi + " PSI",
-          "<#B8B0C8>(ปรับแรงดันให้พอดีก่อนจึงจะล็อคได้)"
+          "",
+          "<#FF3B47>แรงดันต้องอยู่ระหว่าง 30 - 32 PSI",
+          "",
+          "<#5A4E7C>(<#B8B0C8>ปัจจุบัน " + psi + " PSI<#5A4E7C>)"
         ));
       }
       lockBtn.setItemMeta(lMeta);
@@ -267,9 +272,8 @@ public class TirePressureMinigame implements TaskMinigame {
 
     int currentPsi = playerPsi.getOrDefault(player.getUniqueId(), 12);
 
-    if(rawSlot == 0) {
+    if(rawSlot == 0 || rawSlot == 8) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FFB703>ปรับแรงดันให้อยู่ในช่วง 30-32 PSI แล้วกดล็อควาล์วด้านล่าง!"));
       return true;
     }
 
@@ -292,7 +296,7 @@ public class TirePressureMinigame implements TaskMinigame {
     if(rawSlot == BLEED_VALVE_SLOT) {
       currentPsi = Math.max(0, currentPsi - 3);
       XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#B8B0C8>[วาล์วระบาย] ปล่อยลมออก -3 PSI -> เหลือ <#FFB703>" + currentPsi + " PSI"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>ระบายลมออก เหลือ <#FFB703>" + currentPsi + " PSI"));
       playerPsi.put(player.getUniqueId(), currentPsi);
       buildGui(player.getOpenInventory().getTopInventory(), currentPsi);
       return true;
@@ -305,21 +309,19 @@ public class TirePressureMinigame implements TaskMinigame {
 
         XSound.BLOCK_IRON_DOOR_CLOSE.play(player.getLocation(), 1F, 1.2F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] เช็คลมยางสำเร็จ! แรงดันล็อคที่ " + currentPsi + " PSI มาตรฐาน!</bold></gradient>"));
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ล็อคแรงดันลมยางที่ " + currentPsi + " PSI สำเร็จ"));
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-          if(player.isOnline()) {
-            player.closeInventory();
+          if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+            if(isGui(player.getOpenInventory().getTitle())) {
+              player.closeInventory();
+            }
             arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CHECK_TIRE_PRESSURE);
           }
-        }, 10L);
+        }, 8L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        if(currentPsi < MIN_TARGET_PSI) {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางยังอ่อนเกินไป! (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
-        } else {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#FF3B47>[ล็อคไม่ได้] ลมยางเกินเกณฑ์! ต้องระบายลมออก (ปัจจุบัน " + currentPsi + " PSI / เป้าหมาย 30-32 PSI)"));
-        }
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>แรงดันต้องอยู่ระหว่าง 30-32 PSI ก่อนปิดล็อควาล์ว"));
       }
       return true;
     }
@@ -329,18 +331,15 @@ public class TirePressureMinigame implements TaskMinigame {
 
   private void checkAndApplyPsi(Player player, int newPsi) {
     if(newPsi > MAX_SAFE_PSI) {
-      XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.8F, 1.6F);
-      XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 1F, 0.5F);
-
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#D90429:#FF5400><bold>แรงดันเกิน 34 PSI! วาล์วนิรภัยระบายลมทิ้งฉุกเฉิน! (ลมยางลดเหลือ 16 PSI)</bold></gradient>"));
+      XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.7F, 1.6F);
+      XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.9F, 0.6F);
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>แรงดันเกิน 34 PSI วาล์วนิรภัยปล่อยลมเหลือ 16 PSI"));
       newPsi = 16;
+    } else if(newPsi >= MIN_TARGET_PSI && newPsi <= MAX_TARGET_PSI) {
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>แรงดัน " + newPsi + " PSI พอดีแล้ว กดล็อควาล์วด้านล่างได้เลย"));
+      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.8F, 1.8F);
     } else {
-      if(newPsi >= MIN_TARGET_PSI && newPsi <= MAX_TARGET_PSI) {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[/] แรงดันอยู่ที่ " + newPsi + " PSI (พอดีแล้ว!) -> รีบกด [ล็อควาล์ว] ด้านล่าง!"));
-        XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.8F, 1.8F);
-      } else {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#FF5400:#FFB703>[เกจวัด]</gradient> <#F4F1DE>แรงดันปัจจุบัน: <#FF7518>" + newPsi + " PSI <#B8B0C8>(เป้าหมาย: <#6EEB83>30-32 PSI<#B8B0C8>)"));
-      }
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>แรงดันปัจจุบัน <#FFB703>" + newPsi + " PSI <#5A4E7C>(<#B8B0C8>เป้าหมาย 30-32 PSI<#5A4E7C>)"));
     }
 
     playerPsi.put(player.getUniqueId(), newPsi);
@@ -351,9 +350,8 @@ public class TirePressureMinigame implements TaskMinigame {
 
   @Override
   public void handleClose(Player player) {
-    if(completedSessions.contains(player.getUniqueId())) {
-      completedSessions.remove(player.getUniqueId());
-    }
+    playerPsi.remove(player.getUniqueId());
+    completedSessions.remove(player.getUniqueId());
   }
 
   @Override

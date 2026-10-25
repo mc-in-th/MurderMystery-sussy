@@ -241,8 +241,10 @@ public class CleanWindshieldMinigame implements TaskMinigame {
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-          if(player.isOnline()) {
-            player.closeInventory();
+          if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+            if(isGui(player.getOpenInventory().getTitle())) {
+              player.closeInventory();
+            }
             arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CLEAN_WINDSHIELD);
           }
         }, 8L);
@@ -276,3 +278,4 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

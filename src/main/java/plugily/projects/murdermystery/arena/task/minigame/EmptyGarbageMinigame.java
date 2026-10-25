@@ -18,11 +18,6 @@
 
 package plugily.projects.murdermystery.arena.task.minigame;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,16 +25,21 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 public class EmptyGarbageMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#38B000:#9EF01A><bold>ทิ้งขยะออกนอกรถบัส (Trash)</bold></gradient> <#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>ทิ้งขยะออกนอกรถบัส<#5A4E7C>]");
   private static final int TOTAL_PULLS = 5;
   private static final int LEVER_SLOT = 16;
   private static final int[][] TRASH_ROWS = {
@@ -86,14 +86,18 @@ public class EmptyGarbageMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[ทิ้งขยะ]</bold></gradient> <#FFB703>คลิกดึงคันโยกทางขวา 5 ครั้งเพื่อระบายขยะออกนอกตัวรถ!"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>คลิกดึงคันโยกทางขวา 5 ครั้งเพื่อระบายขยะออกนอกตัวรถ"));
   }
 
   private void buildGui(Inventory inv, int pulls) {
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
+      bgMeta.setDisplayName(" ");
+      try {
+        bgMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 45; i++) {
@@ -103,12 +107,13 @@ public class EmptyGarbageMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>วิธีทำภารกิจ: ทิ้งขยะออกนอกรถบัส (Visual Task)</bold></gradient>"));
+      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>Empty Garbage<#5A4E7C>]"));
       iMeta.setLore(HalloweenChat.colorLines(
-        "<#72EFDD>[!] นี่คือภารกิจยืนยันตัวตน (Visual Task)!",
-        "<#B8B0C8>1. คลิกดึงคันโยกปล่องทิ้งขยะทางขวา (ช่อง 16) ทั้งหมด 5 ครั้ง",
-        "<#B8B0C8>2. ขยะในปล่องจะถูกระบายออกนอกตัวรถทีละชั้น",
-        "<#6EEB83>3. ผู้เล่นคนอื่นที่ยืนดูอยู่จะเห็นขยะถูกปล่อยออกมาจริงๆ!"
+        "",
+        "<#F4F1DE>1. คลิกดึงคันโยกปล่องทิ้งขยะทางขวาทั้งหมด 5 ครั้ง",
+        "<#F4F1DE>2. ขยะในปล่องจะถูกระบายออกนอกตัวรถทีละชั้น",
+        "",
+        "<#5A4E7C>(<#72EFDD>Visual Task ยืนยันตัวตนต่อผู้เล่นรอบข้าง<#5A4E7C>)"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -129,14 +134,15 @@ public class EmptyGarbageMinigame implements TaskMinigame {
           cell = XMaterial.LIME_STAINED_GLASS_PANE.parseItem();
           ItemMeta cMeta = cell.getItemMeta();
           if(cMeta != null) {
-            cMeta.setDisplayName(HalloweenChat.color("<#6EEB83>[/] ระบายขยะชั้นนี้แล้ว"));
+            cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ระบายขยะชั้นนี้แล้ว<#5A4E7C>]"));
             cell.setItemMeta(cMeta);
           }
         } else {
           cell = trashMaterials[(r + c) % trashMaterials.length].parseItem();
           ItemMeta cMeta = cell.getItemMeta();
           if(cMeta != null) {
-            cMeta.setDisplayName(HalloweenChat.color("<#FF7518>ขยะค้างท่อ (ดึงคันโยกทางขวาเพื่อทิ้ง)"));
+            cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ขยะค้างท่อ<#5A4E7C>]"));
+            cMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>ดึงคันโยกทางขวาเพื่อระบายออก<#5A4E7C>)"));
             cell.setItemMeta(cMeta);
           }
         }
@@ -144,16 +150,21 @@ public class EmptyGarbageMinigame implements TaskMinigame {
       }
     }
 
-    ItemStack lever = pulls >= TOTAL_PULLS ? XMaterial.EMERALD_BLOCK.parseItem() : XMaterial.LEVER.parseItem();
+    ItemStack lever = (pulls >= TOTAL_PULLS ? XMaterial.EMERALD_BLOCK : XMaterial.LEVER).parseItem();
     ItemMeta lMeta = lever.getItemMeta();
     if(lMeta != null) {
-      lMeta.setDisplayName(HalloweenChat.color(pulls >= TOTAL_PULLS
-        ? "<gradient:#38B000:#9EF01A><bold>[/] ระบายขยะออกหมดแล้ว!</bold></gradient>"
-        : "<#5A4E7C>[ <gradient:#FF5400:#FFB703><bold>คลิกดึงคันโยกทิ้งขยะ (" + pulls + "/" + TOTAL_PULLS + ")</bold></gradient> <#5A4E7C>]"));
-      lMeta.setLore(HalloweenChat.colorLines(
-        "<#B8B0C8>สถานะปล่องขยะ: <#6EEB83>" + pulls + " / " + TOTAL_PULLS,
-        pulls >= TOTAL_PULLS ? "<#6EEB83>[/] สะอาดเรียบร้อย!" : "<#FFB703>> คลิกย้ำๆ เพื่อเปิดประตูระบายขยะ!"
-      ));
+      if(pulls >= TOTAL_PULLS) {
+        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ระบายขยะออกหมดแล้ว<#5A4E7C>]"));
+        lMeta.setLore(HalloweenChat.colorLines("", "<#6EEB83>ปล่องขยะสะอาดเรียบร้อย"));
+      } else {
+        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>คันโยกระบายขยะ<#5A4E7C>]"));
+        lMeta.setLore(HalloweenChat.colorLines(
+          "",
+          "<#F4F1DE>ความคืบหน้า <#FFB703>" + pulls + "<#5A4E7C>/<#F4F1DE>" + TOTAL_PULLS,
+          "",
+          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเปิดประตูระบายขยะ<#5A4E7C>)"
+        ));
+      }
       lever.setItemMeta(lMeta);
     }
     inv.setItem(LEVER_SLOT, lever);
@@ -162,6 +173,13 @@ public class EmptyGarbageMinigame implements TaskMinigame {
   @Override
   public boolean handleClick(Player player, int rawSlot, ClickType clickType) {
     if(completedSessions.contains(player.getUniqueId())) {
+      return true;
+    }
+    if(!pullCounts.containsKey(player.getUniqueId())) {
+      return true;
+    }
+    if(rawSlot == 0) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
       return true;
     }
     if(rawSlot != LEVER_SLOT) {
@@ -178,16 +196,18 @@ public class EmptyGarbageMinigame implements TaskMinigame {
       completedSessions.add(player.getUniqueId());
       pullCounts.remove(player.getUniqueId());
       XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] ทิ้งขยะออกนอกรถบัสเรียบร้อยแล้ว!</bold></gradient>"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทิ้งขยะออกนอกรถบัสสำเร็จ"));
 
       Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-        if(player.isOnline()) {
-          player.closeInventory();
+        if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+          if(isGui(player.getOpenInventory().getTitle())) {
+            player.closeInventory();
+          }
           arena.getTaskManager().completeTaskFromMinigame(player, TaskType.EMPTY_GARBAGE);
         }
-      }, 10L);
+      }, 8L);
     } else {
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>[กำลังระบายขยะ] <#FFB703>ดึงคันโยกแล้ว " + pulls + "/" + TOTAL_PULLS + " ครั้ง!"));
+      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>ดึงคันโยกระบายขยะ <#FFB703>" + pulls + "/" + TOTAL_PULLS));
     }
 
     return true;

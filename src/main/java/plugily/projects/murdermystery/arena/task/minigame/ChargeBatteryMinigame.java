@@ -182,7 +182,11 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 0.8F, 1.2F);
 
       session.task = Bukkit.getScheduler().runTaskTimer(arena.getPlugin(), () -> {
-        if(!player.isOnline() || !sessions.containsKey(player.getUniqueId())) {
+        if(!player.isOnline()
+          || !arena.getPlayers().contains(player)
+          || arena.getVotingManager().isVotingActive()
+          || !sessions.containsKey(player.getUniqueId())
+          || !isGui(player.getOpenInventory().getTitle())) {
           cancelSession(player.getUniqueId());
           return;
         }
@@ -199,8 +203,10 @@ public class ChargeBatteryMinigame implements TaskMinigame {
           sessions.remove(player.getUniqueId());
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-            if(player.isOnline()) {
-              player.closeInventory();
+            if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+              if(isGui(player.getOpenInventory().getTitle())) {
+                player.closeInventory();
+              }
               arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CHARGE_BATTERY);
             }
           }, 8L);
@@ -232,3 +238,4 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

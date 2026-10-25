@@ -18,11 +18,6 @@
 
 package plugily.projects.murdermystery.arena.task.minigame;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -31,16 +26,21 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 public class SubmitScanMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[ <gradient:#00B4D8:#72EFDD><bold>สแกนร่างกายยืนยันตัวตน (Scan)</bold></gradient> <#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>สแกนร่างกายยืนยันตัวตน<#5A4E7C>]");
   private static final int TOTAL_STEPS = 9;
   private static final int[] PROGRESS_SLOTS = {18, 19, 20, 21, 22, 23, 24, 25, 26};
 
@@ -90,14 +90,18 @@ public class SubmitScanMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_ACTIVATE.play(player.getLocation(), 0.8F, 1.4F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>[สแกนร่างกาย]</bold></gradient> <#FFB703>คลิกปุ่มตรงกลางเพื่อเริ่มสแกนยืนยันตัวตน (คนอื่นจะเห็นแสงสแกนรอบตัวคุณ!)"));
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>คลิกปุ่มตรงกลางเพื่อเริ่มสแกนร่างกายยืนยันตัวตน"));
   }
 
   private void buildGui(Inventory inv, Player player, ScanSession session) {
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
+    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
     ItemMeta bgMeta = bg.getItemMeta();
     if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
+      bgMeta.setDisplayName(" ");
+      try {
+        bgMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
       bg.setItemMeta(bgMeta);
     }
     for(int i = 0; i < 27; i++) {
@@ -107,13 +111,13 @@ public class SubmitScanMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>วิธีทำภารกิจ: สแกนร่างกาย (Visual Task)</bold></gradient>"));
+      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>MedBay Scan<#5A4E7C>]"));
       iMeta.setLore(HalloweenChat.colorLines(
-        "<#72EFDD>[!] นี่คือภารกิจยืนยันตัวตน (Visual Task)!",
-        "<#B8B0C8>1. คลิกที่ปุ่มเครื่องสแกนตรงกลาง (ช่อง 13)",
-        "<#B8B0C8>2. ยืนรอให้เครื่องสแกนตรวจสอบข้อมูลครบ 100%",
-        "<#6EEB83>3. ขณะสแกน ผู้เล่นคนอื่นที่อยู่ใกล้ๆ จะเห็นวงแหวนแสงสีเขียว",
-        "<#6EEB83>   รอบตัวคุณ ซึ่งช่วยพิสูจน์ว่าคุณเป็นผู้บริสุทธิ์!"
+        "",
+        "<#F4F1DE>1. คลิกปุ่มเครื่องสแกนตรงกลางเพื่อเดินเครื่อง",
+        "<#F4F1DE>2. ยืนรอให้เครื่องสแกนตรวจสอบข้อมูลครบ 100%",
+        "",
+        "<#5A4E7C>(<#72EFDD>Visual Task ยืนยันตัวตนต่อผู้เล่นรอบข้าง<#5A4E7C>)"
       ));
       instruction.setItemMeta(iMeta);
     }
@@ -126,19 +130,21 @@ public class SubmitScanMinigame implements TaskMinigame {
     ItemMeta sMeta = scanner.getItemMeta();
     if(sMeta != null) {
       if(session.step >= TOTAL_STEPS) {
-        sMeta.setDisplayName(HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] สแกนร่างกายสำเร็จ 100% (Verified Innocent)</bold></gradient>"));
+        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>สแกนร่างกายสำเร็จ 100%<#5A4E7C>]"));
       } else if(session.scanning) {
-        sMeta.setDisplayName(HalloweenChat.color("<gradient:#00B4D8:#72EFDD><bold>กำลังสแกนร่างกาย... (" + percent + "%)</bold></gradient>"));
+        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>กำลังสแกนร่างกาย " + percent + "%<#5A4E7C>]"));
       } else {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[ <gradient:#00B4D8:#72EFDD><bold>คลิกเพื่อเริ่มสแกนร่างกาย (Start MedBay Scan)</bold></gradient> <#5A4E7C>]"));
+        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>เริ่มสแกนร่างกายยืนยันตัวตน<#5A4E7C>]"));
       }
       sMeta.setLore(HalloweenChat.colorLines(
-        "<#F4F1DE>ชื่อผู้โดยสาร: <#6EEB83>" + player.getName(),
-        "<#F4F1DE>รหัสประจำตัว: <#FFB703>#AMOG-" + Math.abs(player.getUniqueId().hashCode() % 9000 + 1000),
-        "<#F4F1DE>ส่วนสูง / น้ำหนัก: <#72EFDD>106 cm / 42 kg",
-        "<#F4F1DE>สถานะชีวภาพ: " + (session.step >= TOTAL_STEPS ? "<#6EEB83>ยืนยันผู้บริสุทธิ์ [/]" : "<#FFB703>กำลังตรวจสอบข้อมูล..."),
-        " ",
-        session.scanning ? "<#72EFDD>* กรุณาเปิดหน้าต่างนี้ค้างไว้จนกว่าจะครบ 100%" : "<#6EEB83>> คลิกที่นี่เพื่อเริ่มเดินเครื่องสแกน!"
+        "",
+        "<#F4F1DE>ผู้โดยสาร <#6EEB83>" + player.getName(),
+        "<#F4F1DE>รหัสประจำตัว <#FFB703>#BUS-" + Math.abs(player.getUniqueId().hashCode() % 9000 + 1000),
+        "<#F4F1DE>สถานะชีวภาพ " + (session.step >= TOTAL_STEPS ? "<#6EEB83>ยืนยันผู้บริสุทธิ์" : "<#FFB703>กำลังตรวจสอบข้อมูล"),
+        "",
+        session.scanning
+          ? "<#5A4E7C>(<#B8B0C8>กรุณาเปิดหน้าต่างนี้ค้างไว้จนครบ 100%<#5A4E7C>)"
+          : "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเริ่มเดินเครื่องสแกน<#5A4E7C>)"
       ));
       scanner.setItemMeta(sMeta);
     }
@@ -146,12 +152,12 @@ public class SubmitScanMinigame implements TaskMinigame {
 
     for(int i = 0; i < PROGRESS_SLOTS.length; i++) {
       boolean done = i < session.step;
-      ItemStack pane = done ? XMaterial.LIME_STAINED_GLASS_PANE.parseItem() : XMaterial.CYAN_STAINED_GLASS_PANE.parseItem();
+      ItemStack pane = (done ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.GRAY_STAINED_GLASS_PANE).parseItem();
       ItemMeta pMeta = pane.getItemMeta();
       if(pMeta != null) {
         pMeta.setDisplayName(HalloweenChat.color(done
-          ? "<#6EEB83>■ สแกนส่วนที่ " + (i + 1) + "/" + TOTAL_STEPS + " สำเร็จ"
-          : "<#72EFDD>□ รอการสแกนส่วนที่ " + (i + 1) + "/" + TOTAL_STEPS));
+          ? "<#5A4E7C>[<#6EEB83>สแกนส่วนที่ " + (i + 1) + "/" + TOTAL_STEPS + "<#5A4E7C>]"
+          : "<#5A4E7C>[<#B8B0C8>รอสแกนส่วนที่ " + (i + 1) + "/" + TOTAL_STEPS + "<#5A4E7C>]"));
         pane.setItemMeta(pMeta);
       }
       inv.setItem(PROGRESS_SLOTS[i], pane);
@@ -168,33 +174,46 @@ public class SubmitScanMinigame implements TaskMinigame {
       return true;
     }
 
+    if(rawSlot == 0) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+      return true;
+    }
+
     if(rawSlot == 13 && !session.scanning) {
       session.scanning = true;
+      Inventory topInv = player.getOpenInventory().getTopInventory();
       XSound.BLOCK_BEACON_POWER_SELECT.play(player.getLocation(), 0.9F, 1.4F);
-      buildGui(player.getOpenInventory().getTopInventory(), player, session);
+      buildGui(topInv, player, session);
 
       session.scanTask = Bukkit.getScheduler().runTaskTimer(arena.getPlugin(), () -> {
-        if(!player.isOnline()) {
+        if(!player.isOnline()
+          || !arena.getPlayers().contains(player)
+          || arena.getVotingManager().isVotingActive()
+          || !sessions.containsKey(player.getUniqueId())
+          || !isGui(player.getOpenInventory().getTitle())) {
           stopSessionTask(player.getUniqueId());
+          sessions.remove(player.getUniqueId());
           return;
         }
         session.step++;
         arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.SUBMIT_SCAN, session.step, TOTAL_STEPS);
-        buildGui(player.getOpenInventory().getTopInventory(), player, session);
+        buildGui(topInv, player, session);
 
         if(session.step >= TOTAL_STEPS) {
           stopSessionTask(player.getUniqueId());
           completedSessions.add(player.getUniqueId());
           sessions.remove(player.getUniqueId());
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1.0F, 1.5F);
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<gradient:#38B000:#9EF01A><bold>[/] สแกนร่างกายยืนยันตัวตนสำเร็จ!</bold></gradient>"));
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>สแกนร่างกายยืนยันตัวตนสำเร็จ"));
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-            if(player.isOnline()) {
-              player.closeInventory();
+            if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
+              if(isGui(player.getOpenInventory().getTitle())) {
+                player.closeInventory();
+              }
               arena.getTaskManager().completeTaskFromMinigame(player, TaskType.SUBMIT_SCAN);
             }
-          }, 10L);
+          }, 8L);
         }
       }, 10L, 10L);
     }
