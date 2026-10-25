@@ -144,6 +144,8 @@ public class VotingManager {
   private final Map<UUID, Long> recentKills = new HashMap<>();
   private final List<DeadBody> activeBodies = new ArrayList<>();
   private Player pendingEjectedPlayer;
+  private String pendingEjectedName;
+  private boolean pendingEjectedWasMurderer = false;
   private boolean verdictExecuted = false;
   private long lastVoteEndTime = 0;
   private int remainingEmergencyMeetings = 2;
@@ -354,11 +356,18 @@ public class VotingManager {
     this.meetingCircleLocations.clear();
     this.savedSlotItems.clear();
     this.pendingEjectedPlayer = null;
+    this.pendingEjectedName = null;
+    this.pendingEjectedWasMurderer = false;
     this.verdictExecuted = false;
     clearCircleStatusDisplays();
 
     if(arena.getSabotageManager() != null) {
       arena.getSabotageManager().cancelActiveSabotage("VOTING");
+    }
+
+    for(Player p : arena.getPlayers()) {
+      arena.getTaskManager().getMinigameManager().handleClose(p, null);
+      p.closeInventory();
     }
 
     clearDeadBodies();
@@ -1028,6 +1037,8 @@ public class VotingManager {
     voteTimer = 7;
     verdictExecuted = false;
     pendingEjectedPlayer = null;
+    pendingEjectedName = null;
+    pendingEjectedWasMurderer = false;
 
     Map<Player, List<String>> votersByTarget = new HashMap<>();
     for(Map.Entry<Player, Player> entry : votes.entrySet()) {
@@ -1087,6 +1098,9 @@ public class VotingManager {
 
     if(!tie && skipCount < maxVotes && topCandidate != null) {
       pendingEjectedPlayer = topCandidate;
+      pendingEjectedName = topCandidate.getName();
+      IUser candUser = arena.getPlugin().getUserManager().getUser(topCandidate);
+      pendingEjectedWasMurderer = candUser != null && Role.isRole(Role.MURDERER, candUser, arena);
     }
 
     String revealTitle = HalloweenChat.color("<#5A4E7C>[<#FF7518>สรุปผลคะแนนโหวต<#5A4E7C>]");
@@ -1107,7 +1121,7 @@ public class VotingManager {
       player.closeInventory();
     }
 
-    if(pendingEjectedPlayer == null || !pendingEjectedPlayer.isOnline()) {
+    if(pendingEjectedName == null) {
       broadcastArenaMessage("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#5A4E7C>(<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<#5A4E7C>)");
 
       String noEjectTitle = HalloweenChat.color("<#5A4E7C>[<#FF7518>ไม่มีใครถูกโหวตออก<#5A4E7C>]");
@@ -1120,14 +1134,20 @@ public class VotingManager {
     }
 
     Player ejectedPlayer = pendingEjectedPlayer;
-    IUser ejectedUser = arena.getPlugin().getUserManager().getUser(ejectedPlayer);
-    boolean wasMurderer = Role.isRole(Role.MURDERER, ejectedUser, arena);
+    boolean ejectedOnline = ejectedPlayer != null && ejectedPlayer.isOnline() && arena.getPlayers().contains(ejectedPlayer);
+    boolean wasMurderer = pendingEjectedWasMurderer;
+    if(ejectedOnline) {
+      IUser ejectedUser = arena.getPlugin().getUserManager().getUser(ejectedPlayer);
+      wasMurderer = Role.isRole(Role.MURDERER, ejectedUser, arena);
+    }
 
     Location center = arena.getCampfireLocation();
     if(center != null && center.getWorld() != null) {
       Location fireCenter = center.clone().add(0.5, 1.0, 0.5);
-      meetingCircleLocations.put(ejectedPlayer.getUniqueId(), fireCenter);
-      VersionUtils.teleport(ejectedPlayer, fireCenter);
+      if(ejectedOnline) {
+        meetingCircleLocations.put(ejectedPlayer.getUniqueId(), fireCenter);
+        VersionUtils.teleport(ejectedPlayer, fireCenter);
+      }
       try {
         center.getWorld().strikeLightningEffect(fireCenter);
       } catch(Throwable ignored) {
@@ -1138,18 +1158,20 @@ public class VotingManager {
       ? "<#5A4E7C>(<#6EEB83>เขาคือฆาตกร<#5A4E7C>)"
       : "<#5A4E7C>(<#FF3B47>เขาไม่ใช่ฆาตกร<#5A4E7C>)";
 
-    broadcastArenaMessage("<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>" + ejectedPlayer.getName()
+    broadcastArenaMessage("<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>" + pendingEjectedName
       + " <#F4F1DE>ถูกโหวตคัดออกรอบกองไฟ " + roleReveal);
 
-    String ejectTitle = HalloweenChat.color("<#5A4E7C>[<#FF3B47>" + ejectedPlayer.getName() + " ถูกโหวตคัดออก<#5A4E7C>]");
+    String ejectTitle = HalloweenChat.color("<#5A4E7C>[<#FF3B47>" + pendingEjectedName + " ถูกโหวตคัดออก<#5A4E7C>]");
     String ejectSub = HalloweenChat.color(roleReveal);
     for(Player player : arena.getPlayers()) {
       XSound.ENTITY_GENERIC_EXPLODE.play(player.getLocation(), 0.9F, 1.0F);
       HalloweenChat.sendTitles(player, ejectTitle, ejectSub, 10, 60, 10);
     }
 
-    restoreVoteMenuItem(ejectedPlayer);
-    ejectedPlayer.damage(1000.0);
+    if(ejectedOnline) {
+      restoreVoteMenuItem(ejectedPlayer);
+      ejectedPlayer.damage(1000.0);
+    }
 
     if(wasMurderer && arena.aliveMurderer() <= 0) {
       ArenaUtils.onMurdererDeath(arena);
@@ -1197,10 +1219,16 @@ public class VotingManager {
     meetingCircleLocations.clear();
     savedSlotItems.clear();
     pendingEjectedPlayer = null;
+    pendingEjectedName = null;
+    pendingEjectedWasMurderer = false;
     verdictExecuted = false;
     reporter = null;
     reportedVictimName = null;
     arena.updateCampfireHologram();
+  }
+
+  public boolean isPendingEjected(Player player) {
+    return player != null && player.equals(pendingEjectedPlayer);
   }
 
   public boolean isVotingActive() {
@@ -1225,6 +1253,7 @@ public class VotingManager {
 
   public void handlePlayerLeave(Player player) {
     restoreVoteMenuItem(player);
+    player.setWalkSpeed(0.2f);
     votes.remove(player);
     skipVotes.remove(player);
     pendingVotes.remove(player);
@@ -1237,6 +1266,9 @@ public class VotingManager {
     }
     votes.values().removeIf(target -> target.equals(player));
     pendingVotes.values().removeIf(target -> target.equals(player));
+    if(isVotingActive()) {
+      refreshOpenVotingGUIs();
+    }
   }
 
   public void cleanup() {
@@ -1244,6 +1276,7 @@ public class VotingManager {
     clearCircleStatusDisplays();
     for(Player player : arena.getPlayers()) {
       restoreVoteMenuItem(player);
+      player.setWalkSpeed(0.2f);
     }
     clearDeadBodies();
     voteState = VoteState.NONE;
@@ -1256,6 +1289,8 @@ public class VotingManager {
     meetingCircleLocations.clear();
     savedSlotItems.clear();
     pendingEjectedPlayer = null;
+    pendingEjectedName = null;
+    pendingEjectedWasMurderer = false;
     verdictExecuted = false;
     reporter = null;
     reportedVictimName = null;

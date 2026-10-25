@@ -103,6 +103,11 @@ public class VentManager {
   }
 
   public boolean enterVent(Player player, SpecialBlock currentBlock) {
+    IUser checkUser = plugin.getUserManager().getUser(player);
+    if(checkUser == null || checkUser.isSpectator() || arena.isDeathPlayer(player)
+      || arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+      return false;
+    }
     long now = System.currentTimeMillis();
     long nextAllowed = ventCooldowns.getOrDefault(player.getUniqueId(), 0L);
     if(now < nextAllowed) {
@@ -286,12 +291,6 @@ public class VentManager {
     }
     lastSwitchTime.remove(player.getUniqueId());
 
-    SpecialBlock currentVent = session.sewerBlocks.get(session.currentVentIndex);
-    Location exitLoc = currentVent.getLocation().clone().add(0.5, 1.0, 0.5);
-    exitLoc.setYaw(player.getLocation().getYaw());
-    exitLoc.setPitch(player.getLocation().getPitch());
-    VersionUtils.teleport(player, exitLoc);
-
     player.removePotionEffect(PotionEffectType.BLINDNESS);
     try {
       player.removePotionEffect(PotionEffectType.DARKNESS);
@@ -305,13 +304,22 @@ public class VentManager {
       }
     }
     player.setRemainingAir(player.getMaximumAir());
-
     player.setInvisible(false);
     player.setFlying(false);
     player.setAllowFlight(false);
     for(Player p : arena.getPlayers()) {
       p.showPlayer(plugin, player);
     }
+
+    if(plugin.getArenaRegistry().getArena(player) != arena) {
+      return;
+    }
+
+    SpecialBlock currentVent = session.sewerBlocks.get(session.currentVentIndex);
+    Location exitLoc = currentVent.getLocation().clone().add(0.5, 1.0, 0.5);
+    exitLoc.setYaw(player.getLocation().getYaw());
+    exitLoc.setPitch(player.getLocation().getPitch());
+    VersionUtils.teleport(player, exitLoc);
 
     player.getInventory().clear();
     if(session.savedInventory != null) {
@@ -327,7 +335,7 @@ public class VentManager {
     int inGameLength = plugin.getConfig().getInt("Time-Manager.In-Game", 270);
     if(arena.getTimer() <= (inGameLength - 14)) {
       IUser user = plugin.getUserManager().getUser(player);
-      if(user != null && Role.isRole(Role.MURDERER, user, arena)) {
+      if(user != null && !user.isSpectator() && Role.isRole(Role.MURDERER, user, arena)) {
         int swordSlot = ItemPosition.MURDERER_SWORD.getMurdererItemPosition();
         ItemStack currentSword = player.getInventory().getItem(swordSlot);
         if(currentSword == null || currentSword.getType() == Material.AIR) {

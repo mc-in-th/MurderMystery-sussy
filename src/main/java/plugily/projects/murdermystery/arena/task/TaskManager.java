@@ -34,10 +34,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
+import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.minigame.TaskMinigameManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
@@ -124,6 +128,7 @@ public class TaskManager {
   private int totalTasks = 0;
   private int completedTasks = 0;
   private boolean allTasksCompleted = false;
+  private boolean taskWinTriggered = false;
 
   public TaskManager(Arena arena) {
     this.arena = arena;
@@ -492,6 +497,9 @@ public class TaskManager {
   }
 
   public boolean completeTaskFromMinigame(Player player, TaskType taskType) {
+    if(arena.getArenaState() != IArenaState.IN_GAME || arena.getVotingManager().isVotingActive()) {
+      return false;
+    }
     List<GameTask> tasks = playerTasks.get(player);
     if(tasks == null || tasks.isEmpty()) {
       return false;
@@ -530,12 +538,29 @@ public class TaskManager {
 
         if(completedTasks >= totalTasks) {
           allTasksCompleted = true;
+          triggerTaskVictory();
         }
 
         return true;
       }
     }
     return false;
+  }
+
+  public void triggerTaskVictory() {
+    if(taskWinTriggered || arena.getArenaState() != IArenaState.IN_GAME) {
+      return;
+    }
+    taskWinTriggered = true;
+    new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
+      .asKey().arena(arena).sendArena();
+    for(Player p : arena.getPlayers()) {
+      HalloweenChat.sendTitles(p,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE").asKey().build(),
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
+        10, 60, 10);
+    }
+    ArenaUtils.onMurdererDeath(arena);
   }
 
   public GameTask getNextTask(Player player) {
@@ -645,6 +670,9 @@ public class TaskManager {
       taskBossBar = null;
     }
     for(TaskStationDisplay station : stationDisplays) {
+      if(station.getGlowingBlock() != null) {
+        arena.removeEntityGlowColor(station.getGlowingBlock());
+      }
       station.remove();
     }
     stationDisplays.clear();
@@ -653,11 +681,15 @@ public class TaskManager {
     totalTasks = 0;
     completedTasks = 0;
     allTasksCompleted = false;
+    taskWinTriggered = false;
   }
 
   public void startArrowTracker() {
     stopArrowTracker();
     arrowTrackerTask = Bukkit.getScheduler().runTaskTimer(arena.getPlugin(), () -> {
+      if(arena.getSabotageManager() != null && arena.getSabotageManager().isCommsJammed()) {
+        return;
+      }
       for(Map.Entry<Player, List<GameTask>> entry : playerTasks.entrySet()) {
         Player player = entry.getKey();
         if(!player.isOnline()) {
@@ -752,6 +784,7 @@ public class TaskManager {
 
   public void removePlayer(Player player) {
     visualEffectManager.stopVisualSession(player);
+    minigameManager.handleClose(player, null);
     List<GameTask> tasks = playerTasks.remove(player);
     if(tasks != null) {
       for(GameTask task : tasks) {
@@ -762,6 +795,9 @@ public class TaskManager {
       boolean hasLivingInnocents = !playerTasks.isEmpty() && arena.getPlayersLeft().size() > arena.aliveMurderer();
       if(hasLivingInnocents && totalTasks > 0 && completedTasks >= totalTasks) {
         allTasksCompleted = true;
+        if(!arena.getVotingManager().isVotingActive() && !arena.getCutsceneManager().isPlaying()) {
+          triggerTaskVictory();
+        }
       }
       updateBossBar();
     }
@@ -774,6 +810,34 @@ public class TaskManager {
 
   public void updatePlayerStationVisibility(Player player) {
     if(player == null || !player.isOnline()) {
+      return;
+    }
+
+    boolean commsJammed = arena.getSabotageManager() != null && arena.getSabotageManager().isCommsJammed();
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    boolean isMurderer = user != null && Role.isRole(Role.MURDERER, user, arena);
+
+    if(commsJammed && !isMurderer) {
+      for(TaskStationDisplay station : stationDisplays) {
+        if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getActiveHologram());
+          } catch(Throwable ignored) {
+          }
+        }
+        if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
+          } catch(Throwable ignored) {
+          }
+        }
+        if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
+          } catch(Throwable ignored) {
+          }
+        }
+      }
       return;
     }
 

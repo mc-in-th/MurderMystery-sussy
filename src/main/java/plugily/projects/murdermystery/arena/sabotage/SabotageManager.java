@@ -145,6 +145,9 @@ public class SabotageManager {
     if(arena.getArenaState() != IArenaState.IN_GAME) {
       return;
     }
+    if(arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+      return;
+    }
 
     if(activeSabotage == null) {
       if(cooldownRemaining > 0) {
@@ -194,9 +197,14 @@ public class SabotageManager {
   }
 
   private void triggerMeltdownVictory() {
-    Location explodeLoc = activeFixLocation != null ? activeFixLocation : arena.getPlayersLeft().get(0).getLocation();
+    Location explodeLoc = activeFixLocation;
+    if(explodeLoc == null && !arena.getPlayersLeft().isEmpty()) {
+      explodeLoc = arena.getPlayersLeft().get(0).getLocation();
+    }
     try {
-      explodeLoc.getWorld().createExplosion(explodeLoc, 0F, false);
+      if(explodeLoc != null && explodeLoc.getWorld() != null) {
+        explodeLoc.getWorld().createExplosion(explodeLoc, 0F, false);
+      }
       String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
       String sub = HalloweenChat.color("<#FF3B47>เครื่องยนต์ระเบิด <#5A4E7C>(<#B8B0C8>ฆาตกรเป็นฝ่ายชนะ<#5A4E7C>)");
       for(Player p : arena.getPlayers()) {
@@ -206,8 +214,23 @@ public class SabotageManager {
     } catch(Exception ignored) {
     }
 
+    arena.setSabotageWin(true);
     cancelActiveSabotage("MELTDOWN_EXPLODED");
     arena.getPlugin().getArenaManager().stopGame(false, arena);
+  }
+
+  private ItemStack createBorderPane() {
+    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+    ItemMeta bgMeta = bg.getItemMeta();
+    if(bgMeta != null) {
+      bgMeta.setDisplayName(" ");
+      try {
+        bgMeta.setHideTooltip(true);
+      } catch(Throwable ignored) {
+      }
+      bg.setItemMeta(bgMeta);
+    }
+    return bg;
   }
 
   public void openSabotageGUI(Player player) {
@@ -221,12 +244,7 @@ public class SabotageManager {
 
     Inventory inv = Bukkit.createInventory(null, 27, SABOTAGE_GUI_TITLE);
 
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
-      bg.setItemMeta(bgMeta);
-    }
+    ItemStack bg = createBorderPane();
     for(int i = 0; i < 27; i++) {
       inv.setItem(i, bg);
     }
@@ -397,16 +415,7 @@ public class SabotageManager {
         HalloweenChat.sendTitles(p, title, sub, 10, 60, 10);
       }
     } else if(type == SabotageType.COMMS) {
-      arena.getTaskManager().getStationDisplays().forEach(s -> {
-        try {
-          if(s.getActiveHologram() != null) {
-            for(Player p : arena.getPlayersLeft()) {
-              p.hideEntity(arena.getPlugin(), s.getActiveHologram());
-            }
-          }
-        } catch(Throwable ignored) {
-        }
-      });
+      arena.getTaskManager().updateAllPlayersStationVisibility();
 
       String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
       String sub = HalloweenChat.color("<#F4F1DE>เรดาร์ถูกรบกวน <#5A4E7C>(<#B8B0C8>รีบไปปรับคลื่นวิทยุ<#5A4E7C>)");
@@ -475,8 +484,11 @@ public class SabotageManager {
       fixTextDisplay.remove();
       fixTextDisplay = null;
     }
-    if(fixBlockDisplay != null && fixBlockDisplay.isValid()) {
-      fixBlockDisplay.remove();
+    if(fixBlockDisplay != null) {
+      arena.removeEntityGlowColor(fixBlockDisplay);
+      if(fixBlockDisplay.isValid()) {
+        fixBlockDisplay.remove();
+      }
       fixBlockDisplay = null;
     }
   }
@@ -528,12 +540,7 @@ public class SabotageManager {
   }
 
   private void buildFixLightsGUI(Inventory inv) {
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
-      bg.setItemMeta(bgMeta);
-    }
+    ItemStack bg = createBorderPane();
     for(int i = 0; i < 27; i++) {
       inv.setItem(i, bg);
     }
@@ -556,12 +563,7 @@ public class SabotageManager {
 
   private void openFixEngineGUI(Player player) {
     Inventory inv = Bukkit.createInventory(null, 27, FIX_ENGINE_TITLE);
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
-      bg.setItemMeta(bgMeta);
-    }
+    ItemStack bg = createBorderPane();
     for(int i = 0; i < 27; i++) {
       inv.setItem(i, bg);
     }
@@ -585,12 +587,7 @@ public class SabotageManager {
 
   private void openFixCommsGUI(Player player) {
     Inventory inv = Bukkit.createInventory(null, 27, FIX_COMMS_TITLE);
-    ItemStack bg = XMaterial.PURPLE_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(HalloweenChat.color("<#5A4E7C> "));
-      bg.setItemMeta(bgMeta);
-    }
+    ItemStack bg = createBorderPane();
     for(int i = 0; i < 27; i++) {
       inv.setItem(i, bg);
     }
@@ -751,6 +748,10 @@ public class SabotageManager {
       meltdownBossBar.setVisible(false);
       meltdownBossBar.removeAll();
       meltdownBossBar = null;
+    }
+    for(Player p : arena.getPlayers()) {
+      p.removePotionEffect(PotionEffectType.DARKNESS);
+      p.removePotionEffect(PotionEffectType.NIGHT_VISION);
     }
     removeEmergencyVisuals();
     activeSabotage = null;

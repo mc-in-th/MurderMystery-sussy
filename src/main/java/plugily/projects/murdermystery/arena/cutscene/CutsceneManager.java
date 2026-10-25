@@ -37,24 +37,27 @@ import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -70,17 +73,25 @@ public class CutsceneManager {
   private static final int FADE_IN_FRAMES = 60;
   private static final int FADE_OUT_FRAMES = 45;
 
-  private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(2, r -> {
-    Thread t = new Thread(r, "MurderMystery-Cutscene-60FPS");
-    t.setDaemon(true);
-    return t;
-  });
+  private static volatile ScheduledExecutorService executor;
+
+  private static synchronized ScheduledExecutorService getExecutor() {
+    if(executor == null || executor.isShutdown() || executor.isTerminated()) {
+      executor = Executors.newScheduledThreadPool(2, r -> {
+        Thread t = new Thread(r, "MurderMystery-Cutscene-60FPS");
+        t.setDaemon(true);
+        return t;
+      });
+    }
+    return executor;
+  }
 
   private static final Map<UUID, RecordingSession> activeRecordings = new ConcurrentHashMap<>();
   private static final Map<UUID, PreviewSession> activePreviews = new ConcurrentHashMap<>();
 
   private final Arena arena;
   private final List<CutsceneFrame> frames = new ArrayList<>();
+  private final List<Player> activeViewers = new CopyOnWriteArrayList<>();
   private ScheduledFuture<?> playbackFuture;
   private BukkitTask syncTask;
   private TextDisplay cameraRig;
@@ -133,6 +144,12 @@ public class CutsceneManager {
     List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
 
     List<Player> participants = new ArrayList<>(arena.getPlayersLeft());
+    activeViewers.clear();
+    for(Player participant : participants) {
+      if(participant != null && participant.isOnline()) {
+        activeViewers.add(participant);
+      }
+    }
     CutsceneFrame firstFrame = snapshotFrames.get(0);
     Location initialEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
     Location initialOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
@@ -143,7 +160,7 @@ public class CutsceneManager {
       if(player == null || !player.isOnline()) {
         continue;
       }
-      preparePlayerForCutscene(player, participants, initialEyeLoc, cameraRig);
+      preparePlayerForCutscene(player, arena.getPlayers(), initialEyeLoc, cameraRig);
       HalloweenChat.sendTitles(
         player,
         HalloweenChat.color("<#5A4E7C>[<#FF7518>" + arena.getMapName() + "<#5A4E7C>]"),
@@ -179,10 +196,13 @@ public class CutsceneManager {
           }
           updateFadeOverlayTick(fadeOverlay, currentFrame, fallbackWorld, frameIdx, totalFrames);
           int remainingSec = Math.max(1, (int) Math.ceil((double) (totalFrames - frameIdx) / FPS));
-          for(Player player : arena.getPlayersLeft()) {
+          List<Player> currentLiving = arena.getPlayersLeft();
+          List<Player> updatedViewers = new ArrayList<>(currentLiving.size());
+          for(Player player : currentLiving) {
             if(player == null || !player.isOnline()) {
               continue;
             }
+            updatedViewers.add(player);
             if(player.getGameMode() != GameMode.SPECTATOR) {
               player.setGameMode(GameMode.SPECTATOR);
             }
@@ -199,11 +219,13 @@ public class CutsceneManager {
               HalloweenChat.color("<#B8B0C8>เกมกำลังจะเริ่มใน <#FFB703>" + remainingSec + "s")
             );
           }
+          activeViewers.clear();
+          activeViewers.addAll(updatedViewers);
         }
       }
     }.runTaskTimer(plugin, 0L, 1L);
 
-    playbackFuture = EXECUTOR.scheduleAtFixedRate(() -> {
+    playbackFuture = getExecutor().scheduleAtFixedRate(() -> {
       if(!playing) {
         return;
       }
@@ -213,14 +235,13 @@ public class CutsceneManager {
         return;
       }
       CutsceneFrame frame = snapshotFrames.get(frameIdx);
-      List<Player> viewers = arena.getPlayersLeft();
       TextDisplay rig = cameraRig;
       if(rig != null) {
-        PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewers);
+        PacketCameraSender.sendEntityPosition60Fps(rig, frame, activeViewers);
       }
       TextDisplay overlay = fadeOverlay;
       if(overlay != null && computeFadeAlpha(frameIdx, totalFrames) > 0) {
-        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewers);
+        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, activeViewers);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
   }
@@ -236,12 +257,15 @@ public class CutsceneManager {
     }
     boolean wasPlaying = playing;
     playing = false;
+    activeViewers.clear();
 
     if(wasPlaying) {
       for(Player player : arena.getPlayers()) {
         if(player != null && player.isOnline()) {
           restorePlayerFromCutscene(player);
-          applyPostCutsceneFadeIn(player);
+          if(!isArenaSpectator(player)) {
+            applyPostCutsceneFadeIn(player);
+          }
         }
       }
     }
@@ -256,7 +280,15 @@ public class CutsceneManager {
     if(player == null) {
       return;
     }
-    restorePlayerFromCutscene(player);
+    activeViewers.remove(player);
+    if(!playing) {
+      return;
+    }
+    if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
+      player.setSpectatorTarget(null);
+    }
+    player.setFlySpeed(0.1f);
+    player.setWalkSpeed(0.2f);
   }
 
   public void cleanup() {
@@ -268,6 +300,7 @@ public class CutsceneManager {
       syncTask.cancel();
       syncTask = null;
     }
+    activeViewers.clear();
     if(playing) {
       playing = false;
       for(Player player : arena.getPlayers()) {
@@ -394,7 +427,7 @@ public class CutsceneManager {
     }
   }
 
-  private void preparePlayerForCutscene(Player player, List<Player> allPlayers, Location startEyeLoc, TextDisplay rig) {
+  private void preparePlayerForCutscene(Player player, Collection<Player> allPlayers, Location startEyeLoc, TextDisplay rig) {
     Main plugin = arena.getPlugin();
     for(Player other : allPlayers) {
       if(other != null && !other.equals(player)) {
@@ -412,6 +445,17 @@ public class CutsceneManager {
     }
   }
 
+  private boolean isArenaSpectator(Player player) {
+    if(player == null) {
+      return false;
+    }
+    if(arena.isSpectatorPlayer(player) || arena.isDeathPlayer(player)) {
+      return true;
+    }
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    return user != null && (user.isSpectator() || user.isPermanentSpectator());
+  }
+
   private void restorePlayerFromCutscene(Player player) {
     Main plugin = arena.getPlugin();
     if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
@@ -419,12 +463,28 @@ public class CutsceneManager {
     }
     player.setFlySpeed(0.1f);
     player.setWalkSpeed(0.2f);
+    if(isArenaSpectator(player)) {
+      player.setGameMode(GameMode.SURVIVAL);
+      player.setAllowFlight(true);
+      player.setFlying(true);
+      ArenaUtils.hidePlayer(player, arena);
+      for(Player other : arena.getPlayers()) {
+        if(other != null && !other.equals(player)) {
+          VersionUtils.showPlayer(plugin, player, other);
+        }
+      }
+      return;
+    }
     player.setGameMode(GameMode.ADVENTURE);
     player.setFlying(false);
     player.setAllowFlight(false);
     for(Player other : arena.getPlayers()) {
       if(other != null && !other.equals(player)) {
-        VersionUtils.showPlayer(plugin, player, other);
+        if(isArenaSpectator(other)) {
+          VersionUtils.hidePlayer(plugin, player, other);
+        } else {
+          VersionUtils.showPlayer(plugin, player, other);
+        }
       }
     }
   }
@@ -504,7 +564,7 @@ public class CutsceneManager {
       }
     }.runTaskTimer(plugin, 0L, 1L);
 
-    ScheduledFuture<?> highFreqTask = EXECUTOR.scheduleAtFixedRate(() -> {
+    ScheduledFuture<?> highFreqTask = getExecutor().scheduleAtFixedRate(() -> {
       if(recorded.size() < MAX_RECORDING_FRAMES) {
         recorded.add(session.latestFrame);
       }
@@ -662,7 +722,7 @@ public class CutsceneManager {
       }
     }.runTaskTimer(plugin, 0L, 1L);
 
-    ScheduledFuture<?> highFreqFuture = EXECUTOR.scheduleAtFixedRate(() -> {
+    ScheduledFuture<?> highFreqFuture = getExecutor().scheduleAtFixedRate(() -> {
       if(!player.isOnline()) {
         return;
       }
@@ -685,6 +745,63 @@ public class CutsceneManager {
       new PreviewSession(originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
     );
     return true;
+  }
+
+  public static void shutdownAll(PluginMain plugin) {
+    for(UUID uuid : new ArrayList<>(activeRecordings.keySet())) {
+      Player player = Bukkit.getPlayer(uuid);
+      if(player != null) {
+        stopRecording(plugin, player, false);
+      } else {
+        RecordingSession session = activeRecordings.remove(uuid);
+        if(session != null) {
+          if(session.captureFuture != null) {
+            session.captureFuture.cancel(false);
+          }
+          if(session.tickTask != null) {
+            session.tickTask.cancel();
+          }
+        }
+      }
+    }
+    for(UUID uuid : new ArrayList<>(activePreviews.keySet())) {
+      Player player = Bukkit.getPlayer(uuid);
+      if(player != null) {
+        stopPreview(player);
+      } else {
+        PreviewSession session = activePreviews.remove(uuid);
+        if(session != null) {
+          if(session.highFreqFuture != null) {
+            session.highFreqFuture.cancel(false);
+          }
+          if(session.syncTask != null) {
+            session.syncTask.cancel();
+          }
+          if(session.rig != null) {
+            try {
+              if(session.rig.isValid()) {
+                session.rig.remove();
+              }
+            } catch(Throwable ignored) {
+            }
+          }
+          if(session.overlay != null) {
+            try {
+              if(session.overlay.isValid()) {
+                session.overlay.remove();
+              }
+            } catch(Throwable ignored) {
+            }
+          }
+        }
+      }
+    }
+    synchronized(CutsceneManager.class) {
+      if(executor != null) {
+        executor.shutdownNow();
+        executor = null;
+      }
+    }
   }
 
   public static boolean stopPreview(Player player) {

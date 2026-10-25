@@ -223,10 +223,13 @@ public class VisualTaskEffectManager {
       }
       session.statusDisplay = null;
     }
-    if(session.scanPadDisplay != null && session.scanPadDisplay.isValid()) {
-      try {
-        session.scanPadDisplay.remove();
-      } catch(Throwable ignored) {
+    if(session.scanPadDisplay != null) {
+      arena.removeEntityGlowColor(session.scanPadDisplay);
+      if(session.scanPadDisplay.isValid()) {
+        try {
+          session.scanPadDisplay.remove();
+        } catch(Throwable ignored) {
+        }
       }
       session.scanPadDisplay = null;
     }
@@ -385,6 +388,7 @@ public class VisualTaskEffectManager {
         }
       }
       Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
+        arena.removeEntityGlowColor(debris);
         if(debris.isValid()) {
           debris.remove();
         }
@@ -494,10 +498,13 @@ public class VisualTaskEffectManager {
     }
     completionDisplays.clear();
     for(BlockDisplay bd : temporaryBlockDisplays) {
-      if(bd != null && bd.isValid()) {
-        try {
-          bd.remove();
-        } catch(Throwable ignored) {
+      if(bd != null) {
+        arena.removeEntityGlowColor(bd);
+        if(bd.isValid()) {
+          try {
+            bd.remove();
+          } catch(Throwable ignored) {
+          }
         }
       }
     }

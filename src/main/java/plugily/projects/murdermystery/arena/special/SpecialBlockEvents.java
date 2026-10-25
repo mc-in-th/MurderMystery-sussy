@@ -140,13 +140,17 @@ public class SpecialBlockEvents implements Listener {
       return;
     }
 
+    if(arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+      return;
+    }
+
     if(arena.getVentManager().isInsideVent(player)) {
       arena.getVentManager().exitVent(player);
       return;
     }
 
     IUser user = plugin.getUserManager().getUser(player);
-    if(!Role.isRole(Role.MURDERER, user, arena)) {
+    if(user == null || user.isSpectator() || arena.isDeathPlayer(player) || !Role.isRole(Role.MURDERER, user, arena)) {
       return;
     }
 
@@ -169,6 +173,10 @@ public class SpecialBlockEvents implements Listener {
       return;
     }
     IUser user = plugin.getUserManager().getUser(player);
+    if(user == null || user.isSpectator() || arena.isDeathPlayer(player)
+      || arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+      return;
+    }
 
     if(!Role.isRole(Role.MURDERER, user, arena)) {
       player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sewer Vent<#5A4E7C>] <#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่มุดผ่านได้"));
@@ -302,6 +310,12 @@ public class SpecialBlockEvents implements Listener {
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena != null && arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
       arena.getVentManager().exitVent(player);
+      return;
+    }
+    for(Arena candidate : plugin.getArenaRegistry().getPluginArenas()) {
+      if(candidate.getVentManager() != null && candidate.getVentManager().isInsideVent(player)) {
+        candidate.getVentManager().exitVent(player);
+      }
     }
   }
 
