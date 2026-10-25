@@ -848,7 +848,9 @@ public class Arena extends PluginArena {
   }
 
   public void addDeathPlayer(Player player) {
-    deaths.add(player);
+    if(!deaths.contains(player)) {
+      deaths.add(player);
+    }
   }
 
   public void removeDeathPlayer(Player player) {
@@ -864,7 +866,9 @@ public class Arena extends PluginArena {
   }
 
   public void addSpectatorPlayer(Player player) {
-    spectators.add(player);
+    if(!spectators.contains(player)) {
+      spectators.add(player);
+    }
   }
 
   public void removeSpectatorPlayer(Player player) {
@@ -873,6 +877,10 @@ public class Arena extends PluginArena {
 
   public boolean isSpectatorPlayer(Player player) {
     return spectators.contains(player);
+  }
+
+  public List<Player> getSpectators() {
+    return spectators;
   }
 
   public List<Location> getPlayerSpawnPoints() {

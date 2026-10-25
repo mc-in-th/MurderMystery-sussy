@@ -113,6 +113,14 @@ public class StartingState extends PluginStartingState {
         pluginArena.getMinimap().distributeMaps();
         pluginArena.getSabotageManager().start();
         pluginArena.getVotingManager().initForGame();
+
+        for(Player p : pluginArena.getPlayers()) {
+          if(ArenaUtils.isSpectator(p, pluginArena)) {
+            ArenaUtils.applySpectatorState(p, pluginArena, true);
+            pluginArena.getTaskManager().addPlayerToBossBar(p);
+            pluginArena.getSabotageManager().addPlayerToBossBar(p);
+          }
+        }
       };
 
       if(pluginArena.getCutsceneManager().hasCutscene()) {

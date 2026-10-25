@@ -465,9 +465,9 @@ public class VotingManager {
     }
 
     for(Player player : arena.getPlayers()) {
-      IUser user = arena.getPlugin().getUserManager().getUser(player);
-      if(user.isSpectator() && center != null) {
-        VersionUtils.teleport(player, center.clone().add(0.5, 2.5, 0.5));
+      if(ArenaUtils.isSpectator(player, arena) && center != null) {
+        VersionUtils.teleport(player, center.clone().add(0.5, 2.5, 0.5)).thenAccept(ignored ->
+          Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> ArenaUtils.applySpectatorState(player, arena, true), 1L));
       }
     }
 
@@ -1239,9 +1239,9 @@ public class VotingManager {
     }
 
     for(Player player : arena.getPlayers()) {
-      IUser user = arena.getPlugin().getUserManager().getUser(player);
-      if(user.isSpectator()) {
+      if(ArenaUtils.isSpectator(player, arena)) {
         player.setWalkSpeed(0.2f);
+        ArenaUtils.applySpectatorState(player, arena, false);
       }
     }
 

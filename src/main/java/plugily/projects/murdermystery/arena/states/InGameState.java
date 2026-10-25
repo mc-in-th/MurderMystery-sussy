@@ -51,6 +51,8 @@ public class InGameState extends PluginInGameState {
       return;
     }
 
+    maintainSpectators(pluginArena);
+
     if(pluginArena.getVotingManager().isVotingActive()) {
       pluginArena.getVotingManager().tick();
       arena.setTimer(arena.getTimer() + 1);
@@ -78,6 +80,14 @@ public class InGameState extends PluginInGameState {
     addInnocentLocator(pluginArena);
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer() + 1) {
       addMurdererSpeed(pluginArena);
+    }
+  }
+
+  private void maintainSpectators(Arena pluginArena) {
+    for(Player player : pluginArena.getPlayers()) {
+      if(player != null && player.isOnline() && ArenaUtils.isSpectator(player, pluginArena)) {
+        ArenaUtils.applySpectatorState(player, pluginArena, false);
+      }
     }
   }
 

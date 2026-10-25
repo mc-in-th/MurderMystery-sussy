@@ -483,15 +483,7 @@ public class CutsceneManager {
     player.setFlySpeed(0.1f);
     player.setWalkSpeed(0.2f);
     if(isArenaSpectator(player)) {
-      player.setGameMode(GameMode.SURVIVAL);
-      player.setAllowFlight(true);
-      player.setFlying(true);
-      ArenaUtils.hidePlayer(player, arena);
-      for(Player other : arena.getPlayers()) {
-        if(other != null && !other.equals(player)) {
-          VersionUtils.showPlayer(plugin, player, other);
-        }
-      }
+      ArenaUtils.applySpectatorState(player, arena, true);
       return;
     }
     player.setGameMode(GameMode.ADVENTURE);

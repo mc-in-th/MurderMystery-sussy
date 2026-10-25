@@ -18,6 +18,7 @@
 
 package plugily.projects.murdermystery.arena;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
@@ -51,7 +52,7 @@ public class ArenaManager extends PluginArenaManager {
 
   @Override
   public void joinAttempt(@NotNull Player player, @NotNull IPluginArena arena) {
-    Arena pluginArena = (Arena) plugin.getArenaRegistry().getArena(arena.getId());
+    Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
     if(pluginArena == null) {
       return;
     }
@@ -64,8 +65,37 @@ public class ArenaManager extends PluginArenaManager {
   }
 
   @Override
+  public void additionalSpectatorSettings(Player player, IPluginArena arena) {
+    super.additionalSpectatorSettings(player, arena);
+    Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
+    if(pluginArena == null || player == null || !player.isOnline()) {
+      return;
+    }
+    pluginArena.addSpectatorPlayer(player);
+    ArenaUtils.applySpectatorState(player, pluginArena, true);
+    ArenaUtils.updateNameTagsVisibility(player);
+    if(pluginArena.getArenaState() == IArenaState.IN_GAME) {
+      pluginArena.getTaskManager().addPlayerToBossBar(player);
+      pluginArena.getSabotageManager().addPlayerToBossBar(player);
+    }
+    pluginArena.getScoreboardManager().updateScoreboards();
+
+    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == pluginArena) {
+        ArenaUtils.applySpectatorState(player, pluginArena, true);
+      }
+    }, 2L);
+
+    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == pluginArena) {
+        ArenaUtils.applySpectatorState(player, pluginArena, true);
+      }
+    }, 10L);
+  }
+
+  @Override
   public void leaveAttempt(@NotNull Player player, @NotNull IPluginArena arena) {
-    Arena pluginArena = (Arena) plugin.getArenaRegistry().getArena(arena.getId());
+    Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
     if(pluginArena == null) {
       return;
     }
@@ -81,12 +111,16 @@ public class ArenaManager extends PluginArenaManager {
     pluginArena.getCutsceneManager().handlePlayerLeave(player);
     player.setInvisible(false);
     player.setWalkSpeed(0.2f);
+    player.setFlySpeed(0.1f);
 
     pluginArena.cleanUpBossBars(player);
     super.leaveAttempt(player, arena);
     pluginArena.cleanUpBossBars(player);
     if(pluginArena.isDeathPlayer(player)) {
       pluginArena.removeDeathPlayer(player);
+    }
+    if(pluginArena.isSpectatorPlayer(player)) {
+      pluginArena.removeSpectatorPlayer(player);
     }
 
     if(playerHasMurdererRole) {

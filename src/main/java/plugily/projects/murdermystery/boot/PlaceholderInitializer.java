@@ -14,6 +14,7 @@ import plugily.projects.minigamesbox.number.NumberUtils;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaRegistry;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 
 /**
@@ -181,7 +182,7 @@ public class PlaceholderInitializer {
         }
         IUser user = getUserManager().getUser(player);
         String role;
-        if(pluginArena.isDeathPlayer(player)) {
+        if(ArenaUtils.isSpectator(player, pluginArena)) {
           role = new MessageBuilder("SCOREBOARD_ROLES_DEAD").asKey().build();
         } else if(Role.isRole(Role.MURDERER, user, arena)) {
           role = new MessageBuilder("SCOREBOARD_ROLES_MURDERER").asKey().build();

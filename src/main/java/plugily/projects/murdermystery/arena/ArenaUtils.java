@@ -19,12 +19,14 @@
 package plugily.projects.murdermystery.arena;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Vector;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
@@ -33,9 +35,12 @@ import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
+
+import java.util.List;
 
 /**
  * @author Plajer
@@ -171,6 +176,105 @@ public class ArenaUtils extends PluginArenaUtils {
       if(Role.isRole(Role.INNOCENT, user, arena)) {
         ItemPosition.setItem(user, ItemPosition.BOW_LOCATOR, bowLocator);
         p.setCompassTarget(loc);
+      }
+    }
+  }
+
+  public static boolean isSpectator(Player player, Arena arena) {
+    if(player == null || arena == null) {
+      return false;
+    }
+    if(arena.isDeathPlayer(player) || arena.isSpectatorPlayer(player)) {
+      return true;
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    return user != null && (user.isSpectator() || user.isPermanentSpectator());
+  }
+
+  public static void applySpectatorState(Player player, Arena arena, boolean startFlying) {
+    if(player == null || !player.isOnline() || arena == null || !arena.getPlayers().contains(player)) {
+      return;
+    }
+    IArenaState state = arena.getArenaState();
+    if(state == IArenaState.WAITING_FOR_PLAYERS || state == IArenaState.RESTARTING) {
+      return;
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    if((state == IArenaState.STARTING || state == IArenaState.FULL_GAME)
+      && (user == null || (!user.isSpectator() && !user.isPermanentSpectator() && !arena.isSpectatorPlayer(player)))) {
+      return;
+    }
+
+    if(user != null) {
+      user.setSpectator(true);
+    }
+    arena.addSpectatorPlayer(player);
+
+    if(CutsceneManager.isPreviewing(player)
+      || (arena.getCutsceneManager().isPlaying() && player.getGameMode() == GameMode.SPECTATOR)) {
+      return;
+    }
+
+    List<Player> firstPersonList = getPlugin().getSpectatorItemsManager().getSpectatorSettingsMenu().firstPersonMode;
+    boolean inFirstPerson = (player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null)
+      || (firstPersonList != null && firstPersonList.contains(player));
+
+    if(inFirstPerson) {
+      if(player.getGameMode() != GameMode.SPECTATOR) {
+        player.setGameMode(GameMode.SPECTATOR);
+      }
+      for(Player other : arena.getPlayers()) {
+        if(other != null && other.isOnline() && !other.equals(player) && !isSpectator(other, arena)) {
+          VersionUtils.hidePlayer(getPlugin(), other, player);
+        }
+      }
+      return;
+    }
+
+    if(player.getGameMode() != GameMode.ADVENTURE) {
+      player.setGameMode(GameMode.ADVENTURE);
+    }
+    VersionUtils.setCollidable(player, false);
+    player.setFallDistance(0.0f);
+    player.setFireTicks(0);
+    if(player.getFlySpeed() < 0.15f) {
+      player.setFlySpeed(0.15f);
+    }
+    if(player.getWalkSpeed() <= 0.05f) {
+      player.setWalkSpeed(0.2f);
+    }
+    if(!player.getAllowFlight()) {
+      player.setAllowFlight(true);
+    }
+    if(startFlying) {
+      player.setAllowFlight(true);
+      if(player.isOnGround()) {
+        player.setVelocity(new Vector(0.0, 0.18, 0.0));
+      }
+      player.setFlying(true);
+    }
+
+    List<Player> invisibleSpecs = getPlugin().getSpectatorItemsManager().getSpectatorSettingsMenu().invisibleSpectators;
+    for(Player other : arena.getPlayers()) {
+      if(other == null || !other.isOnline() || other.equals(player)) {
+        continue;
+      }
+      if(!isSpectator(other, arena)) {
+        VersionUtils.hidePlayer(getPlugin(), other, player);
+        if(arena.getVentManager() == null || !arena.getVentManager().isInsideVent(other)) {
+          VersionUtils.showPlayer(getPlugin(), player, other);
+        }
+      } else {
+        if(invisibleSpecs != null && invisibleSpecs.contains(other)) {
+          VersionUtils.hidePlayer(getPlugin(), other, player);
+        } else {
+          VersionUtils.showPlayer(getPlugin(), other, player);
+        }
+        if(invisibleSpecs != null && invisibleSpecs.contains(player)) {
+          VersionUtils.hidePlayer(getPlugin(), player, other);
+        } else {
+          VersionUtils.showPlayer(getPlugin(), player, other);
+        }
       }
     }
   }

@@ -500,6 +500,7 @@ public final class HalloweenChat {
                 || existingStr.contains("เพื่อออกจากห้อง")
                 || existingStr.contains("อยู่ในห้องเกม")
                 || existingStr.contains("ออกจากขบวนรถบัส")
+                || ("Scoreboard.Roles.Dead".equals(key) && existingStr.contains("เสียชีวิต"))
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             boolean hasServerIp = false;

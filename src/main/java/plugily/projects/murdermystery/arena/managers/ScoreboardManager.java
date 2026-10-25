@@ -27,6 +27,7 @@ import plugily.projects.minigamesbox.classic.arena.managers.PluginScoreboardMana
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.scoreboard.adventure.FastBoard;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.GameTask;
@@ -192,18 +193,48 @@ public class ScoreboardManager extends PluginScoreboardManager {
     }
 
     if(state == IArenaState.IN_GAME) {
+      boolean isSpectator = ArenaUtils.isSpectator(player, gameArena);
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
+
+      String roleDisplay;
+      if(isSpectator) {
+        roleDisplay = "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>วิญญาณผู้ชม<shadow:#000000FF><#5A4E7C>]</shadow>";
+      } else if(isMurderer) {
+        roleDisplay = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>";
+      } else {
+        roleDisplay = "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>";
+      }
 
       List<String> lines = new ArrayList<>();
       lines.add("");
-      lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + (isMurderer
-        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>"
-        : "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>")));
+      lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + roleDisplay));
       lines.add(HalloweenChat.color("<#F4F1DE>เวลา: <#FFB703>%arena_time%"));
       lines.add(HalloweenChat.color("<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"));
       lines.add("");
 
-      if(isMurderer) {
+      if(isSpectator) {
+        List<GameTask> tasks = !isMurderer ? gameArena.getTaskManager().getPlayerTasks(player) : null;
+        if(tasks != null && !tasks.isEmpty()) {
+          int completed = gameArena.getTaskManager().getPlayerCompletedTasks(player);
+          int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
+          lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ภารกิจวิญญาณ<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + completed + "<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>" + total));
+          int shown = 0;
+          for(GameTask task : tasks) {
+            if(shown >= 7) {
+              break;
+            }
+            if(task.isCompleted()) {
+              lines.add(HalloweenChat.color("<#6EEB83>[/] <#6EEB83>" + task.getTaskType().getDisplayName()));
+            } else {
+              lines.add(HalloweenChat.color("<#FF3B47>[x] <#F4F1DE>" + task.getTaskType().getDisplayName()));
+            }
+            shown++;
+          }
+        } else {
+          lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>โหมดผู้ชม<shadow:#000000FF><#5A4E7C>]</shadow>"));
+          lines.add(HalloweenChat.color("<#B8B0C8>บินสำรวจรอบรถบัสได้อย่างอิสระ"));
+        }
+      } else if(isMurderer) {
         lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ภารกิจหลอก<shadow:#000000FF><#5A4E7C>]</shadow>"));
         List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
