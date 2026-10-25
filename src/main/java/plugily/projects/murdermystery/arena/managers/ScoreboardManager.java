@@ -18,11 +18,14 @@
 
 package plugily.projects.murdermystery.arena.managers;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginScoreboardManager;
+import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
+import plugily.projects.minigamesbox.classic.utils.scoreboard.adventure.FastBoard;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
@@ -32,6 +35,9 @@ import plugily.projects.murdermystery.utils.HalloweenChat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Tigerpanzer_02
@@ -40,6 +46,7 @@ import java.util.List;
 public class ScoreboardManager extends PluginScoreboardManager {
 
   private final PluginArena arena;
+  private final Map<UUID, FastBoard> adventureBoards = new ConcurrentHashMap<>();
 
   public ScoreboardManager(PluginArena arena) {
     super(arena);
@@ -59,10 +66,19 @@ public class ScoreboardManager extends PluginScoreboardManager {
       return;
     }
     removeScoreboard(user);
-    if(shouldHideScoreboard(user.getPlayer())) {
+    if(!arena.getPlugin().getConfigPreferences().getOption("SCOREBOARD_DISPLAY")) {
       return;
     }
-    super.createScoreboard(user);
+    Player player = user.getPlayer();
+    if(player == null || !player.isOnline() || shouldHideScoreboard(player)) {
+      return;
+    }
+    FastBoard board = new FastBoard(player);
+    String rawTitle = new MessageBuilder("SCOREBOARD_TITLE").asKey().arena(arena).player(player).build();
+    board.updateTitle(HalloweenChat.component(rawTitle));
+    List<String> formattedLines = formatScoreboardLines(getScoreboardLines(player), player);
+    board.updateLines(toComponentLines(formattedLines));
+    adventureBoards.put(user.getUniqueId(), board);
   }
 
   @Override
@@ -71,15 +87,59 @@ public class ScoreboardManager extends PluginScoreboardManager {
       stopAllScoreboards();
       return;
     }
-    for(Player player : arena.getPlayers()) {
-      if(CutsceneManager.isPreviewing(player)) {
-        IUser user = arena.getPlugin().getUserManager().getUser(player);
-        if(user != null) {
-          removeScoreboard(user);
+    for(Map.Entry<UUID, FastBoard> entry : new ArrayList<>(adventureBoards.entrySet())) {
+      FastBoard board = entry.getValue();
+      Player player = board.getPlayer();
+      if(player == null || !player.isOnline() || CutsceneManager.isPreviewing(player)) {
+        FastBoard removed = adventureBoards.remove(entry.getKey());
+        if(removed != null && !removed.isDeleted()) {
+          removed.delete();
         }
+        continue;
+      }
+      if(!board.isDeleted()) {
+        List<String> formattedLines = formatScoreboardLines(getScoreboardLines(player), player);
+        board.updateLines(toComponentLines(formattedLines));
       }
     }
-    super.updateScoreboards();
+  }
+
+  @Override
+  public void removeScoreboard(IUser user) {
+    if(user == null) {
+      return;
+    }
+    FastBoard board = adventureBoards.remove(user.getUniqueId());
+    if(board != null && !board.isDeleted()) {
+      board.delete();
+    }
+    super.removeScoreboard(user);
+  }
+
+  @Override
+  public void stopAllScoreboards() {
+    for(FastBoard board : adventureBoards.values()) {
+      if(board != null && !board.isDeleted()) {
+        board.delete();
+      }
+    }
+    adventureBoards.clear();
+    super.stopAllScoreboards();
+  }
+
+  private List<Component> toComponentLines(List<String> lines) {
+    if(lines == null || lines.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<Component> components = new ArrayList<>(lines.size());
+    for(String line : lines) {
+      if(line == null || line.isEmpty()) {
+        components.add(Component.empty());
+      } else {
+        components.add(HalloweenChat.component(line));
+      }
+    }
+    return components;
   }
 
   @Override
@@ -97,35 +157,35 @@ public class ScoreboardManager extends PluginScoreboardManager {
 
     if(state == IArenaState.WAITING_FOR_PLAYERS) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
-      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>รอผู้เล่น<#5A4E7C>]"));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>รอผู้เล่น<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add("");
-      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"));
       lines.add(HalloweenChat.color("<#F4F1DE>ขั้นต่ำ: <#FFB703>%arena_min_players% คน"));
       if(!gameArena.isHideChances()) {
         lines.add("");
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
 
     if(state == IArenaState.STARTING || state == IArenaState.FULL_GAME) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: " + (state == IArenaState.FULL_GAME
-        ? "<#5A4E7C>[<#6EEB83>ห้องเต็ม<#5A4E7C>]"
-        : "<#5A4E7C>[<#6EEB83>กำลังจะเริ่ม<#5A4E7C>]")));
+        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ห้องเต็ม<shadow:#000000FF><#5A4E7C>]</shadow>"
+        : "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังจะเริ่ม<shadow:#000000FF><#5A4E7C>]</shadow>")));
       lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>เริ่มใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
-      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"));
       if(!gameArena.isHideChances()) {
         lines.add("");
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
 
@@ -133,16 +193,16 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
 
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + (isMurderer
-        ? "<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]"
-        : "<#5A4E7C>[<#FFB703>ผู้โดยสาร<#5A4E7C>]")));
+        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>"
+        : "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>")));
       lines.add(HalloweenChat.color("<#F4F1DE>เวลา: <#FFB703>%arena_time%"));
       lines.add(HalloweenChat.color("<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"));
       lines.add("");
 
       if(isMurderer) {
-        lines.add(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ภารกิจหลอก<#5A4E7C>]"));
+        lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ภารกิจหลอก<shadow:#000000FF><#5A4E7C>]</shadow>"));
         List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
           for(GameTask task : sampleTasks) {
@@ -155,7 +215,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         List<GameTask> tasks = gameArena.getTaskManager().getPlayerTasks(player);
         int completed = gameArena.getTaskManager().getPlayerCompletedTasks(player);
         int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
-        lines.add(HalloweenChat.color("<#5A4E7C>[<#FF7518>ภารกิจของคุณ<#5A4E7C>] <#FFB703>" + completed + "<#5A4E7C>/<#FFB703>" + total));
+        lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ภารกิจของคุณ<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + completed + "<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>" + total));
         if(tasks != null && !tasks.isEmpty()) {
           for(GameTask task : tasks) {
             String visualTag = (task.getTaskType().isVisual() && gameArena.isVisualTasksEnabled())
@@ -171,7 +231,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
           lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจ"));
         }
       }
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
 
@@ -179,11 +239,11 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean murderWon = gameArena.isMurdererVictory();
       Player mainMurderer = gameArena.getCharacter(Arena.CharacterType.MURDERER);
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
-      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>จบเกมแล้ว<#5A4E7C>]"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>จบเกมแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>ผู้ชนะ: " + (murderWon
-        ? "<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]"
-        : "<#5A4E7C>[<#6EEB83>ผู้โดยสาร<#5A4E7C>]")));
+        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>"
+        : "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>")));
       lines.add("");
       if(user != null && !user.isPermanentSpectator()) {
         boolean isMurderer = gameArena.getMurdererList().contains(player)
@@ -197,18 +257,18 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<#F4F1DE>ฆาตกร: <#FF3B47>" + murdererNames));
       }
       lines.add(HalloweenChat.color("<#F4F1DE>กลับล็อบบี้ใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
 
     if(state == IArenaState.RESTARTING) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
-      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FF3B47>กำลังรีเซ็ต<#5A4E7C>]"));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add("");
       lines.add(HalloweenChat.color("<#B8B0C8>กำลังเตรียมสนามประลองใหม่"));
-      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
 

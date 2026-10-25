@@ -45,7 +45,7 @@ import java.util.Locale;
 public class TaskAndVentArgument {
 
   private static void msg(CommandSender sender, String text) {
-    sender.sendMessage(HalloweenChat.color(text));
+    HalloweenChat.send(sender, text);
   }
 
   public TaskAndVentArgument(ArgumentsRegistry registry) {
@@ -210,7 +210,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          msg(player, "<#5A4E7C>[<#FF7518>รายการจุดภารกิจ: " + arenaId + "<#5A4E7C>]");
+          msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>รายการจุดภารกิจ: " + arenaId + "<shadow:#000000FF><#5A4E7C>]</shadow>");
           int idx = 1;
           for(TaskType type : TaskType.values()) {
             List<Location> locs = arena.getTaskLocations(type);
@@ -244,7 +244,7 @@ public class TaskAndVentArgument {
             + (arena.getCutsceneManager().hasCutscene()
               ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม @ 60FPS)"
               : "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")"));
-          msg(player, "<#5A4E7C>=============================================================");
+          msg(player, "<shadow:#000000FF><#5A4E7C>=============================================================</shadow>");
         }
       }
     );
@@ -356,7 +356,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          msg(player, "<#5A4E7C>[<#FF3B47>รายการบล็อกแก้ Sabotage: " + arenaId + "<#5A4E7C>]");
+          msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>รายการบล็อกแก้ Sabotage: " + arenaId + "<shadow:#000000FF><#5A4E7C>]</shadow>");
           int idx = 1;
           for(SabotageType type : SabotageType.values()) {
             Location l = arena.getSabotageLocation(type);
@@ -370,7 +370,7 @@ public class TaskAndVentArgument {
             }
             idx++;
           }
-          msg(player, "<#5A4E7C>=============================================================");
+          msg(player, "<shadow:#000000FF><#5A4E7C>=============================================================</shadow>");
         }
       }
     );
@@ -767,7 +767,7 @@ public class TaskAndVentArgument {
 
   private static void handleRecordCutscene(ArgumentsRegistry registry, Player player, String[] args, String label) {
     if(registry.getPlugin().getArenaRegistry().isInArena(player)) {
-      msg(player, "<#5A4E7C>[<#FF3B47>Cutscene<#5A4E7C>] <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนบันทึก Cutscene");
+      msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนบันทึก Cutscene");
       return;
     }
     if(args.length < 2) {
@@ -782,7 +782,7 @@ public class TaskAndVentArgument {
     }
 
     CutsceneManager.startRecording(registry.getPlugin(), player, arena);
-    msg(player, "<#5A4E7C>[<#FF3B47>REC 60FPS<#5A4E7C>] <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว");
+    msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>REC 60FPS<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว");
     msg(player, "<#B8B0C8>เดินหรือบินไปตามเส้นทางมุมกล้องที่ต้องการ แล้วพิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>เพื่อหยุดและบันทึก");
   }
 
@@ -813,7 +813,7 @@ public class TaskAndVentArgument {
 
   private static void handlePreviewCutscene(ArgumentsRegistry registry, Player player, String[] args) {
     if(registry.getPlugin().getArenaRegistry().isInArena(player)) {
-      msg(player, "<#5A4E7C>[<#FF3B47>Cutscene<#5A4E7C>] <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนดูตัวอย่าง Cutscene");
+      msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนดูตัวอย่าง Cutscene");
       return;
     }
     if(args.length < 2) {
@@ -1033,23 +1033,23 @@ public class TaskAndVentArgument {
   }
 
   private static void sendTaskTypesHelp(CommandSender sender) {
-    msg(sender, "<#5A4E7C>[<#FF7518>ประเภทภารกิจที่ใช้ได้<#5A4E7C>]");
+    msg(sender, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ประเภทภารกิจที่ใช้ได้<shadow:#000000FF><#5A4E7C>]</shadow>");
     int i = 1;
     for(TaskType t : TaskType.values()) {
       String visualBadge = t.isVisual() ? " <#72EFDD>[Visual]" : "";
       msg(sender, "<#F4F1DE>" + i + ". <#FFB703>" + t.getShortId() + " <#B8B0C8>- " + t.getIcon() + " " + t.getDisplayName() + visualBadge);
       i++;
     }
-    msg(sender, "<#5A4E7C>(<#B8B0C8>ระบุเป็นหมายเลข 1-" + TaskType.values().length + " หรือชื่อย่อ<#5A4E7C>)");
+    msg(sender, "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ระบุเป็นหมายเลข 1-" + TaskType.values().length + " หรือชื่อย่อ<shadow:#000000FF><#5A4E7C>)</shadow>");
   }
 
   private static void sendSabotageTypesHelp(Player player) {
-    msg(player, "<#5A4E7C>[<#FF3B47>ประเภท Sabotage ที่ใช้ได้<#5A4E7C>]");
+    msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ประเภท Sabotage ที่ใช้ได้<shadow:#000000FF><#5A4E7C>]</shadow>");
     int i = 1;
     for(SabotageType s : SabotageType.values()) {
       msg(player, "<#F4F1DE>" + i + ". <#FF3B47>" + s.getShortId() + " <#B8B0C8>- " + s.getIcon() + " " + s.getDisplayName());
       i++;
     }
-    msg(player, "<#5A4E7C>(<#B8B0C8>ระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms<#5A4E7C>)");
+    msg(player, "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms<shadow:#000000FF><#5A4E7C>)</shadow>");
   }
 }

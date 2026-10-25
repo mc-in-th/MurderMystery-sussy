@@ -112,13 +112,13 @@ public class MessageInitializer {
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_HIGHEST_SCORE", new Message("Leaderboard.Statistics.Highest-Score", ""));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_BOSSBAR", new Message("In-Game.Messages.Arena.Task.Bossbar",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Bus Repair<#5A4E7C>] <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<#5A4E7C>/<#FFB703>%value%")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Repair<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>%value%")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED", new Message("In-Game.Messages.Arena.Task.Completed",
-        HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task Completed<#5A4E7C>] <#F4F1DE>สำเร็จภารกิจ <#FFB703>%value%")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task Completed<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>สำเร็จภารกิจ <#FFB703>%value%")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED", new Message("In-Game.Messages.Arena.Task.All-Completed",
-        HalloweenChat.color("<#5A4E7C>[<#6EEB83>Bus Repair<#5A4E7C>] <#6EEB83>ซ่อมแซมรถบัสสำเร็จแล้ว ผู้โดยสารหลบหนีและคว้าชัยชนะ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Bus Repair<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ซ่อมแซมรถบัสสำเร็จแล้ว ผู้โดยสารหลบหนีและคว้าชัยชนะ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE", new Message("In-Game.Messages.Arena.Task.Win.Title",
-        HalloweenChat.color("<#5A4E7C>[<#6EEB83>ซ่อมแซมรถบัสสำเร็จ<#5A4E7C>]")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ซ่อมแซมรถบัสสำเร็จ<shadow:#000000FF><#5A4E7C>]</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE", new Message("In-Game.Messages.Arena.Task.Win.Subtitle",
         HalloweenChat.color("<#B8B0C8>ผู้โดยสารหลบหนีออกจากป่ามืดได้สำเร็จ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", new Message("In-Game.Messages.Arena.Task.Types.Find-Diesel-Fuel", "หาน้ำมันดีเซล"));
@@ -134,33 +134,33 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", new Message("In-Game.Messages.Arena.Task.Types.Clean-Air-Filter", "ทำความสะอาดไส้กรองอากาศ"));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_BODY_REPORTED", new Message("In-Game.Messages.Arena.Voting.Body-Reported",
-        HalloweenChat.color("<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_START", new Message("In-Game.Messages.Arena.Voting.Discussion-Start",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_NOW", new Message("In-Game.Messages.Arena.Voting.Vote-Now",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <#5A4E7C>(<#FFB703>%number% วิ<#5A4E7C>)")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>%number% วิ<shadow:#000000FF><#5A4E7C>)</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_DISCUSSION_TIMER", new Message("In-Game.Messages.Arena.Voting.Discussion-Timer",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_VOTE_TIMER", new Message("In-Game.Messages.Arena.Voting.Vote-Timer",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_ALREADY_VOTED", new Message("In-Game.Messages.Arena.Voting.Already-Voted",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_PLAYER_VOTED", new Message("In-Game.Messages.Arena.Voting.Player-Voted",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT", new Message("In-Game.Messages.Arena.Voting.No-Eject",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#5A4E7C>(<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<#5A4E7C>)")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<shadow:#000000FF><#5A4E7C>)</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_TITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Title",
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>ไม่มีใครถูกโหวตออก<#5A4E7C>]")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ไม่มีใครถูกโหวตออก<shadow:#000000FF><#5A4E7C>]</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_NO_EJECT_SUBTITLE", new Message("In-Game.Messages.Arena.Voting.No-Eject-Subtitle",
         HalloweenChat.color("<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_EJECTED", new Message("In-Game.Messages.Arena.Voting.Ejected",
-        HalloweenChat.color("<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ถูกโหวตคัดออก %value%")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>ถูกโหวตคัดออก %value%")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Impostor",
-        HalloweenChat.color("<#5A4E7C>(<#6EEB83>เขาคือฆาตกร<#5A4E7C>)")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>เขาคือฆาตกร<shadow:#000000FF><#5A4E7C>)</shadow>")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_WAS_NOT_IMPOSTOR", new Message("In-Game.Messages.Arena.Voting.Was-Not-Impostor",
-        HalloweenChat.color("<#5A4E7C>(<#FF3B47>เขาไม่ใช่ฆาตกร<#5A4E7C>)")));
+        HalloweenChat.color("<shadow:#000000FF><#5A4E7C>(</shadow><#FF3B47>เขาไม่ใช่ฆาตกร<shadow:#000000FF><#5A4E7C>)</shadow>")));
   }
 
   private MessageManager getMessageManager() {

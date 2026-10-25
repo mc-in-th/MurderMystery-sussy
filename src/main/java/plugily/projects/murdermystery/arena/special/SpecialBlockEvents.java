@@ -182,7 +182,7 @@ public class SpecialBlockEvents implements Listener {
     }
 
     if(!Role.isRole(Role.MURDERER, user, arena)) {
-      player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sewer Vent<#5A4E7C>] <#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่มุดผ่านได้"));
+      HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sewer Vent<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ท่อระบายน้ำถูกปิดสนิท มีเพียงฆาตกรเท่านั้นที่มุดผ่านได้");
       return;
     }
 

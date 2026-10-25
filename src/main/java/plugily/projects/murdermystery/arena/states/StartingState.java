@@ -25,7 +25,6 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginStartingState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
@@ -96,11 +95,11 @@ public class StartingState extends PluginStartingState {
           player.setGameMode(GameMode.ADVENTURE);
           IUser user = arena.getPlugin().getUserManager().getUser(player);
           if(Role.isRole(Role.MURDERER, user, arena)) {
-            new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().arena(pluginArena).player(player).sendPlayer();
+            HalloweenChat.sendTitleEntry(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().arena(pluginArena).player(player).build());
             ArenaUtils.playRoleRevealSound(player, true);
             pluginArena.getSabotageManager().giveSabotageRemote(player);
           } else {
-            new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).sendPlayer();
+            HalloweenChat.sendTitleEntry(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_INNOCENT").asKey().player(player).arena(pluginArena).build());
             ArenaUtils.playRoleRevealSound(player, false);
             innocentPlayers.add(player);
           }

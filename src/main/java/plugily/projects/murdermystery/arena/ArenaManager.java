@@ -25,7 +25,6 @@ import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaManager;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
@@ -133,9 +132,12 @@ public class ArenaManager extends PluginArenaManager {
 
             if(!wasPlayingCutscene) {
               pluginArena.updateVentDisplaysVisibility();
-              new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).sendArena();
+              String roleChangeEntry = new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().player(player).arena(pluginArena).build();
+              for(Player p : pluginArena.getPlayers()) {
+                HalloweenChat.sendTitleEntry(p, roleChangeEntry);
+              }
               if(newMurderer != null) {
-                new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).sendPlayer();
+                HalloweenChat.sendTitleEntry(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER").asKey().player(newMurderer).arena(pluginArena).build());
                 ArenaUtils.playRoleRevealSound(newMurderer, true);
                 HalloweenChat.sendActionBar(newMurderer, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE").asKey().build());
                 if(pluginArena.getMinimap() != null) {

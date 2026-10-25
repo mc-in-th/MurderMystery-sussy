@@ -18,15 +18,14 @@
 
 package plugily.projects.murdermystery.arena.task;
 
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -125,6 +124,7 @@ public class TaskManager {
   private final TaskMinigameManager minigameManager;
   private final VisualTaskEffectManager visualEffectManager;
   private BossBar taskBossBar;
+  private final Set<Player> bossBarViewers = new HashSet<>();
   private BukkitTask arrowTrackerTask;
   private int totalTasks = 0;
   private int completedTasks = 0;
@@ -283,15 +283,15 @@ public class TaskManager {
       String activeText;
       String completedText;
       if(types.isEmpty()) {
-        activeText = "<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n<#F4F1DE>จุดทำภารกิจ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)";
-        completedText = "<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n<#6EEB83>ทำภารกิจเสร็จแล้ว\n\n<#5A4E7C>(<#B8B0C8>จุดทำภารกิจนี้เสร็จสิ้นแล้ว<#5A4E7C>)";
+        activeText = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>จุดทำภารกิจ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>";
+        completedText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#6EEB83>ทำภารกิจเสร็จแล้ว\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>จุดทำภารกิจนี้เสร็จสิ้นแล้ว<shadow:#000000FF><#5A4E7C>)</shadow>";
       } else if(types.size() == 1) {
         TaskType t = types.iterator().next();
-        activeText = "<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n" + t.getHologramTitle() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)";
-        completedText = "<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n<#B8B0C8>" + t.getDisplayName() + "\n<#6EEB83>ทำภารกิจเสร็จแล้ว";
+        activeText = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n" + t.getHologramTitle() + "\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>";
+        completedText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#B8B0C8>" + t.getDisplayName() + "\n<#6EEB83>ทำภารกิจเสร็จแล้ว";
       } else {
-        StringBuilder sbActive = new StringBuilder("<#5A4E7C>[<#FF7518>Task<#5A4E7C>]\n\n");
-        StringBuilder sbDone = new StringBuilder("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>]\n\n");
+        StringBuilder sbActive = new StringBuilder("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
+        StringBuilder sbDone = new StringBuilder("<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
         int count = 0;
         for(TaskType t : types) {
           if(count > 0) {
@@ -302,7 +302,7 @@ public class TaskManager {
           sbDone.append("<#B8B0C8>").append(t.getDisplayName());
           count++;
         }
-        sbActive.append("\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<#5A4E7C>)");
+        sbActive.append("\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>");
         sbDone.append("\n<#6EEB83>ทำภารกิจเสร็จแล้ว");
         activeText = sbActive.toString();
         completedText = sbDone.toString();
@@ -327,11 +327,11 @@ public class TaskManager {
       ItemStack compass = new ItemStack(Material.COMPASS);
       ItemMeta meta = compass.getItemMeta();
       if(meta != null) {
-        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task Compass<#5A4E7C>]"));
-        meta.setLore(Arrays.asList(
-          HalloweenChat.color("<#F4F1DE>ชี้ไปยังจุดทำภารกิจถัดไปของคุณ"),
-          HalloweenChat.color("<#5A4E7C>(<#B8B0C8>เดินตามเข็มทิศแล้วกดคลิกขวาที่จุดภารกิจ<#5A4E7C>)")
-        ));
+        HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task Compass<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(meta,
+          "<#F4F1DE>ชี้ไปยังจุดทำภารกิจถัดไปของคุณ",
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>เดินตามเข็มทิศแล้วกดคลิกขวาที่จุดภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
         compass.setItemMeta(meta);
       }
       int targetSlot = 8;
@@ -366,19 +366,19 @@ public class TaskManager {
     }
 
     player.sendMessage(" ");
-    player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>]"));
+    HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Tasks<shadow:#000000FF><#5A4E7C>]</shadow>");
     for(GameTask task : tasks) {
       String taskName = task.getTaskType().getDisplayName();
       String visualTag = (task.getTaskType().isVisual() && arena.isVisualTasksEnabled())
-        ? " <#5A4E7C>(<#72EFDD>ยืนยันตัวตน<#5A4E7C>)"
+        ? " <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>ยืนยันตัวตน<shadow:#000000FF><#5A4E7C>)</shadow>"
         : "";
       if(task.isCompleted()) {
-        player.sendMessage(HalloweenChat.color("<#5A4E7C>- <#6EEB83>" + taskName + visualTag + " <#5A4E7C>(<#6EEB83>เสร็จแล้ว<#5A4E7C>)"));
+        HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>- </shadow><#6EEB83>" + taskName + visualTag + " <shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>เสร็จแล้ว<shadow:#000000FF><#5A4E7C>)</shadow>");
       } else {
-        player.sendMessage(HalloweenChat.color("<#5A4E7C>- <#F4F1DE>" + taskName + visualTag));
+        HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>- </shadow><#F4F1DE>" + taskName + visualTag);
       }
     }
-    player.sendMessage(HalloweenChat.color("<#5A4E7C>(<#B8B0C8>เดินตามเข็มทิศหรือแผนที่ไปกดคลิกขวาที่จุดภารกิจ<#5A4E7C>)"));
+    HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>เดินตามเข็มทิศหรือแผนที่ไปกดคลิกขวาที่จุดภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>");
     player.sendMessage(" ");
   }
 
@@ -399,22 +399,22 @@ public class TaskManager {
 
         String taskName = task.getTaskType().getDisplayName();
 
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
+        HalloweenChat.send(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
           .asKey().player(player).arena(arena)
           .value(taskName)
-          .sendPlayer();
+          .build());
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ");
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName));
+            HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName);
           }
         } else {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <#5A4E7C>(<#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<#5A4E7C>)"));
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<shadow:#000000FF><#5A4E7C>)</shadow>");
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว");
         }
 
         updatePlayerStationVisibility(player);
@@ -429,7 +429,7 @@ public class TaskManager {
 
     for(Location loc : arena.getAllTaskLocations()) {
       if(player.getWorld().equals(loc.getWorld()) && player.getLocation().distanceSquared(loc) <= (range * range)) {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ไม่มีภารกิจที่จุดนี้");
         break;
       }
     }
@@ -567,12 +567,12 @@ public class TaskManager {
 
     for(GameTask task : tasks) {
       if(task.isCompleted() && isSameBlock(task.getLocation(), stationLoc)) {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว");
         return true;
       }
     }
 
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ไม่มีภารกิจที่จุดนี้");
     return true;
   }
 
@@ -604,25 +604,25 @@ public class TaskManager {
         visualEffectManager.completeVisualSession(player, task.getTaskType());
 
         String taskName = task.getTaskType().getDisplayName();
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
+        HalloweenChat.send(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
           .asKey().player(player).arena(arena)
           .value(taskName)
-          .sendPlayer();
+          .build());
 
         XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player.getLocation(), 1F, 1F);
         VersionUtils.sendParticles("VILLAGER_HAPPY", player, player.getLocation().add(0, 1, 0), 15);
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ");
           GameTask next = getNextTask(player);
           if(next != null) {
             String nextName = next.getTaskType().getDisplayName();
-            HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName));
+            HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ภารกิจถัดไป <#FFB703>" + nextName);
           }
         } else {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <#5A4E7C>(<#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<#5A4E7C>)"));
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รอเพื่อนร่วมทีมทำภารกิจให้ครบ<shadow:#000000FF><#5A4E7C>)</shadow>");
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจส่วนตัวครบแล้ว");
         }
 
         updatePlayerStationVisibility(player);
@@ -643,9 +643,10 @@ public class TaskManager {
       return;
     }
     taskWinTriggered = true;
-    new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
-      .asKey().arena(arena).sendArena();
+    String allDoneMsg = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
+      .asKey().arena(arena).build();
     for(Player p : arena.getPlayers()) {
+      HalloweenChat.send(p, allDoneMsg);
       HalloweenChat.sendTitles(p,
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE").asKey().build(),
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().build(),
@@ -699,26 +700,45 @@ public class TaskManager {
     return playerTasks;
   }
 
-  private String formatBossBarTitle() {
-    return HalloweenChat.color(
-      "<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>ซ่อมรถบัส <#FFB703>"
+  private Component formatBossBarTitle() {
+    return HalloweenChat.component(
+      "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Tasks<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ซ่อมรถบัส <#FFB703>"
         + completedTasks
-        + "<#5A4E7C>/<#FFB703>"
+        + "<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>"
         + totalTasks
     );
   }
 
-  private void createBossBar() {
-    if(taskBossBar != null) {
-      taskBossBar.setVisible(false);
-      taskBossBar.removeAll();
+  private void hideTaskBossBarAll() {
+    if(taskBossBar == null) {
+      bossBarViewers.clear();
+      return;
     }
-    taskBossBar = Bukkit.createBossBar(formatBossBarTitle(), BarColor.PURPLE, BarStyle.SEGMENTED_10);
-    taskBossBar.setProgress(0.0);
-    taskBossBar.setVisible(true);
+    for(Player viewer : new ArrayList<>(bossBarViewers)) {
+      if(viewer != null) {
+        try {
+          viewer.hideBossBar(taskBossBar);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(Player player : arena.getPlayers()) {
+      if(player != null) {
+        try {
+          player.hideBossBar(taskBossBar);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    bossBarViewers.clear();
+  }
+
+  private void createBossBar() {
+    hideTaskBossBarAll();
+    taskBossBar = BossBar.bossBar(formatBossBarTitle(), 0.0f, BossBar.Color.PURPLE, BossBar.Overlay.NOTCHED_10);
 
     for(Player player : arena.getPlayers()) {
-      taskBossBar.addPlayer(player);
+      addPlayerToBossBar(player);
     }
     updateBossBar();
   }
@@ -727,39 +747,44 @@ public class TaskManager {
     if(taskBossBar == null) {
       return;
     }
-    taskBossBar.setTitle(formatBossBarTitle());
-    double progress = totalTasks <= 0 ? 0.0 : Math.max(0.0, Math.min(1.0, (double) completedTasks / totalTasks));
-    taskBossBar.setProgress(progress);
+    taskBossBar.name(formatBossBarTitle());
+    float progress = totalTasks <= 0 ? 0.0f : (float) Math.max(0.0, Math.min(1.0, (double) completedTasks / totalTasks));
+    taskBossBar.progress(progress);
 
-    if(progress >= 0.75) {
-      taskBossBar.setColor(BarColor.GREEN);
-    } else if(progress >= 0.5) {
-      taskBossBar.setColor(BarColor.YELLOW);
+    if(progress >= 0.75f) {
+      taskBossBar.color(BossBar.Color.GREEN);
+    } else if(progress >= 0.5f) {
+      taskBossBar.color(BossBar.Color.YELLOW);
     } else {
-      taskBossBar.setColor(BarColor.PURPLE);
+      taskBossBar.color(BossBar.Color.PURPLE);
     }
   }
 
   public void addPlayerToBossBar(Player player) {
     if(taskBossBar != null && player != null) {
-      taskBossBar.addPlayer(player);
+      try {
+        player.showBossBar(taskBossBar);
+        bossBarViewers.add(player);
+      } catch(Throwable ignored) {
+      }
     }
   }
 
   public void removePlayerFromBossBar(Player player) {
     if(taskBossBar != null && player != null) {
-      taskBossBar.removePlayer(player);
+      try {
+        player.hideBossBar(taskBossBar);
+      } catch(Throwable ignored) {
+      }
+      bossBarViewers.remove(player);
     }
   }
 
   public void cleanup() {
     stopArrowTracker();
     visualEffectManager.cleanup();
-    if(taskBossBar != null) {
-      taskBossBar.setVisible(false);
-      taskBossBar.removeAll();
-      taskBossBar = null;
-    }
+    hideTaskBossBarAll();
+    taskBossBar = null;
     for(TaskStationDisplay station : stationDisplays) {
       if(station.getGlowingBlock() != null) {
         arena.removeEntityGlowColor(station.getGlowingBlock());

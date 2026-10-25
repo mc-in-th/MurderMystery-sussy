@@ -21,19 +21,26 @@ package plugily.projects.murdermystery.utils;
 import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.ShadowColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.ItemMeta;
 import plugily.projects.murdermystery.Main;
 
 public final class HalloweenChat {
@@ -52,6 +59,7 @@ public final class HalloweenChat {
   public static final String MIST_GRAY = "#B8B0C8";
   public static final String CRYPT_DARK = "#5A4E7C";
   public static final String MIDNIGHT_BLACK = "#1A1423";
+  public static final String DARK_SHADOW_TAG = "<shadow:#000000FF>";
 
   public static final String GRADIENT_PUMPKIN = "<gradient:#FF5400:#FFB703>";
   public static final String GRADIENT_BLOOD = "<gradient:#D90429:#FF5400>";
@@ -60,6 +68,7 @@ public final class HalloweenChat {
   public static final String GRADIENT_SLIME = "<gradient:#38B000:#9EF01A>";
   public static final String GRADIENT_SOUL = "<gradient:#00B4D8:#72EFDD>";
 
+  private static final ShadowColor DARK_TEXT_SHADOW = ShadowColor.shadowColor(0xFF000000);
   private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
   private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder()
       .hexColors()
@@ -73,7 +82,7 @@ public final class HalloweenChat {
       "(?i)(?:[§&]x(?:[§&][0-9a-f]){6}|[§&][0-9a-fk-or])+(?=[\\u0E31\\u0E34-\\u0E3A\\u0E47-\\u0E4E])"
   );
   private static final Pattern NON_TAG_LT_PATTERN = Pattern.compile(
-      "(?i)<(?!(/?(gradient|color|rainbow|transition|bold|b|italic|i|underlined|u|strikethrough|st|obfuscated|obf|reset|newline|hover|click)(:[^>]*)?>|/?#[0-9a-f]{6}>))"
+      "(?i)<(?!([!/]?(gradient|color|shadow|rainbow|transition|bold|b|italic|i|underlined|u|strikethrough|st|obfuscated|obf|reset|newline|hover|click)(:[^>]*)?>|/?#[0-9a-f]{6}>))"
   );
 
   private HalloweenChat() {
@@ -119,19 +128,153 @@ public final class HalloweenChat {
     if(input == null || input.isEmpty()) {
       return Component.empty();
     }
-    String colored = color(input);
-    return LEGACY_SERIALIZER.deserialize(colored);
+    if(input.indexOf('\n') == -1) {
+      return componentLine(input, false);
+    }
+    String[] lines = input.split("\n", -1);
+    TextComponent.Builder builder = Component.text();
+    for(int i = 0; i < lines.length; i++) {
+      if(i > 0) {
+        builder.append(Component.newline());
+      }
+      builder.append(componentLine(lines[i], false));
+    }
+    return builder.build();
+  }
+
+  public static Component itemComponent(String input) {
+    if(input == null || input.isEmpty()) {
+      return Component.empty().decoration(TextDecoration.ITALIC, false);
+    }
+    return componentLine(input, true);
+  }
+
+  public static List<Component> itemLore(List<String> lines) {
+    if(lines == null) {
+      return new ArrayList<>();
+    }
+    List<Component> result = new ArrayList<>(lines.size());
+    for(String line : lines) {
+      result.add(itemComponent(line));
+    }
+    return result;
+  }
+
+  public static List<Component> itemLore(String... lines) {
+    if(lines == null) {
+      return new ArrayList<>();
+    }
+    List<Component> result = new ArrayList<>(lines.length);
+    for(String line : lines) {
+      result.add(itemComponent(line));
+    }
+    return result;
+  }
+
+  public static void setItemName(ItemMeta meta, String displayName) {
+    if(meta == null) {
+      return;
+    }
+    try {
+      meta.displayName(itemComponent(displayName));
+    } catch(Throwable t) {
+      meta.setDisplayName(color(displayName));
+    }
+  }
+
+  public static void setItemLore(ItemMeta meta, List<String> lines) {
+    if(meta == null || lines == null) {
+      return;
+    }
+    try {
+      meta.lore(itemLore(lines));
+    } catch(Throwable t) {
+      meta.setLore(colorList(lines));
+    }
+  }
+
+  public static void setItemLore(ItemMeta meta, String... lines) {
+    if(meta == null || lines == null) {
+      return;
+    }
+    try {
+      meta.lore(itemLore(lines));
+    } catch(Throwable t) {
+      meta.setLore(colorLines(lines));
+    }
+  }
+
+  private static Component componentLine(String line, boolean defaultNoItalic) {
+    if(line == null || line.isEmpty()) {
+      return defaultNoItalic ? Component.empty().decoration(TextDecoration.ITALIC, false) : Component.empty();
+    }
+    String converted = toMiniMessageFormat(line);
+    try {
+      Component parsed = MINI_MESSAGE.deserialize(converted);
+      TextComponent.Builder out = Component.text();
+      if(defaultNoItalic) {
+        out.decoration(TextDecoration.ITALIC, false);
+      }
+      collectStyledSegments(parsed, Style.empty(), defaultNoItalic, out);
+      return out.build();
+    } catch(Exception ex) {
+      Component fallback = LEGACY_SERIALIZER.deserialize(ChatColor.translateAlternateColorCodes('&', line));
+      return defaultNoItalic ? fallback.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE) : fallback;
+    }
+  }
+
+  private static void collectStyledSegments(Component node, Style parentStyle, boolean defaultNoItalic, TextComponent.Builder out) {
+    Style merged = node.style().merge(parentStyle, Style.Merge.Strategy.IF_ABSENT_ON_TARGET);
+    Style emitStyle = merged;
+    if(emitStyle.shadowColor() == null && isDarkColor(emitStyle.color())) {
+      emitStyle = emitStyle.shadowColor(DARK_TEXT_SHADOW);
+    }
+    if(defaultNoItalic && emitStyle.decoration(TextDecoration.ITALIC) == TextDecoration.State.NOT_SET) {
+      emitStyle = emitStyle.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+    if(node instanceof TextComponent) {
+      String content = ((TextComponent) node).content();
+      if(!content.isEmpty()) {
+        out.append(Component.text(content, emitStyle));
+      }
+    } else {
+      out.append(node.children(Collections.emptyList()).style(emitStyle));
+    }
+    for(Component child : node.children()) {
+      collectStyledSegments(child, merged, defaultNoItalic, out);
+    }
+  }
+
+  public static boolean isDarkColor(TextColor color) {
+    if(color == null) {
+      return false;
+    }
+    int r = (color.value() >> 16) & 0xFF;
+    int g = (color.value() >> 8) & 0xFF;
+    int b = color.value() & 0xFF;
+    return Math.max(r, Math.max(g, b)) <= 160;
+  }
+
+  public static void send(CommandSender sender, String message) {
+    if(sender == null || message == null || message.isEmpty()) {
+      return;
+    }
+    try {
+      sender.sendMessage(component(message));
+    } catch(Throwable t) {
+      sender.sendMessage(color(message));
+    }
   }
 
   public static void sendActionBar(Player player, String message) {
     if(player == null) {
       return;
     }
-    String colored = message == null ? "" : color(message);
     try {
-      player.sendActionBar(LEGACY_SERIALIZER.deserialize(colored));
+      player.sendActionBar(message == null ? Component.empty() : component(message));
     } catch(Throwable t) {
-      player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(colored));
+      String colored = message == null ? "" : color(message);
+      player.spigot().sendMessage(ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(colored));
     }
   }
 
@@ -139,8 +282,6 @@ public final class HalloweenChat {
     if(player == null) {
       return;
     }
-    String coloredTitle = title == null ? "" : color(title);
-    String coloredSub = subtitle == null ? "" : color(subtitle);
     try {
       Title.Times times = Title.Times.times(
           Duration.ofMillis(fadeInTicks * 50L),
@@ -148,18 +289,43 @@ public final class HalloweenChat {
           Duration.ofMillis(fadeOutTicks * 50L)
       );
       Title advTitle = Title.title(
-          LEGACY_SERIALIZER.deserialize(coloredTitle),
-          LEGACY_SERIALIZER.deserialize(coloredSub),
+          title == null ? Component.empty() : component(title),
+          subtitle == null ? Component.empty() : component(subtitle),
           times
       );
       player.showTitle(advTitle);
     } catch(Throwable t) {
+      String coloredTitle = title == null ? "" : color(title);
+      String coloredSub = subtitle == null ? "" : color(subtitle);
       player.sendTitle(coloredTitle, coloredSub, fadeInTicks, stayTicks, fadeOutTicks);
     }
   }
 
   public static void sendSubTitle(Player player, String subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
     sendTitles(player, "", subtitle, fadeInTicks, stayTicks, fadeOutTicks);
+  }
+
+  public static void sendTitleEntry(Player player, String rawEntry) {
+    if(player == null || rawEntry == null || rawEntry.isEmpty()) {
+      return;
+    }
+    String[] parts = rawEntry.split(";", 3);
+    int fadeIn = 10;
+    int stay = 40;
+    int fadeOut = 10;
+    String title;
+    String subtitle = "";
+    if(parts.length >= 2 && parts[0].matches("\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*")) {
+      String[] nums = parts[0].split(",", 3);
+      fadeIn = Integer.parseInt(nums[0].trim());
+      stay = Integer.parseInt(nums[1].trim());
+      fadeOut = Integer.parseInt(nums[2].trim());
+      title = parts[1];
+      subtitle = parts.length >= 3 ? parts[2] : "";
+    } else {
+      title = rawEntry;
+    }
+    sendTitles(player, title, subtitle, fadeIn, stay, fadeOut);
   }
 
   public static String strip(String input) {
@@ -202,7 +368,11 @@ public final class HalloweenChat {
         hex.append(match.charAt(i + 1));
       }
       String hexUpper = hex.toString().toUpperCase(Locale.ROOT);
-      if(bukkitHexMatcher.start() > 0 && input.charAt(bukkitHexMatcher.start() - 1) == ':') {
+      int start = bukkitHexMatcher.start();
+      int end = bukkitHexMatcher.end();
+      if(start > 0 && input.charAt(start - 1) == ':') {
+        bukkitHexMatcher.appendReplacement(hexBuffer, "#" + hexUpper);
+      } else if(start > 0 && input.charAt(start - 1) == '<' && end < input.length() && input.charAt(end) == '>') {
         bukkitHexMatcher.appendReplacement(hexBuffer, "#" + hexUpper);
       } else {
         bukkitHexMatcher.appendReplacement(hexBuffer, "<reset><#" + hexUpper + ">");
@@ -233,15 +403,15 @@ public final class HalloweenChat {
   private static String mapLegacyCode(char code) {
     switch(code) {
       case '0':
-        return "<reset><#1A1423>";
+        return "<reset><shadow:#000000FF><#1A1423>";
       case '1':
-        return "<reset><#5A189A>";
+        return "<reset><shadow:#000000FF><#5A189A>";
       case '2':
-        return "<reset><#2D8A4E>";
+        return "<reset><shadow:#000000FF><#2D8A4E>";
       case '3':
         return "<reset><#00B4D8>";
       case '4':
-        return "<reset><#9E001A>";
+        return "<reset><shadow:#000000FF><#9E001A>";
       case '5':
         return "<reset><#9D4EDD>";
       case '6':
@@ -249,7 +419,7 @@ public final class HalloweenChat {
       case '7':
         return "<reset><#B8B0C8>";
       case '8':
-        return "<reset><#5A4E7C>";
+        return "<reset><shadow:#000000FF><#5A4E7C>";
       case '9':
         return "<reset><#C77DFF>";
       case 'a':
@@ -307,14 +477,16 @@ public final class HalloweenChat {
             String existingStr = (String) existing;
             hasStaleGradient = existingStr.contains("<gradient:")
                 || existingStr.contains("MurderMystery")
-                || existingStr.contains("%plugin_name%");
+                || existingStr.contains("%plugin_name%")
+                || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             for(Object item : (List<?>) existing) {
               if(item instanceof String) {
                 String itemStr = (String) item;
                 if(itemStr.contains("<gradient:")
                     || itemStr.contains("MurderMystery")
-                    || itemStr.contains("%plugin_name%")) {
+                    || itemStr.contains("%plugin_name%")
+                    || (itemStr.contains("<#5A4E7C>") && !itemStr.contains("<shadow:"))) {
                   hasStaleGradient = true;
                   break;
                 }

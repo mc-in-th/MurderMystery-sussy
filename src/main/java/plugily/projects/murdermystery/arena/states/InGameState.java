@@ -99,7 +99,7 @@ public class InGameState extends PluginInGameState {
   private void distributeMurdererSword(Arena pluginArena) {
     int inGameLength = getPlugin().getConfig().getInt("Time-Manager.In-Game", 270);
     if(pluginArena.getTimer() <= (inGameLength - 10) && pluginArena.getTimer() > (inGameLength - 15)) {
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SWORD_SOON").asKey().integer(pluginArena.getTimer() - (inGameLength - 15)).arena(pluginArena).sendArena();
+      String swordSoonMsg = new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SWORD_SOON").asKey().integer(pluginArena.getTimer() - (inGameLength - 15)).arena(pluginArena).build(); for(Player p : pluginArena.getPlayers()) { HalloweenChat.send(p, swordSoonMsg); }
       for(Player p : pluginArena.getPlayers()) {
         XSound.UI_BUTTON_CLICK.play(p.getLocation(), 1, 1);
       }

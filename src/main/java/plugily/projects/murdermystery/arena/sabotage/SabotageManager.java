@@ -18,13 +18,11 @@
 
 package plugily.projects.murdermystery.arena.sabotage;
 
+import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -44,14 +42,16 @@ import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SabotageManager {
 
-  public static final String SABOTAGE_GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>เมนูก่อวินาศกรรม");
-  public static final String FIX_LIGHTS_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>Sabotage<#5A4E7C>] <#F4F1DE>กู้ระบบไฟฟ้า");
-  public static final String FIX_ENGINE_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>วาล์วระบายความร้อน");
-  public static final String FIX_COMMS_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>Sabotage<#5A4E7C>] <#F4F1DE>กู้สัญญาณเรดาร์");
+  public static final String SABOTAGE_GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เมนูก่อวินาศกรรม");
+  public static final String FIX_LIGHTS_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กู้ระบบไฟฟ้า");
+  public static final String FIX_ENGINE_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>วาล์วระบายความร้อน");
+  public static final String FIX_COMMS_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กู้สัญญาณเรดาร์");
   public static final int SABOTAGE_REMOTE_SLOT = 2;
 
   private static final int COOLDOWN_DURATION = 30;
@@ -63,6 +63,7 @@ public class SabotageManager {
   private int cooldownRemaining = 20;
   private BukkitTask tickTask = null;
   private BossBar meltdownBossBar = null;
+  private final Set<Player> meltdownBarViewers = new HashSet<>();
 
   private TextDisplay fixTextDisplay = null;
   private BlockDisplay fixBlockDisplay = null;
@@ -72,14 +73,6 @@ public class SabotageManager {
 
   public SabotageManager(Arena arena) {
     this.arena = arena;
-  }
-
-  private List<String> colorLines(List<String> lines) {
-    List<String> colored = new ArrayList<>(lines.size());
-    for(String line : lines) {
-      colored.add(HalloweenChat.color(line));
-    }
-    return colored;
   }
 
   public boolean hasActiveSabotage() {
@@ -106,15 +99,39 @@ public class SabotageManager {
     return activeFixLocation;
   }
 
+  private void hideMeltdownBossBarAll() {
+    if(meltdownBossBar == null) {
+      meltdownBarViewers.clear();
+      return;
+    }
+    for(Player viewer : new ArrayList<>(meltdownBarViewers)) {
+      if(viewer != null) {
+        try {
+          viewer.hideBossBar(meltdownBossBar);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    for(Player p : arena.getPlayers()) {
+      if(p != null) {
+        try {
+          p.hideBossBar(meltdownBossBar);
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+    meltdownBarViewers.clear();
+  }
+
   public ItemStack createSabotageRemoteItem() {
     ItemStack item = XMaterial.REDSTONE_TORCH.parseItem();
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>เมนูก่อวินาศกรรม"));
-      meta.setLore(colorLines(Arrays.asList(
+      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เมนูก่อวินาศกรรม");
+      HalloweenChat.setItemLore(meta, Arrays.asList(
         "<#F4F1DE>ตัดไฟ ระเบิดเครื่องยนต์ หรือตัดเรดาร์",
-        "<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อเปิดเมนู<#5A4E7C>)"
-      )));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อเปิดเมนู<shadow:#000000FF><#5A4E7C>)</shadow>"
+      ));
       item.setItemMeta(meta);
     }
     return item;
@@ -169,18 +186,18 @@ public class SabotageManager {
       countdownSeconds--;
 
       if(meltdownBossBar != null) {
-        meltdownBossBar.setTitle(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>เครื่องยนต์จะระเบิดใน <#FFB703>" + countdownSeconds + " <#F4F1DE>วิ <#5A4E7C>(<#B8B0C8>รีบไประบายความร้อน<#5A4E7C>)"));
-        double progress = Math.max(0.0, Math.min(1.0, (double) countdownSeconds / SabotageType.ENGINE_MELTDOWN.getCountdownSeconds()));
-        meltdownBossBar.setProgress(progress);
-        meltdownBossBar.setColor(countdownSeconds <= 15 ? BarColor.RED : BarColor.YELLOW);
+        meltdownBossBar.name(HalloweenChat.component("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เครื่องยนต์จะระเบิดใน <#FFB703>" + countdownSeconds + " <#F4F1DE>วิ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รีบไประบายความร้อน<shadow:#000000FF><#5A4E7C>)</shadow>"));
+        float progress = (float) Math.max(0.0, Math.min(1.0, (double) countdownSeconds / SabotageType.ENGINE_MELTDOWN.getCountdownSeconds()));
+        meltdownBossBar.progress(progress);
+        meltdownBossBar.color(countdownSeconds <= 15 ? BossBar.Color.RED : BossBar.Color.YELLOW);
       }
 
       if(fixTextDisplay != null && fixTextDisplay.isValid()) {
-        fixTextDisplay.setText(HalloweenChat.color(
-          "<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]\n\n<#F4F1DE>ระบายความร้อนฉุกเฉิน\n<#FF3B47>เหลือเวลา <#FFB703>" + countdownSeconds + " <#FF3B47>วิ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อระบายความร้อน<#5A4E7C>)"));
+        fixTextDisplay.text(HalloweenChat.component(
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ระบายความร้อนฉุกเฉิน\n<#FF3B47>เหลือเวลา <#FFB703>" + countdownSeconds + " <#FF3B47>วิ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อระบายความร้อน<shadow:#000000FF><#5A4E7C>)</shadow>"));
       }
 
-      String barMsg = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>เครื่องยนต์จะระเบิดใน <#FFB703>" + countdownSeconds + " <#FF3B47>วิ");
+      String barMsg = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>เครื่องยนต์จะระเบิดใน <#FFB703>" + countdownSeconds + " <#FF3B47>วิ";
       for(Player p : arena.getPlayersLeft()) {
         if(countdownSeconds <= 10) {
           XSound.BLOCK_NOTE_BLOCK_BELL.play(p.getLocation(), 1F, 1.8F);
@@ -205,8 +222,8 @@ public class SabotageManager {
       if(explodeLoc != null && explodeLoc.getWorld() != null) {
         explodeLoc.getWorld().createExplosion(explodeLoc, 0F, false);
       }
-      String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
-      String sub = HalloweenChat.color("<#FF3B47>เครื่องยนต์ระเบิด <#5A4E7C>(<#B8B0C8>ฆาตกรเป็นฝ่ายชนะ<#5A4E7C>)");
+      String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String sub = "<#FF3B47>เครื่องยนต์ระเบิด <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>)</shadow>";
       for(Player p : arena.getPlayers()) {
         XSound.ENTITY_GENERIC_EXPLODE.play(p.getLocation(), 1F, 0.8F);
         HalloweenChat.sendTitles(p, title, sub, 10, 80, 20);
@@ -238,7 +255,7 @@ public class SabotageManager {
       return;
     }
     if(arena.getVotingManager().isVotingActive()) {
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>ไม่สามารถก่อวินาศกรรมระหว่างประชุมได้"));
+      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถก่อวินาศกรรมระหว่างประชุมได้");
       return;
     }
 
@@ -267,14 +284,14 @@ public class SabotageManager {
     ItemMeta sMeta = status.getItemMeta();
     if(sMeta != null) {
       if(hasActive) {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>กำลังทำงานอยู่"));
-        sMeta.setLore(colorLines(Arrays.asList("<#5A4E7C>(<#B8B0C8>ต้องรอให้ผู้โดยสารแก้ไขระบบก่อน<#5A4E7C>)")));
+        HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กำลังทำงานอยู่");
+        HalloweenChat.setItemLore(sMeta, Arrays.asList("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ต้องรอให้ผู้โดยสารแก้ไขระบบก่อน<shadow:#000000FF><#5A4E7C>)</shadow>"));
       } else if(onCooldown) {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>คูลดาวน์ <#FFB703>" + cooldownRemaining + " <#FF3B47>วิ"));
-        sMeta.setLore(colorLines(Arrays.asList("<#5A4E7C>(<#B8B0C8>กำลังรีชาร์จระบบก่อวินาศกรรม<#5A4E7C>)")));
+        HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คูลดาวน์ <#FFB703>" + cooldownRemaining + " <#FF3B47>วิ");
+        HalloweenChat.setItemLore(sMeta, Arrays.asList("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังรีชาร์จระบบก่อวินาศกรรม<shadow:#000000FF><#5A4E7C>)</shadow>"));
       } else {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>Sabotage<#5A4E7C>] <#6EEB83>พร้อมใช้งาน"));
-        sMeta.setLore(colorLines(Arrays.asList("<#5A4E7C>(<#B8B0C8>คลิกเลือกการก่อวินาศกรรมด้านบน<#5A4E7C>)")));
+        HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>พร้อมใช้งาน");
+        HalloweenChat.setItemLore(sMeta, Arrays.asList("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกเลือกการก่อวินาศกรรมด้านบน<shadow:#000000FF><#5A4E7C>)</shadow>"));
       }
       status.setItemMeta(sMeta);
     }
@@ -299,7 +316,7 @@ public class SabotageManager {
 
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>" + type.getDisplayName() + "<#5A4E7C>]"));
+      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>" + type.getDisplayName() + "<shadow:#000000FF><#5A4E7C>]</shadow>");
       List<String> lore = new ArrayList<>();
       if(type == SabotageType.LIGHTS) {
         lore.add("<#F4F1DE>ตัดกระแสไฟฟ้าทั้งแผนที่");
@@ -314,7 +331,7 @@ public class SabotageManager {
       lore.add(" ");
       if(!hasLocation) {
         lore.add("<#FF3B47>ยังไม่ได้ตั้งจุดในแผนที่");
-        lore.add("<#5A4E7C>(<#B8B0C8>/mma setsabotage " + arena.getId() + " " + type.getShortId() + "<#5A4E7C>)");
+        lore.add("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>/mma setsabotage " + arena.getId() + " " + type.getShortId() + "<shadow:#000000FF><#5A4E7C>)</shadow>");
       } else if(isActiveThis) {
         lore.add("<#FFB703>กำลังทำงานอยู่");
       } else if(hasActive) {
@@ -322,9 +339,9 @@ public class SabotageManager {
       } else if(onCooldown) {
         lore.add("<#FF3B47>คูลดาวน์ " + cooldownRemaining + " วิ");
       } else {
-        lore.add("<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อก่อวินาศกรรม<#5A4E7C>)");
+        lore.add("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อก่อวินาศกรรม<shadow:#000000FF><#5A4E7C>)</shadow>");
       }
-      meta.setLore(colorLines(lore));
+      HalloweenChat.setItemLore(meta, lore);
       item.setItemMeta(meta);
     }
     return item;
@@ -337,12 +354,12 @@ public class SabotageManager {
 
     if(cooldownRemaining > 0) {
       XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>คูลดาวน์ <#FFB703>" + cooldownRemaining + " <#FF3B47>วิ"));
+      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คูลดาวน์ <#FFB703>" + cooldownRemaining + " <#FF3B47>วิ");
       return;
     }
     if(activeSabotage != null) {
       XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>กำลังเกิดวินาศกรรมอยู่"));
+      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กำลังเกิดวินาศกรรมอยู่");
       return;
     }
 
@@ -358,7 +375,7 @@ public class SabotageManager {
     if(selected != null) {
       if(resolveStationLocation(selected) == null) {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#FF3B47>ยังไม่ได้ตั้งจุดในแผนที่"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ยังไม่ได้ตั้งจุดในแผนที่");
         return;
       }
       player.closeInventory();
@@ -387,29 +404,27 @@ public class SabotageManager {
     }
 
     if(type == SabotageType.LIGHTS) {
-      String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
-      String sub = HalloweenChat.color("<#F4F1DE>ไฟฟ้าดับ <#5A4E7C>(<#B8B0C8>รีบไปสับคัตเอาท์เพื่อกู้ระบบ<#5A4E7C>)");
+      String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String sub = "<#F4F1DE>ไฟฟ้าดับ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รีบไปสับคัตเอาท์เพื่อกู้ระบบ<shadow:#000000FF><#5A4E7C>)</shadow>";
       for(Player p : arena.getPlayersLeft()) {
         XSound.ENTITY_LIGHTNING_BOLT_THUNDER.play(p.getLocation(), 0.7F, 0.6F);
         XSound.BLOCK_REDSTONE_TORCH_BURNOUT.play(p.getLocation(), 1F, 0.8F);
         HalloweenChat.sendTitles(p, title, sub, 10, 60, 10);
       }
     } else if(type == SabotageType.ENGINE_MELTDOWN) {
-      if(meltdownBossBar != null) {
-        meltdownBossBar.removeAll();
-      }
-      meltdownBossBar = Bukkit.createBossBar(
-        HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>เครื่องยนต์จะระเบิดใน <#FFB703>40 <#F4F1DE>วิ <#5A4E7C>(<#B8B0C8>รีบไประบายความร้อน<#5A4E7C>)"),
-        BarColor.RED,
-        BarStyle.SOLID
+      hideMeltdownBossBarAll();
+      meltdownBossBar = BossBar.bossBar(
+        HalloweenChat.component("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เครื่องยนต์จะระเบิดใน <#FFB703>40 <#F4F1DE>วิ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รีบไประบายความร้อน<shadow:#000000FF><#5A4E7C>)</shadow>"),
+        1.0f,
+        BossBar.Color.RED,
+        BossBar.Overlay.PROGRESS
       );
-      meltdownBossBar.setProgress(1.0);
       for(Player p : arena.getPlayers()) {
-        meltdownBossBar.addPlayer(p);
+        addPlayerToBossBar(p);
       }
 
-      String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
-      String sub = HalloweenChat.color("<#FF3B47>เครื่องยนต์จะระเบิดใน <#FFB703>40 <#FF3B47>วิ <#5A4E7C>(<#B8B0C8>รีบไประบายความร้อน<#5A4E7C>)");
+      String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String sub = "<#FF3B47>เครื่องยนต์จะระเบิดใน <#FFB703>40 <#FF3B47>วิ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รีบไประบายความร้อน<shadow:#000000FF><#5A4E7C>)</shadow>";
       for(Player p : arena.getPlayersLeft()) {
         XSound.BLOCK_BEACON_DEACTIVATE.play(p.getLocation(), 1F, 0.8F);
         HalloweenChat.sendTitles(p, title, sub, 10, 60, 10);
@@ -417,8 +432,8 @@ public class SabotageManager {
     } else if(type == SabotageType.COMMS) {
       arena.getTaskManager().updateAllPlayersStationVisibility();
 
-      String title = HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]");
-      String sub = HalloweenChat.color("<#F4F1DE>เรดาร์ถูกรบกวน <#5A4E7C>(<#B8B0C8>รีบไปปรับคลื่นวิทยุ<#5A4E7C>)");
+      String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String sub = "<#F4F1DE>เรดาร์ถูกรบกวน <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รีบไปปรับคลื่นวิทยุ<shadow:#000000FF><#5A4E7C>)</shadow>";
       for(Player p : arena.getPlayersLeft()) {
         XSound.BLOCK_FIRE_EXTINGUISH.play(p.getLocation(), 0.8F, 1.8F);
         XSound.BLOCK_NOTE_BLOCK_SNARE.play(p.getLocation(), 1F, 0.6F);
@@ -458,11 +473,11 @@ public class SabotageManager {
     Location textLoc = loc.clone().add(0.5, 2.0, 0.5);
     String text;
     if(type == SabotageType.LIGHTS) {
-      text = "<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]\n\n<#F4F1DE>กู้ระบบไฟฟ้า\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อสับคัตเอาท์<#5A4E7C>)";
+      text = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>กู้ระบบไฟฟ้า\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อสับคัตเอาท์<shadow:#000000FF><#5A4E7C>)</shadow>";
     } else if(type == SabotageType.ENGINE_MELTDOWN) {
-      text = "<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]\n\n<#F4F1DE>ระบายความร้อนฉุกเฉิน\n<#FF3B47>เหลือเวลา <#FFB703>40 <#FF3B47>วิ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อระบายความร้อน<#5A4E7C>)";
+      text = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ระบายความร้อนฉุกเฉิน\n<#FF3B47>เหลือเวลา <#FFB703>40 <#FF3B47>วิ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อระบายความร้อน<shadow:#000000FF><#5A4E7C>)</shadow>";
     } else {
-      text = "<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>]\n\n<#F4F1DE>กู้สัญญาณเรดาร์\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อปรับคลื่นวิทยุ<#5A4E7C>)";
+      text = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>กู้สัญญาณเรดาร์\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อปรับคลื่นวิทยุ<shadow:#000000FF><#5A4E7C>)</shadow>";
     }
 
     fixTextDisplay = arena.spawnTextDisplay(textLoc, text, false);
@@ -536,7 +551,7 @@ public class SabotageManager {
     buildFixLightsGUI(inv);
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Sabotage<#5A4E7C>] <#F4F1DE>คลิกสับคัตเอาท์ทั้งหมดให้เปิด"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกสับคัตเอาท์ทั้งหมดให้เปิด");
   }
 
   private void buildFixLightsGUI(Inventory inv) {
@@ -551,10 +566,12 @@ public class SabotageManager {
       ItemStack sw = isOn ? XMaterial.LIME_STAINED_GLASS_PANE.parseItem() : XMaterial.RED_STAINED_GLASS_PANE.parseItem();
       ItemMeta sMeta = sw.getItemMeta();
       if(sMeta != null) {
-        sMeta.setDisplayName(HalloweenChat.color(isOn
-          ? "<#5A4E7C>[<#6EEB83>คัตเอาท์ " + (i + 1) + "<#5A4E7C>] <#6EEB83>เปิดแล้ว"
-          : "<#5A4E7C>[<#FF3B47>คัตเอาท์ " + (i + 1) + "<#5A4E7C>] <#FF3B47>ปิดอยู่"));
-        sMeta.setLore(colorLines(Arrays.asList(isOn ? "<#5A4E7C>(<#B8B0C8>คัตเอาท์เปิดทำงานแล้ว<#5A4E7C>)" : "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อสับคัตเอาท์ขึ้น<#5A4E7C>)")));
+        HalloweenChat.setItemName(sMeta, isOn
+          ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>คัตเอาท์ " + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เปิดแล้ว"
+          : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>คัตเอาท์ " + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ปิดอยู่");
+        HalloweenChat.setItemLore(sMeta, Arrays.asList(isOn
+          ? "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คัตเอาท์เปิดทำงานแล้ว<shadow:#000000FF><#5A4E7C>)</shadow>"
+          : "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อสับคัตเอาท์ขึ้น<shadow:#000000FF><#5A4E7C>)</shadow>"));
         sw.setItemMeta(sMeta);
       }
       inv.setItem(switchSlots[i], sw);
@@ -571,18 +588,18 @@ public class SabotageManager {
     ItemStack coolBtn = XMaterial.ICE.parseItem();
     ItemMeta cMeta = coolBtn.getItemMeta();
     if(cMeta != null) {
-      cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>ระบายความร้อนฉุกเฉิน<#5A4E7C>]"));
-      cMeta.setLore(colorLines(Arrays.asList(
+      HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>ระบายความร้อนฉุกเฉิน<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(cMeta, Arrays.asList(
         "<#F4F1DE>ฉีดน้ำยาหล่อเย็นดับความร้อนเครื่องยนต์",
-        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อหยุดการระเบิด<#5A4E7C>)"
-      )));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อหยุดการระเบิด<shadow:#000000FF><#5A4E7C>)</shadow>"
+      ));
       coolBtn.setItemMeta(cMeta);
     }
     inv.setItem(13, coolBtn);
 
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Sabotage<#5A4E7C>] <#F4F1DE>คลิกปุ่มตรงกลางเพื่อระบายความร้อน"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกปุ่มตรงกลางเพื่อระบายความร้อน");
   }
 
   private void openFixCommsGUI(Player player) {
@@ -595,18 +612,18 @@ public class SabotageManager {
     ItemStack tuner = XMaterial.COMPASS.parseItem();
     ItemMeta tMeta = tuner.getItemMeta();
     if(tMeta != null) {
-      tMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>ปรับคลื่นความถี่วิทยุ<#5A4E7C>]"));
-      tMeta.setLore(colorLines(Arrays.asList(
+      HalloweenChat.setItemName(tMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ปรับคลื่นความถี่วิทยุ<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(tMeta, Arrays.asList(
         "<#F4F1DE>ปรับคลื่นความถี่เพื่อกู้สัญญาณเรดาร์",
-        "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อกู้สัญญาณ<#5A4E7C>)"
-      )));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อกู้สัญญาณ<shadow:#000000FF><#5A4E7C>)</shadow>"
+      ));
       tuner.setItemMeta(tMeta);
     }
     inv.setItem(13, tuner);
 
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Sabotage<#5A4E7C>] <#F4F1DE>คลิกปุ่มตรงกลางเพื่อกู้สัญญาณวิทยุ"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกปุ่มตรงกลางเพื่อกู้สัญญาณวิทยุ");
   }
 
   public boolean isSabotageGUI(String title) {
@@ -674,11 +691,8 @@ public class SabotageManager {
 
     removeEmergencyVisuals();
 
-    if(meltdownBossBar != null) {
-      meltdownBossBar.setVisible(false);
-      meltdownBossBar.removeAll();
-      meltdownBossBar = null;
-    }
+    hideMeltdownBossBarAll();
+    meltdownBossBar = null;
 
     for(Player p : arena.getPlayersLeft()) {
       p.removePotionEffect(PotionEffectType.DARKNESS);
@@ -689,8 +703,8 @@ public class SabotageManager {
       arena.getTaskManager().updateAllPlayersStationVisibility();
     }
 
-    String title = HalloweenChat.color("<#5A4E7C>[<#6EEB83>Sabotage<#5A4E7C>]");
-    String sub = HalloweenChat.color("<#FFB703>" + fixer.getName() + " <#6EEB83>กู้ระบบสำเร็จแล้ว");
+    String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
+    String sub = "<#FFB703>" + fixer.getName() + " <#6EEB83>กู้ระบบสำเร็จแล้ว";
     for(Player p : arena.getPlayersLeft()) {
       XSound.BLOCK_BEACON_ACTIVATE.play(p.getLocation(), 1F, 1.5F);
       XSound.ENTITY_PLAYER_LEVELUP.play(p.getLocation(), 0.8F, 1.5F);
@@ -709,11 +723,8 @@ public class SabotageManager {
 
     removeEmergencyVisuals();
 
-    if(meltdownBossBar != null) {
-      meltdownBossBar.setVisible(false);
-      meltdownBossBar.removeAll();
-      meltdownBossBar = null;
-    }
+    hideMeltdownBossBarAll();
+    meltdownBossBar = null;
 
     for(Player p : arena.getPlayersLeft()) {
       p.removePotionEffect(PotionEffectType.DARKNESS);
@@ -729,13 +740,21 @@ public class SabotageManager {
 
   public void addPlayerToBossBar(Player player) {
     if(meltdownBossBar != null && player != null) {
-      meltdownBossBar.addPlayer(player);
+      try {
+        player.showBossBar(meltdownBossBar);
+        meltdownBarViewers.add(player);
+      } catch(Throwable ignored) {
+      }
     }
   }
 
   public void removePlayerFromBossBar(Player player) {
     if(meltdownBossBar != null && player != null) {
-      meltdownBossBar.removePlayer(player);
+      try {
+        player.hideBossBar(meltdownBossBar);
+      } catch(Throwable ignored) {
+      }
+      meltdownBarViewers.remove(player);
     }
   }
 
@@ -744,11 +763,8 @@ public class SabotageManager {
       tickTask.cancel();
       tickTask = null;
     }
-    if(meltdownBossBar != null) {
-      meltdownBossBar.setVisible(false);
-      meltdownBossBar.removeAll();
-      meltdownBossBar = null;
-    }
+    hideMeltdownBossBarAll();
+    meltdownBossBar = null;
     for(Player p : arena.getPlayers()) {
       p.removePotionEffect(PotionEffectType.DARKNESS);
       p.removePotionEffect(PotionEffectType.NIGHT_VISION);

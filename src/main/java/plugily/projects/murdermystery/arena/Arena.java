@@ -350,7 +350,7 @@ public class Arena extends PluginArena {
         }
         Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
         removeNearbyDisplays(ventLoc, 1.2, 1.8, 1.2, false);
-        TextDisplay td = spawnTextDisplay(ventLoc, "<#5A4E7C>[<#FF3B47>Sewer Vent<#5A4E7C>]\n\n<#F4F1DE>ท่อระบายน้ำ\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาหรือ <#FFB703>SHIFT <#B8B0C8>เพื่อมุดท่อ<#5A4E7C>)", false);
+        TextDisplay td = spawnTextDisplay(ventLoc, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sewer Vent<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ท่อระบายน้ำ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาหรือ <#FFB703>SHIFT <#B8B0C8>เพื่อมุดท่อ<shadow:#000000FF><#5A4E7C>)</shadow>", false);
         block.setTextDisplay(td);
         if(td != null) {
           ventDisplays.add(td);
@@ -423,7 +423,7 @@ public class Arena extends PluginArena {
     try {
       loc.getChunk().load();
       TextDisplay display = loc.getWorld().spawn(loc, TextDisplay.class, entity -> {
-        entity.setText(HalloweenChat.color(text));
+        entity.text(HalloweenChat.component(text));
         entity.setBillboard(Display.Billboard.CENTER);
         entity.setShadowed(true);
         entity.setDefaultBackground(false);
@@ -1130,7 +1130,7 @@ public class Arena extends PluginArena {
     boolean sabotageActive = sabotageManager != null && sabotageManager.hasActiveSabotage();
 
     StringBuilder sb = new StringBuilder();
-    sb.append("<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>]\n\n");
+    sb.append("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
     if(remainingUses > 0) {
       sb.append("<#F4F1DE>กดได้อีก <#FFB703>").append(remainingUses).append(" <#F4F1DE>รอบ");
       if(sabotageActive) {
@@ -1141,7 +1141,7 @@ public class Arena extends PluginArena {
     } else {
       sb.append("<#FF3B47>กดได้อีก 0 รอบ");
     }
-    sb.append("\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อเรียกประชุมฉุกเฉิน<#5A4E7C>)");
+    sb.append("\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อเรียกประชุมฉุกเฉิน<shadow:#000000FF><#5A4E7C>)</shadow>");
     return sb.toString();
   }
 
@@ -1169,7 +1169,7 @@ public class Arena extends PluginArena {
     }
     campfireDisplay.setDefaultBackground(false);
     campfireDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-    campfireDisplay.setText(HalloweenChat.color(buildCampfireHologramText()));
+    campfireDisplay.text(HalloweenChat.component(buildCampfireHologramText()));
   }
 
   public void spawnCampfireHologram() {

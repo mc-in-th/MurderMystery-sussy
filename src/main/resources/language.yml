@@ -49,22 +49,22 @@ Commands:
     Adjust-Statistic: "%plugin_prefix% ค่าสถิติ %value% ของ %player% เปลี่ยนเป็น %number% แล้ว"
     Reload-Success: "%plugin_prefix% รีโหลดข้อมูลห้องเกมเรียบร้อยแล้ว"
     List:
-      Header: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>รายชื่อห้องเกม <#5A4E7C>(<#B8B0C8>ชื่อ สถานะ ผู้เล่น<#5A4E7C>)"
-      Format: "<#FFB703>%arena_name% <#5A4E7C>| %arena_state_placeholder% <#5A4E7C>| <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%"
+      Header: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>รายชื่อห้องเกม <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ชื่อ สถานะ ผู้เล่น<shadow:#000000FF><#5A4E7C>)</shadow>"
+      Format: "<#FFB703>%arena_name% <shadow:#000000FF><#5A4E7C>|</shadow> %arena_state_placeholder% <shadow:#000000FF><#5A4E7C>|</shadow> <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%"
       No-Arenas: "%color_chat_issue%%plugin_prefix% ยังไม่มีห้องเกมที่สร้างไว้"
     Spychat:
       Toggled: "%plugin_prefix% เปลี่ยนสถานะแชทผู้ดูแลเป็น %value%"
   Main:
-    Header: "<#5A4E7C>----------------[<#FF7518> คำสั่ง Event <#5A4E7C>]----------------"
+    Header: "<shadow:#000000FF><#5A4E7C>----------------[</shadow><#FF7518> คำสั่ง Event <shadow:#000000FF><#5A4E7C>]----------------</shadow>"
     Description:
       - "<#FFB703>คำสั่งผู้เล่น:"
-      - "<#72EFDD>/%plugin_short_command% stats <#5A4E7C>- <#F4F1DE>ดูสถิติการเล่นของคุณ"
-      - "<#72EFDD>/%plugin_short_command% leave <#5A4E7C>- <#F4F1DE>ออกจากห้องเกมปัจจุบัน"
-      - "<#72EFDD>/%plugin_short_command% join <arena> <#5A4E7C>- <#F4F1DE>เข้าร่วมห้องเกมที่ระบุ"
-      - "<#72EFDD>/%plugin_short_command% top <statistic> <#5A4E7C>- <#F4F1DE>ดู 10 อันดับผู้เล่นสูงสุด"
-      - "<#72EFDD>/%plugin_short_command% randomjoin <#5A4E7C>- <#F4F1DE>สุ่มเข้าร่วมห้องเกมที่ว่าง"
-    Admin-Bonus-Description: "<#FF7518>/%plugin_short_command%a <#5A4E7C>- <#F4F1DE>ดูคำสั่งสำหรับผู้ดูแลระบบทั้งหมด"
-    Footer: "<#5A4E7C>--------------------------------------------------"
+      - "<#72EFDD>/%plugin_short_command% stats <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดูสถิติการเล่นของคุณ"
+      - "<#72EFDD>/%plugin_short_command% leave <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ออกจากห้องเกมปัจจุบัน"
+      - "<#72EFDD>/%plugin_short_command% join <arena> <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>เข้าร่วมห้องเกมที่ระบุ"
+      - "<#72EFDD>/%plugin_short_command% top <statistic> <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดู 10 อันดับผู้เล่นสูงสุด"
+      - "<#72EFDD>/%plugin_short_command% randomjoin <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>สุ่มเข้าร่วมห้องเกมที่ว่าง"
+    Admin-Bonus-Description: "<#FF7518>/%plugin_short_command%a <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดูคำสั่งสำหรับผู้ดูแลระบบทั้งหมด"
+    Footer: "<shadow:#000000FF><#5A4E7C>--------------------------------------------------</shadow>"
 
 
 #
@@ -75,12 +75,12 @@ Commands:
 # Placeholders:
 # https://wiki.plugily.xyz/REPLACEWITHPROJECTNAME/placeholders/language
 Scoreboard:
-  Title: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
+  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
   Roles:
     Detective: "<#72EFDD>นักสืบ"
     Murderer: "<#FF3B47>ฆาตกร"
     Innocent: "<#FFB703>ผู้โดยสาร"
-    Dead: "<#5A4E7C>เสียชีวิต"
+    Dead: "<shadow:#000000FF><#5A4E7C>เสียชีวิต</shadow>"
   Detective:
     Alive: "<#6EEB83>ยังมีชีวิต"
     Bow:
@@ -88,74 +88,74 @@ Scoreboard:
       Picked: "<#FFB703>มีผู้เก็บธนูแล้ว"
   Content:
     Waiting:
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
-      - "<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>รอผู้เล่น<#5A4E7C>]"
+      - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>รอผู้เล่น<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
-      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"
+      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
       - "<#F4F1DE>ขั้นต่ำ: <#FFB703>%arena_min_players% คน"
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     Starting:
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
-      - "<#F4F1DE>สถานะ: <#5A4E7C>[<#6EEB83>กำลังจะเริ่ม<#5A4E7C>]"
+      - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังจะเริ่ม<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
       - "<#F4F1DE>เริ่มใน: <#FFB703>%arena_time%"
-      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"
-      - "<#5A4E7C>----------------"
+      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while ingame
     In-Game:
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     In-Game-Murderer:
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while state is ending
     Ending:
-      - "<#5A4E7C>----------------"
-      - "<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>จบเกมแล้ว<#5A4E7C>]"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>จบเกมแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"
       - "<#F4F1DE>ฆาตกร: <#FF3B47>%arena_murderer_list%"
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while state is restarting
     Restarting:
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
-      - "<#F4F1DE>สถานะ: <#5A4E7C>[<#FF3B47>กำลังรีเซ็ต<#5A4E7C>]"
+      - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
       - "<#B8B0C8>กำลังเตรียมสนามประลองใหม่"
-      - "<#5A4E7C>----------------"
+      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
 
 #
 # Bossbar messages
 #
 # Bossbar needs to be enabled on config.yml
 Bossbar:
-  Title: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
+  Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
   Content:
     Waiting:
-      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
     Starting:
-      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
     In-Game:
-      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>บทบาทของคุณ %arena_player_role%"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>บทบาทของคุณ %arena_player_role%"
     Ending:
-      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#FFB703>เกมจบลงแล้ว"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>เกมจบลงแล้ว"
     Restarting:
-      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
 
 #
 # In-Game Messages
 #
 In-Game:
   #Used in most game messages.
-  Plugin-Prefix: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
-  Game-Chat-Format: "<#5A4E7C>[<#FFB703>%user_statistic_level%<#5A4E7C>] <#C77DFF>%player% <#5A4E7C>| <#F4F1DE>%message%"
+  Plugin-Prefix: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow>"
+  Game-Chat-Format: "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>%user_statistic_level%<shadow:#000000FF><#5A4E7C>]</shadow> <#C77DFF>%player% <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>%message%"
   You-Leveled-Up: "%plugin_prefix% <#6EEB83>เลเวลอัปแล้ว ตอนนี้คุณอยู่เลเวล <#FFB703>%number%"
   Commands-Blocked: "%color_chat_issue%%plugin_prefix% ไม่สามารถใช้คำสั่งอื่นขณะอยู่ในเกมได้ ใช้ได้เฉพาะ /%plugin_short_command% leave เพื่อออกจากห้อง"
   Join:
@@ -167,15 +167,15 @@ In-Game:
     Cancelled-Via-API: "%color_chat_issue%%plugin_prefix% ไม่สามารถเข้าร่วมห้องเกมนี้ได้"
     As-Party-Member: "%plugin_prefix% คุณถูกดึงเข้าห้อง %arena_name% ตามหัวหน้าปาร์ตี้"
     Arena-Not-Configured: "%color_chat_issue%%plugin_prefix% ห้องเกมนี้ยังตั้งค่าไม่เสร็จสมบูรณ์ กรุณาแจ้งผู้ดูแลระบบ"
-    Title: "20,30,20;<#5A4E7C>[<#FF7518>%arena_name%<#5A4E7C>];<#B8B0C8>ผู้โดยสาร <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%"
+    Title: "20,30,20;<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>%arena_name%<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ผู้โดยสาร <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%"
   Death:
-    Tag: "&8เสียชีวิต"
+    Tag: "<shadow:#000000FF><#5A4E7C>เสียชีวิต</shadow>"
     Screen: "%color_chat_issue%คุณถูกสังหารในป่ามืด"
   Spectator:
     Blocked: "%color_chat_issue%%plugin_prefix% ห้องนี้ปิดการเข้าชมแล้ว"
     You-Are-Spectator: "%plugin_prefix% คุณอยู่ในโหมดวิญญาณผู้ชม สามารถบินและช่วยซ่อมรถบัสต่อได้"
-    Spectator-Menu-Name: "<#5A4E7C>[<#FF7518>รายชื่อผู้รอดชีวิต<#5A4E7C>]"
-    Target-Player-Health: "<#F4F1DE>พลังชีวิต: <#FF3B47>%number% <#5A4E7C>| <#F4F1DE>บทบาท: %arena_player_role%"
+    Spectator-Menu-Name: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>รายชื่อผู้รอดชีวิต<shadow:#000000FF><#5A4E7C>]</shadow>"
+    Target-Player-Health: "<#F4F1DE>พลังชีวิต: <#FF3B47>%number% <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>บทบาท: %arena_player_role%"
     Spectator-Warning: "%plugin_prefix% คุณอยู่ในโหมดผู้ชม"
     Teleport: "%plugin_prefix% วาร์ปไปยัง %player% แล้ว"
     Menu:
@@ -186,15 +186,15 @@ In-Game:
         Changed-Speed: "<#F4F1DE>เปลี่ยนความเร็วการบินเป็นระดับ <#FFB703>%number%"
         Auto-Teleport: "%value% <#F4F1DE>วาร์ปตามเป้าหมายอัตโนมัติ"
         Target-Player:
-          Action-Bar: "<#B8B0C8>ห่าง <#FFB703>%number% บล็อก <#5A4E7C>| <#F4F1DE>เป้าหมาย <#C77DFF>%player%"
+          Action-Bar: "<#B8B0C8>ห่าง <#FFB703>%number% บล็อก <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>เป้าหมาย <#C77DFF>%player%"
         Night-Vision: "%value% <#F4F1DE>มองเห็นในความมืด"
         First-Person-Mode:
-          Action-Bar: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก <#5A4E7C>| <#F4F1DE>มุมมอง <#C77DFF>%player%"
+          Action-Bar: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>มุมมอง <#C77DFF>%player%"
           Title: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก"
         Visibility: "%value% <#F4F1DE>การมองเห็นผู้ชมคนอื่น"
   Messages:
-    Join: "%plugin_prefix% %player% เข้าร่วมขบวนรถบัส <#5A4E7C>(<#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%<#5A4E7C>)"
-    Leave: "%plugin_prefix% %player% ออกจากขบวนรถบัส <#5A4E7C>(<#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%<#5A4E7C>)"
+    Join: "%plugin_prefix% %player% เข้าร่วมขบวนรถบัส <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
+    Leave: "%plugin_prefix% %player% ออกจากขบวนรถบัส <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
     Death: "%plugin_prefix% %player% เสียชีวิตแล้ว"
     Lobby:
       Start-In: "%plugin_prefix% เกมจะเริ่มในอีก %arena_time% วินาที"
@@ -208,15 +208,15 @@ In-Game:
       Not-Enough-Space-For-Party: "%color_chat_issue%%plugin_prefix% สมาชิกปาร์ตี้ของคุณมีมากกว่าที่ว่างในห้อง %arena_name%"
     Game-End:
       Summary:
-        - "<#5A4E7C>--------------------------------------------------"
-        - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>สรุปผลการเอาชีวิตรอด"
+        - "<shadow:#000000FF><#5A4E7C>--------------------------------------------------</shadow>"
+        - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Event<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>สรุปผลการเอาชีวิตรอด"
         - ""
         - "%arena_summary%"
         - "%arena_summary_player%"
         - ""
-        - "<#F4F1DE>ฆาตกร: <#FF3B47>%arena_murderer_list% <#5A4E7C>(<#FFB703>สังหาร %arena_murderer_kills% คน<#5A4E7C>)"
+        - "<#F4F1DE>ฆาตกร: <#FF3B47>%arena_murderer_list% <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>สังหาร %arena_murderer_kills% คน<shadow:#000000FF><#5A4E7C>)</shadow>"
         - ""
-        - "<#5A4E7C>--------------------------------------------------"
+        - "<shadow:#000000FF><#5A4E7C>--------------------------------------------------</shadow>"
       Placeholders:
         Win: "<#6EEB83>คุณเป็นฝ่ายชนะในรอบนี้"
         Lose: "<#FF3B47>คุณเป็นฝ่ายพ่ายแพ้ในรอบนี้"
@@ -235,14 +235,14 @@ In-Game:
       Set-Starting-In-To-0: "%plugin_prefix% ผู้ดูแลระบบสั่งเริ่มเกมทันที"
     Arena:
       Chances:
-        Action-Bar: "<#5A4E7C>[<#FF3B47>Murderer Chance<#5A4E7C>] <#F4F1DE>โอกาสเป็นฆาตกร <#FFB703>%arena_murderer_chance%"
-      Cooldown: "<#5A4E7C>[<#FF7518>%value%<#5A4E7C>] <#FFB703>%number% วินาที"
+        Action-Bar: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Murderer Chance<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>โอกาสเป็นฆาตกร <#FFB703>%arena_murderer_chance%"
+      Cooldown: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>%value%<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%number% วินาที"
       Locator:
         Bow: "<#72EFDD>เข็มทิศค้นหาธนู"
         Innocent: "<#FF3B47>เข็มทิศตามล่าผู้โดยสาร"
-        Watch-Out: "5,20,5;<#5A4E7C>[<#FF3B47>ระวังตัวไว้<#5A4E7C>];<#B8B0C8>ตอนนี้ฆาตกรสามารถตามรอยผู้รอดชีวิตได้แล้ว"
+        Watch-Out: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ระวังตัวไว้<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ตอนนี้ฆาตกรสามารถตามรอยผู้รอดชีวิตได้แล้ว"
       Pass:
-        Name: "<#5A4E7C>[<#FF7518>เลือกใช้บัตรบทบาท<#5A4E7C>]"
+        Name: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เลือกใช้บัตรบทบาท<shadow:#000000FF><#5A4E7C>]</shadow>"
         Role:
           Murderer:
             Name: "<#FF3B47>รับบทฆาตกร"
@@ -261,11 +261,11 @@ In-Game:
         Time-Left: "5,20,5;<#FFB703>เหลือเวลาอีก %arena_time%;<#B8B0C8>อดทนไว้ หากหมดเวลาฆาตกรจะเป็นฝ่ายแพ้"
         Role:
           Change: "5,20,5;<#FFB703>%arena_player_role% คนก่อนออกจากเกม;<#B8B0C8>ระบบทำการสุ่มผู้รับบทแทนใหม่"
-          Murderer: "5,20,5;<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>];<#B8B0C8>กำจัดผู้โดยสารทุกคนและขัดขวางการซ่อมรถบัส"
-          Detective: "5,20,5;<#5A4E7C>[<#72EFDD>นักสืบ<#5A4E7C>];<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร"
-          Innocent: "5,20,5;<#5A4E7C>[<#FFB703>ผู้โดยสาร<#5A4E7C>];<#B8B0C8>ร่วมมือกันซ่อมรถบัสในป่าและเปิดโปงฆาตกร"
+          Murderer: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>กำจัดผู้โดยสารทุกคนและขัดขวางการซ่อมรถบัส"
+          Detective: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>นักสืบ<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร"
+          Innocent: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ร่วมมือกันซ่อมรถบัสในป่าและเปิดโปงฆาตกร"
         Score:
-          Bonus: "<#6EEB83>+%number% คะแนน <#5A4E7C>(<#B8B0C8>%value%<#5A4E7C>)"
+          Bonus: "<#6EEB83>+%number% คะแนน <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>%value%<shadow:#000000FF><#5A4E7C>)</shadow>"
           Gold: "<#FFB703>เก็บเศษทองคำได้"
           Action:
             Kill:
@@ -284,7 +284,7 @@ In-Game:
         Special-Blocks:
           Cauldron:
             Potion: "%color_chat_issue%กรุณาดื่มน้ำยาขวดเดิมให้หมดก่อน"
-            Hologram: "<#C77DFF>หม้อต้มยาปริศนา <#5A4E7C>- <#FFB703>1 ทอง"
+            Hologram: "<#C77DFF>หม้อต้มยาปริศนา <shadow:#000000FF><#5A4E7C>-</shadow> <#FFB703>1 ทอง"
           Not-Enough-Gold: "%color_chat_issue%คุณต้องใช้ทองคำ %number% ก้อน"
           Pray:
             Hologram: "<#FFB703>คลิกเพื่อถวายเครื่องเซ่น;<#B8B0C8>ดึงคันโยกเพื่ออธิษฐานต่อศาลเจ้าป่า"
@@ -310,17 +310,17 @@ In-Game:
                 Gold: "%color_chat_issue%คุณต้องคำสาปแห่งความโลภ ไม่สามารถเก็บทองคำได้อีก"
                 Death: "%color_chat_issue%เงามรณะคืบคลานเข้ามา ชีวิตของคุณจะดับสูญในอีก 1 นาที"
         Bow:
-          Dropped: "5,20,5;<#5A4E7C>[<#FFB703>ธนูตกอยู่ในป่า<#5A4E7C>];<#B8B0C8>ตามหาธนูเพื่อใช้ป้องกันตัวจากฆาตกร"
+          Dropped: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ธนูตกอยู่ในป่า<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ตามหาธนูเพื่อใช้ป้องกันตัวจากฆาตกร"
           Pickup: "%plugin_prefix% <#FFB703>มีผู้โดยสารเก็บธนูขึ้นมาแล้ว"
           Shot:
             Gold: "<#6EEB83>+1 ลูกธนู"
             Title: "5,20,5;;<#6EEB83>สะสมครบ 10 ทองคำ ได้รับธนูและลูกศร 1 ดอก"
       Task:
-        Bossbar: "<#5A4E7C>[<#FF7518>Bus Repair<#5A4E7C>] <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<#5A4E7C>/<#FFB703>%value%"
-        Completed: "<#5A4E7C>[<#6EEB83>Task Completed<#5A4E7C>] <#F4F1DE>สำเร็จภารกิจ <#FFB703>%value%"
-        All-Completed: "<#5A4E7C>[<#6EEB83>Bus Repair<#5A4E7C>] <#6EEB83>ซ่อมแซมรถบัสสำเร็จแล้ว ผู้โดยสารหลบหนีและคว้าชัยชนะ"
+        Bossbar: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Repair<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>%value%"
+        Completed: "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task Completed<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>สำเร็จภารกิจ <#FFB703>%value%"
+        All-Completed: "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Bus Repair<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ซ่อมแซมรถบัสสำเร็จแล้ว ผู้โดยสารหลบหนีและคว้าชัยชนะ"
         Win:
-          Title: "<#5A4E7C>[<#6EEB83>ซ่อมแซมรถบัสสำเร็จ<#5A4E7C>]"
+          Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ซ่อมแซมรถบัสสำเร็จ<shadow:#000000FF><#5A4E7C>]</shadow>"
           Subtitle: "<#B8B0C8>ผู้โดยสารหลบหนีออกจากป่ามืดได้สำเร็จ"
         Types:
           Find-Diesel-Fuel: "หาน้ำมันดีเซล"
@@ -335,20 +335,20 @@ In-Game:
           Charge-Battery: "พ่วงชาร์จแบตเตอรี่รถบัส"
           Clean-Air-Filter: "ทำความสะอาดไส้กรองอากาศ"
       Voting:
-        Cooldown: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่"
-        Body-Reported: "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน"
-        Discussion-Start: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ"
-        Vote-Now: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <#5A4E7C>(<#FFB703>%number% วิ<#5A4E7C>)"
-        Discussion-Timer: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ"
-        Vote-Timer: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ"
-        Already-Voted: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว"
-        Player-Voted: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว"
-        No-Eject: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#5A4E7C>(<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<#5A4E7C>)"
-        No-Eject-Title: "<#5A4E7C>[<#FF7518>ไม่มีใครถูกโหวตออก<#5A4E7C>]"
+        Cooldown: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่"
+        Body-Reported: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน"
+        Discussion-Start: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ"
+        Vote-Now: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>%number% วิ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        Discussion-Timer: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Emergency Campfire<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ"
+        Vote-Timer: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ"
+        Already-Voted: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว"
+        Player-Voted: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว"
+        No-Eject: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<shadow:#000000FF><#5A4E7C>)</shadow>"
+        No-Eject-Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ไม่มีใครถูกโหวตออก<shadow:#000000FF><#5A4E7C>]</shadow>"
         No-Eject-Subtitle: "<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม"
-        Ejected: "<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ถูกโหวตคัดออก %value%"
-        Was-Impostor: "<#5A4E7C>(<#6EEB83>เขาคือฆาตกร<#5A4E7C>)"
-        Was-Not-Impostor: "<#5A4E7C>(<#FF3B47>เขาไม่ใช่ฆาตกร<#5A4E7C>)"
+        Ejected: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Voting<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>%player% <#F4F1DE>ถูกโหวตคัดออก %value%"
+        Was-Impostor: "<shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>เขาคือฆาตกร<shadow:#000000FF><#5A4E7C>)</shadow>"
+        Was-Not-Impostor: "<shadow:#000000FF><#5A4E7C>(</shadow><#FF3B47>เขาไม่ใช่ฆาตกร<shadow:#000000FF><#5A4E7C>)</shadow>"
 
 
 #
@@ -363,20 +363,20 @@ Signs:
     - "%plugin_prefix%"
     - "%arena_state_placeholder%"
     - "<#FFB703>%arena_name%"
-    - "<#5A4E7C>[<#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%<#5A4E7C>]"
+    - "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>]</shadow>"
 
 
 #
 # Arena Selector messages
 #
 Arena-Selector:
-  Inventory-Title: "<#5A4E7C>[<#FF7518>เลือกห้องเกม<#5A4E7C>]"
+  Inventory-Title: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เลือกห้องเกม<shadow:#000000FF><#5A4E7C>]</shadow>"
   Item:
     Name: "<#FF7518>%arena_name%"
     Lore:
       - "<#B8B0C8>ด่าน: <#F4F1DE>%arena_name%"
       - " "
-      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"
+      - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
       - "<#F4F1DE>สถานะ: %arena_state_placeholder%"
       - " "
       - "<#6EEB83>คลิกเพื่อเข้าร่วมห้องนี้"
@@ -402,10 +402,10 @@ Placeholders:
     Ending: "<#B8B0C8>จบเกมแล้ว"
     Restarting: "<#FF3B47>กำลังรีเซ็ต"
   Motd:
-    Waiting: "<#FFB703>รอผู้เล่น <#5A4E7C>| <#6EEB83>คลิกเพื่อเข้าร่วม"
+    Waiting: "<#FFB703>รอผู้เล่น <shadow:#000000FF><#5A4E7C>|</shadow> <#6EEB83>คลิกเพื่อเข้าร่วม"
     Starting: "<#6EEB83>กำลังจะเริ่มเกม"
     Full-Game: "<#FF3B47>ห้องเต็มแล้ว"
-    In-Game: "<#FF7518>กำลังเล่น <#5A4E7C>| <#B8B0C8>คลิกเพื่อเข้าชม"
+    In-Game: "<#FF7518>กำลังเล่น <shadow:#000000FF><#5A4E7C>|</shadow> <#B8B0C8>คลิกเพื่อเข้าชม"
     Ending: "<#B8B0C8>จบเกมแล้ว"
     Restarting: "<#FF3B47>กำลังรีเซ็ตสนามประลอง"
 
@@ -417,18 +417,18 @@ Placeholders:
 Leaderboard:
   Type:
     Hologram:
-      Header: "<#5A4E7C>[<#FF7518>อันดับสูงสุด %number% - %value%<#5A4E7C>]"
-      Format: "<#FFB703>%number%. <#F4F1DE>%player% <#5A4E7C>(<#72EFDD>%value%<#5A4E7C>)"
+      Header: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>อันดับสูงสุด %number% - %value%<shadow:#000000FF><#5A4E7C>]</shadow>"
+      Format: "<#FFB703>%number%. <#F4F1DE>%player% <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%value%<shadow:#000000FF><#5A4E7C>)</shadow>"
       Empty-Format: "<#FFB703>%number%. <#B8B0C8>ว่างเปล่า (0)"
     Chat:
-      Header: "<#5A4E7C>---------[ <#FF7518>สถิติการเล่นของคุณ <#5A4E7C>]---------"
-      Header-Other: "<#5A4E7C>-------[ <#FF7518>สถิติของ <#C77DFF>%player% <#5A4E7C>]-------"
-      Footer: "<#5A4E7C>--------------------------------------"
+      Header: "<shadow:#000000FF><#5A4E7C>---------[</shadow> <#FF7518>สถิติการเล่นของคุณ <shadow:#000000FF><#5A4E7C>]---------</shadow>"
+      Header-Other: "<shadow:#000000FF><#5A4E7C>-------[</shadow> <#FF7518>สถิติของ <#C77DFF>%player% <shadow:#000000FF><#5A4E7C>]-------</shadow>"
+      Footer: "<shadow:#000000FF><#5A4E7C>--------------------------------------</shadow>"
       Format: "<#F4F1DE>%value% ▸ <#6EEB83>%number%"
       Top:
         Type-Name: "%color_chat_issue%กรุณาระบุชื่อสถิติที่ต้องการดู"
-        Header: "<#5A4E7C>---------[ <#FFB703>10 อันดับสูงสุด <#5A4E7C>]---------"
-        Format: "<#FFB703>#%number% <#F4F1DE>%player% <#5A4E7C>- <#6EEB83>%value% <#B8B0C8>%user_statistic%"
+        Header: "<shadow:#000000FF><#5A4E7C>---------[</shadow> <#FFB703>10 อันดับสูงสุด <shadow:#000000FF><#5A4E7C>]---------</shadow>"
+        Format: "<#FFB703>#%number% <#F4F1DE>%player% <shadow:#000000FF><#5A4E7C>-</shadow> <#6EEB83>%value% <#B8B0C8>%user_statistic%"
   Statistics:
     Wins: "ชนะ ▸ %number%"
     Loses: "แพ้ ▸ %number%"

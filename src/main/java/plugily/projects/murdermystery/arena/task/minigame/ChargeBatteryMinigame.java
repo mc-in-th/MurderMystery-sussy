@@ -40,7 +40,7 @@ import java.util.UUID;
 
 public class ChargeBatteryMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>พ่วงชาร์จแบตเตอรี่รถบัส<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>พ่วงชาร์จแบตเตอรี่รถบัส<shadow:#000000FF><#5A4E7C>]</shadow>");
   private static final int[] PROGRESS_SLOTS = {11, 12, 13, 14, 15};
   private static final int START_BUTTON_SLOT = 22;
 
@@ -86,7 +86,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_AMBIENT.play(player.getLocation(), 0.7F, 1.4F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>กดสวิตช์พ่วงแบตเตอรี่ด้านล่างแล้วรอชาร์จไฟจนครบ 100%"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กดสวิตช์พ่วงแบตเตอรี่ด้านล่างแล้วรอชาร์จไฟจนครบ 100%");
   }
 
   private void buildGui(Inventory inv, BatterySession session) {
@@ -109,8 +109,8 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     ItemStack generator = new ItemStack(Material.REDSTONE_BLOCK);
     ItemMeta srcMeta = generator.getItemMeta();
     if(srcMeta != null) {
-      srcMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>เครื่องปั่นไฟฉุกเฉิน<#5A4E7C>]"));
-      srcMeta.setLore(HalloweenChat.colorLines("", "<#F4F1DE>แรงดันไฟพ่วง <#FFB703>24V DC"));
+      HalloweenChat.setItemName(srcMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>เครื่องปั่นไฟฉุกเฉิน<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(srcMeta, "", "<#F4F1DE>แรงดันไฟพ่วง <#FFB703>24V DC");
       generator.setItemMeta(srcMeta);
     }
     inv.setItem(10, generator);
@@ -118,8 +118,8 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     ItemStack busBattery = new ItemStack(Material.IRON_BLOCK);
     ItemMeta dstMeta = busBattery.getItemMeta();
     if(dstMeta != null) {
-      dstMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>แบตเตอรี่หลักรถบัส<#5A4E7C>]"));
-      dstMeta.setLore(HalloweenChat.colorLines("", "<#F4F1DE>ประจุไฟสะสม <#6EEB83>" + percent + "%"));
+      HalloweenChat.setItemName(dstMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>แบตเตอรี่หลักรถบัส<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(dstMeta, "", "<#F4F1DE>ประจุไฟสะสม <#6EEB83>" + percent + "%");
       busBattery.setItemMeta(dstMeta);
     }
     inv.setItem(16, busBattery);
@@ -129,11 +129,12 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       ItemStack pane = (filled ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.GRAY_STAINED_GLASS_PANE).parseItem();
       ItemMeta pMeta = pane.getItemMeta();
       if(pMeta != null) {
-        pMeta.setDisplayName(HalloweenChat.color(
+        HalloweenChat.setItemName(
+          pMeta,
           filled
-            ? "<#5A4E7C>[<#6EEB83>กำลังส่งกระแสไฟ " + percent + "%<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>สายพ่วงแบตเตอรี่<#5A4E7C>]"
-        ));
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังส่งกระแสไฟ " + percent + "%<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>สายพ่วงแบตเตอรี่<shadow:#000000FF><#5A4E7C>]</shadow>"
+        );
         pane.setItemMeta(pMeta);
       }
       inv.setItem(PROGRESS_SLOTS[i], pane);
@@ -143,21 +144,23 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     ItemMeta bMeta = startBtn.getItemMeta();
     if(bMeta != null) {
       if(session.charging) {
-        bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>กำลังพ่วงไฟ " + percent + "%<#5A4E7C>]"));
-        bMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังพ่วงไฟ " + percent + "%<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          bMeta,
           "",
           "<#F4F1DE>กรุณาถือสายพ่วงค้างไว้จนกว่าจะเต็ม",
           "",
-          "<#5A4E7C>(<#B8B0C8>รอให้ชาร์จไฟครบ 100%<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รอให้ชาร์จไฟครบ 100%<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       } else {
-        bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>หนีบสายพ่วงแบตเตอรี่<#5A4E7C>]"));
-        bMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>หนีบสายพ่วงแบตเตอรี่<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          bMeta,
           "",
           "<#F4F1DE>ส่งกระแสไฟจากเครื่องปั่นไฟเข้าสู่แบตเตอรี่รถบัส",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเริ่มชาร์จแบตเตอรี่<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเริ่มชาร์จแบตเตอรี่<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       startBtn.setItemMeta(bMeta);
     }
@@ -238,4 +241,3 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
-

@@ -30,7 +30,6 @@ import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaUtils;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
@@ -120,11 +119,11 @@ public class ArenaUtils extends PluginArenaUtils {
         if(Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
           continue;
         }
-        new TitleBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT")
+        HalloweenChat.sendTitleEntry(p, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT")
           .asKey()
           .player(p)
           .arena(arena)
-          .sendPlayer();
+          .build());
       }
     }
 
@@ -151,7 +150,7 @@ public class ArenaUtils extends PluginArenaUtils {
       if(Role.isRole(Role.MURDERER, user, arena)) {
         continue;
       }
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).send(player);
+      HalloweenChat.sendTitleEntry(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).build());
     }
 
     ArmorStandHologram hologram =
@@ -201,13 +200,13 @@ public class ArenaUtils extends PluginArenaUtils {
 
     if(action == ScoreAction.GOLD_PICKUP && amount > 1) {
       int score = action.points * amount;
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
+      HalloweenChat.send(user.getPlayer(), new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
         .asKey()
         .player(user.getPlayer())
         .arena(user.getArena())
         .integer(score)
         .value(action.action)
-        .sendPlayer();
+        .build());
       user.adjustStatistic("LOCAL_SCORE", score);
       return;
     }
@@ -225,13 +224,13 @@ public class ArenaUtils extends PluginArenaUtils {
       int overallInnocents = 100 * innocents;
 
       user.adjustStatistic("LOCAL_SCORE", overallInnocents);
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
+      HalloweenChat.send(user.getPlayer(), new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
         .asKey()
         .player(user.getPlayer())
         .arena(user.getArena())
         .integer(overallInnocents)
         .value(new MessageBuilder(action.action).integer(innocents).build())
-        .sendPlayer();
+        .build());
       return;
     }
     String msg =
@@ -248,7 +247,7 @@ public class ArenaUtils extends PluginArenaUtils {
     }
 
     user.adjustStatistic("LOCAL_SCORE", action.points);
-    user.getPlayer().sendMessage(msg);
+    HalloweenChat.send(user.getPlayer(), msg);
   }
 
   public enum ScoreAction {

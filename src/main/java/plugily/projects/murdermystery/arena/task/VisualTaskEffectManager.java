@@ -100,7 +100,7 @@ public class VisualTaskEffectManager {
       session.currentStep = Math.max(0, currentStep);
       session.totalSteps = Math.max(1, totalSteps);
       if(session.statusDisplay != null && session.statusDisplay.isValid()) {
-        session.statusDisplay.setText(HalloweenChat.color(buildStatusText(session)));
+        session.statusDisplay.text(HalloweenChat.component(buildStatusText(session)));
       }
     }
 
@@ -162,9 +162,9 @@ public class VisualTaskEffectManager {
     XSound.BLOCK_BEACON_ACTIVATE.play(playerCenter, 0.9F, 1.6F);
 
     Location verifyLoc = player.getLocation().clone().add(0.0, 2.35, 0.0);
-    String verifyText = "<#5A4E7C>[<#6EEB83>Visual Task<#5A4E7C>]\n\n"
+    String verifyText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Visual Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n"
       + "<#FFB703>" + player.getName() + " <#F4F1DE>ยืนยันตัวตนแล้ว\n\n"
-      + "<#5A4E7C>(<#B8B0C8>ทำภารกิจ " + taskType.getDisplayName() + " สำเร็จ<#5A4E7C>)";
+      + "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ทำภารกิจ " + taskType.getDisplayName() + " สำเร็จ<shadow:#000000FF><#5A4E7C>)</shadow>";
     TextDisplay verifyDisplay = arena.spawnTextDisplay(verifyLoc, verifyText, true);
     if(verifyDisplay != null) {
       completionDisplays.add(verifyDisplay);
@@ -290,10 +290,10 @@ public class VisualTaskEffectManager {
 
   private String buildStatusText(ActiveVisualSession session) {
     int percent = session.totalSteps <= 0 ? 0 : Math.min(100, (int) Math.round(((double) session.currentStep / session.totalSteps) * 100.0));
-    return "<#5A4E7C>[<#72EFDD>Visual Task<#5A4E7C>]\n\n"
+    return "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>Visual Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n"
       + "<#F4F1DE>" + session.taskType.getDisplayName() + "\n"
       + "<#FFB703>" + percent + "%\n\n"
-      + "<#5A4E7C>(<#B8B0C8>กำลังยืนยันตัวตน<#5A4E7C>)";
+      + "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังยืนยันตัวตน<shadow:#000000FF><#5A4E7C>)</shadow>";
   }
 
   private Particle resolveDustParticle() {

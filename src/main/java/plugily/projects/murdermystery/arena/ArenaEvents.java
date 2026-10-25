@@ -337,7 +337,10 @@ public class ArenaEvents extends PluginArenaEvents {
     player.getInventory().clear();
     arena.getTaskManager().handlePlayerDeath(player);
     if(plugin.getConfigPreferences().getOption("HIDE_DEATH")) {
-      new MessageBuilder(MessageBuilder.ActionType.DEATH).player(player).arena(arena).sendArena();
+      String deathMsg = new MessageBuilder(MessageBuilder.ActionType.DEATH).player(player).arena(arena).build();
+      for(Player p : arena.getPlayers()) {
+        HalloweenChat.send(p, deathMsg);
+      }
     }
 
     if(arena.getArenaState() != IArenaState.ENDING && arena.getArenaState() != IArenaState.RESTARTING) {
@@ -361,8 +364,8 @@ public class ArenaEvents extends PluginArenaEvents {
         arena.getTaskManager().updatePlayerStationVisibility(player);
         int remaining = arena.getTaskManager().getPlayerTotalTasks(player) - arena.getTaskManager().getPlayerCompletedTasks(player);
         if(remaining > 0) {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>คุณเสียชีวิตแล้ว แต่ยังต้องทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจเพื่อช่วยทีม"));
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Tasks<#5A4E7C>] <#F4F1DE>บินไปทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Tasks<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คุณเสียชีวิตแล้ว แต่ยังต้องทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจเพื่อช่วยทีม");
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Tasks<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>บินไปทำภารกิจที่เหลืออีก <#FFB703>" + remaining + " <#F4F1DE>ภารกิจ");
         }
       }
     }, 5);
@@ -440,7 +443,7 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena.getArenaState() == IArenaState.IN_GAME) {
       VotingManager.DeadBody nearbyBody = arena.getVotingManager().findNearbyBody(player.getLocation(), 3.8);
       if(nearbyBody != null) {
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#F4F1DE>ร่างของ <#FFB703>" + nearbyBody.getVictimName() + " <#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<#5A4E7C>)"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ร่างของ <#FFB703>" + nearbyBody.getVictimName() + " <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<shadow:#000000FF><#5A4E7C>)</shadow>");
       }
 
       if(arena.isMurdererLocatorReceived() && Role.isRole(Role.MURDERER, user, arena) && arena.isMurderAlive(player)) {
@@ -623,7 +626,7 @@ public class ArenaEvents extends PluginArenaEvents {
       } else {
         if(arena.getTaskManager().isStationDisplayEntity(event.getRightClicked())) {
           event.setCancelled(true);
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>] <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้"));
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้");
         }
       }
     }
@@ -716,7 +719,7 @@ public class ArenaEvents extends PluginArenaEvents {
     SabotageType stationType = arena.getSabotageManager().getSabotageStationAt(targetLoc);
     if(stationType != null) {
       event.setCancelled(true);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Sabotage<#5A4E7C>] <#F4F1DE>" + stationType.getDisplayName() + " <#6EEB83>ทำงานปกติ"));
+      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>" + stationType.getDisplayName() + " <#6EEB83>ทำงานปกติ");
       return;
     }
 
@@ -726,7 +729,7 @@ public class ArenaEvents extends PluginArenaEvents {
           if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
             if(targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ()) {
               event.setCancelled(true);
-              HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>] <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้"));
+              HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้");
               return;
             }
           }

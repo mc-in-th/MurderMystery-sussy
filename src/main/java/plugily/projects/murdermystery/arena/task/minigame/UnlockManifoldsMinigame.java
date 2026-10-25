@@ -41,7 +41,7 @@ import java.util.UUID;
 
 public class UnlockManifoldsMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>ปลดล็อกท่อแรงดัน<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ปลดล็อกท่อแรงดัน<shadow:#000000FF><#5A4E7C>]</shadow>");
   private static final int[] MANIFOLD_SLOTS = {
     11, 12, 13, 14, 15,
     20, 21, 22, 23, 24
@@ -93,7 +93,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>กดตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ถึง <#FFB703>10"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กดตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ถึง <#FFB703>10");
   }
 
   private void buildGui(Inventory inv, ManifoldSession session) {
@@ -114,13 +114,14 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     ItemStack info = XMaterial.COMPARATOR.parseItem();
     ItemMeta iMeta = info.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Unlock Manifolds<#5A4E7C>]"));
-      iMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(iMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Unlock Manifolds<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        iMeta,
         "",
         "<#F4F1DE>หมายเลขถัดไป <#FFB703>" + Math.min(10, session.nextExpected),
         "",
-        "<#5A4E7C>(<#B8B0C8>กดเรียงลำดับจาก 1 ถึง 10<#5A4E7C>)"
-      ));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดเรียงลำดับจาก 1 ถึง 10<shadow:#000000FF><#5A4E7C>)</shadow>"
+      );
       info.setItemMeta(iMeta);
     }
     inv.setItem(4, info);
@@ -133,11 +134,11 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
       ItemMeta bMeta = btn.getItemMeta();
       if(bMeta != null) {
         if(pressed) {
-          bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>หมายเลข " + num + "<#5A4E7C>]"));
-          bMeta.setLore(HalloweenChat.colorLines("", "<#6EEB83>ปลดล็อกแล้ว"));
+          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>หมายเลข " + num + "<shadow:#000000FF><#5A4E7C>]</shadow>");
+          HalloweenChat.setItemLore(bMeta, "", "<#6EEB83>ปลดล็อกแล้ว");
         } else {
-          bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>หมายเลข " + num + "<#5A4E7C>]"));
-          bMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อปลดล็อก<#5A4E7C>)"));
+          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>หมายเลข " + num + "<shadow:#000000FF><#5A4E7C>]</shadow>");
+          HalloweenChat.setItemLore(bMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อปลดล็อก<shadow:#000000FF><#5A4E7C>)</shadow>");
         }
         btn.setItemMeta(bMeta);
       }
@@ -193,7 +194,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     } else {
       session.nextExpected = 1;
       XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.6F);
-      HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>กดผิดลำดับ เริ่มต้นใหม่ที่หมายเลข 1"));
+      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กดผิดลำดับ เริ่มต้นใหม่ที่หมายเลข 1");
       buildGui(topInv, session);
     }
     return true;
@@ -211,4 +212,3 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
-

@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class CleanWindshieldMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>เช็ดคราบโคลนกระจกหน้ารถ<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เช็ดคราบโคลนกระจกหน้ารถ<shadow:#000000FF><#5A4E7C>]</shadow>");
   private static final int[] TRACK_SLOTS = {10, 11, 12, 13, 14, 15, 16};
   private static final int BUCKET_SLOT = 22;
 
@@ -84,7 +84,7 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>หยิบฟองน้ำด้านล่าง แล้วคลิกเช็ดกระจกจากซ้ายไปขวาด้วยความเร็วพอดี"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>หยิบฟองน้ำด้านล่าง แล้วคลิกเช็ดกระจกจากซ้ายไปขวาด้วยความเร็วพอดี");
   }
 
   private void buildGui(Inventory inv, WipeSession session) {
@@ -105,13 +105,14 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     ItemStack statusItem = new ItemStack(Material.GLASS);
     ItemMeta sMeta = statusItem.getItemMeta();
     if(sMeta != null) {
-      sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Bus Windshield<#5A4E7C>]"));
-      sMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Windshield<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        sMeta,
         "",
         session.statusLine,
         "",
-        "<#5A4E7C>(<#B8B0C8>คลิกเช็ดกระจกจากซ้ายไปขวาตามลำดับ<#5A4E7C>)"
-      ));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกเช็ดกระจกจากซ้ายไปขวาตามลำดับ<shadow:#000000FF><#5A4E7C>)</shadow>"
+      );
       statusItem.setItemMeta(sMeta);
     }
     inv.setItem(4, statusItem);
@@ -122,36 +123,37 @@ public class CleanWindshieldMinigame implements TaskMinigame {
         slotItem = XMaterial.BROWN_STAINED_GLASS_PANE.parseItem();
         ItemMeta m = slotItem.getItemMeta();
         if(m != null) {
-          m.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#B8B0C8>คราบโคลนกระจก #" + (i + 1) + "<#5A4E7C>]"));
-          m.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>กรุณาหยิบฟองน้ำด้านล่างก่อน<#5A4E7C>)"));
+          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>คราบโคลนกระจก #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
+          HalloweenChat.setItemLore(m, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กรุณาหยิบฟองน้ำด้านล่างก่อน<shadow:#000000FF><#5A4E7C>)</shadow>");
           slotItem.setItemMeta(m);
         }
       } else if(i < session.progress) {
         slotItem = XMaterial.LIGHT_BLUE_STAINED_GLASS_PANE.parseItem();
         ItemMeta m = slotItem.getItemMeta();
         if(m != null) {
-          m.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>กระจกสะอาดแล้ว #" + (i + 1) + "<#5A4E7C>]"));
+          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กระจกสะอาดแล้ว #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
           slotItem.setItemMeta(m);
         }
       } else if(i == session.progress) {
         slotItem = XMaterial.WET_SPONGE.parseItem();
         ItemMeta m = slotItem.getItemMeta();
         if(m != null) {
-          m.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>เช็ดคราบโคลนช่องที่ " + (i + 1) + "/7<#5A4E7C>]"));
-          m.setLore(HalloweenChat.colorLines(
+          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>เช็ดคราบโคลนช่องที่ " + (i + 1) + "/7<shadow:#000000FF><#5A4E7C>]</shadow>");
+          HalloweenChat.setItemLore(
+            m,
             "",
             "<#F4F1DE>คลิกเพื่อปัดคราบโคลนไปทางขวา",
             "",
-            "<#5A4E7C>(<#B8B0C8>อย่าเช็ดเร็วหรือช้าเกินไป<#5A4E7C>)"
-          ));
+            "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>อย่าเช็ดเร็วหรือช้าเกินไป<shadow:#000000FF><#5A4E7C>)</shadow>"
+          );
           slotItem.setItemMeta(m);
         }
       } else {
         slotItem = XMaterial.BROWN_STAINED_GLASS_PANE.parseItem();
         ItemMeta m = slotItem.getItemMeta();
         if(m != null) {
-          m.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>คราบโคลนกระจก #" + (i + 1) + "<#5A4E7C>]"));
-          m.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>คลิกช่องที่มีฟองน้ำก่อนหน้าตามลำดับ<#5A4E7C>)"));
+          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>คราบโคลนกระจก #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
+          HalloweenChat.setItemLore(m, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกช่องที่มีฟองน้ำก่อนหน้าตามลำดับ<shadow:#000000FF><#5A4E7C>)</shadow>");
           slotItem.setItemMeta(m);
         }
       }
@@ -162,16 +164,17 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     ItemMeta wMeta = bucket.getItemMeta();
     if(wMeta != null) {
       if(session.spongeReady) {
-        wMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ชุบน้ำฟองน้ำแล้ว<#5A4E7C>]"));
-        wMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>คลิกแถวกลางจากซ้ายไปขวาเพื่อเช็ดกระจก<#5A4E7C>)"));
+        HalloweenChat.setItemName(wMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ชุบน้ำฟองน้ำแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(wMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกแถวกลางจากซ้ายไปขวาเพื่อเช็ดกระจก<shadow:#000000FF><#5A4E7C>)</shadow>");
       } else {
-        wMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ถังน้ำและฟองน้ำเช็ดกระจก<#5A4E7C>]"));
-        wMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(wMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ถังน้ำและฟองน้ำเช็ดกระจก<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          wMeta,
           "",
           "<#F4F1DE>หยิบฟองน้ำชุบน้ำขึ้นมาเช็ดโคลนหน้ากระจกรถบัส",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อหยิบฟองน้ำ<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อหยิบฟองน้ำ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       bucket.setItemMeta(wMeta);
     }
@@ -278,4 +281,3 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
-

@@ -164,8 +164,8 @@ public class CutsceneManager {
       preparePlayerForCutscene(player, arena.getPlayers(), initialEyeLoc, cameraRig);
       HalloweenChat.sendTitles(
         player,
-        HalloweenChat.color("<#5A4E7C>[<#FF7518>" + arena.getMapName() + "<#5A4E7C>]"),
-        HalloweenChat.color("<#B8B0C8>ระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ"),
+        "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>" + arena.getMapName() + "<shadow:#000000FF><#5A4E7C>]</shadow>",
+        "<#B8B0C8>ระวังคนร้ายที่แฝงตัวอยู่ในกลุ่มของคุณ",
         15,
         45,
         15
@@ -562,7 +562,7 @@ public class CutsceneManager {
         session.latestFrame = CutsceneFrame.fromLocation(player.getLocation());
         int currentFrames = recorded.size();
         if(currentFrames >= MAX_RECORDING_FRAMES) {
-          player.sendMessage(HalloweenChat.color("<#5A4E7C>[<#FF7518>Cutscene<#5A4E7C>] <#FFB703>บันทึกครบเวลาสูงสุด ระบบทำการบันทึกให้อัตโนมัติ"));
+          HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>บันทึกครบเวลาสูงสุด ระบบทำการบันทึกให้อัตโนมัติ");
           stopRecording(plugin, player, true);
           cancel();
           return;
@@ -571,13 +571,11 @@ public class CutsceneManager {
           double seconds = (double) currentFrames / FPS;
           HalloweenChat.sendActionBar(
             player,
-            HalloweenChat.color(
-              "<#5A4E7C>[<#FF3B47>Recording<#5A4E7C>] <#F4F1DE>ห้อง <#FFB703>"
-                + arena.getId()
-                + " <#5A4E7C>| <#6EEB83>"
-                + String.format(Locale.US, "%.1fs", seconds)
-                + " <#5A4E7C>(<#B8B0C8>/mma stopcutscene<#5A4E7C>)"
-            )
+            "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Recording<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ห้อง <#FFB703>"
+              + arena.getId()
+              + " <shadow:#000000FF><#5A4E7C>|</shadow> <#6EEB83>"
+              + String.format(Locale.US, "%.1fs", seconds)
+              + " <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>/mma stopcutscene<shadow:#000000FF><#5A4E7C>)</shadow>"
           );
         }
       }
@@ -628,7 +626,7 @@ public class CutsceneManager {
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
         HalloweenChat.sendActionBar(
           player,
-          HalloweenChat.color("<#5A4E7C>[<#6EEB83>Cutscene<#5A4E7C>] <#F4F1DE>บันทึกฉากเปิดตัวห้อง <#FFB703>" + arena.getId() + " <#6EEB83>สำเร็จ")
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>บันทึกฉากเปิดตัวห้อง <#FFB703>" + arena.getId() + " <#6EEB83>สำเร็จ"
         );
       }
     }
@@ -731,12 +729,10 @@ public class CutsceneManager {
         double remaining = (double) (totalFrames - idx) / FPS;
         HalloweenChat.sendActionBar(
           player,
-          HalloweenChat.color(
-            "<#5A4E7C>[<#FF7518>Preview<#5A4E7C>] <#F4F1DE>ห้อง <#FFB703>"
-              + arena.getId()
-              + " <#5A4E7C>| <#6EEB83>เหลือ "
-              + String.format(Locale.US, "%.1fs", remaining)
-          )
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Preview<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ห้อง <#FFB703>"
+            + arena.getId()
+            + " <shadow:#000000FF><#5A4E7C>|</shadow> <#6EEB83>เหลือ "
+            + String.format(Locale.US, "%.1fs", remaining)
         );
       }
     }.runTaskTimer(plugin, 0L, 1L);

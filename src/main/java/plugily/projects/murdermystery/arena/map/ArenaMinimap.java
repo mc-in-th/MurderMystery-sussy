@@ -137,23 +137,23 @@ public class ArenaMinimap {
       }
 
       if(isMurderer) {
-        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>Impostor Radar<#5A4E7C>] <#F4F1DE>เรดาร์ฆาตกร"));
-        meta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Impostor Radar<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เรดาร์ฆาตกร");
+        HalloweenChat.setItemLore(meta,
           "<#B8B0C8>แสดงตำแหน่งท่อและจุดทำภารกิจทั้งหมด",
           "<#FF3B47>[V] <#F4F1DE>ท่อระบายน้ำ",
           "<#FFB703>[!] <#F4F1DE>จุดภารกิจของผู้โดยสาร",
           "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
-          "<#5A4E7C>(<#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       } else {
-        meta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Task Minimap<#5A4E7C>] <#F4F1DE>แผนที่ภารกิจ"));
-        meta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task Minimap<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>แผนที่ภารกิจ");
+        HalloweenChat.setItemLore(meta,
           "<#B8B0C8>แสดงตำแหน่งภารกิจซ่อมรถบัสของคุณ",
           "<#FFB703>[!] <#F4F1DE>ภารกิจที่ยังไม่เสร็จ",
           "<#6EEB83>[/] <#F4F1DE>ภารกิจที่เสร็จแล้ว",
           "<#72EFDD>[^] <#F4F1DE>ตำแหน่งและทิศทางของคุณ",
-          "<#5A4E7C>(<#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ถือไว้ในมือซ้ายเพื่อดูแผนที่<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       item.setItemMeta(meta);
     }

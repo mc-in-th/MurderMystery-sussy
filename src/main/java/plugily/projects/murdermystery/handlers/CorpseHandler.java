@@ -130,7 +130,7 @@ public class CorpseHandler implements Listener {
       arena.addHead(new Stand(null, hitboxStand));
 
       TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-        "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<#5A4E7C>)");
+        "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<shadow:#000000FF><#5A4E7C>)</shadow>");
 
       List<ArmorStand> corpseStands = new ArrayList<>();
       corpseStands.add(stand);
@@ -144,7 +144,7 @@ public class CorpseHandler implements Listener {
     //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
     arena.addCorpse(new Corpse(hologram, corpse));
     TextDisplay td = arena.spawnTextDisplay(deathLoc.clone().add(0, 1.15, 0),
-      "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>]\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<#5A4E7C>(<#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<#5A4E7C>)");
+      "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ร่างของ <#FFB703>" + player.getName() + "\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<shadow:#000000FF><#5A4E7C>)</shadow>");
     arena.getVotingManager().registerDeadBody(player.getName(), deathLoc, new ArrayList<>(), td, hologram);
   }
 
@@ -154,6 +154,9 @@ public class CorpseHandler implements Listener {
     hologram.appendLine(plugin.getLastWordsManager().getRandomLastWord(player));
     for(ArmorStand stand : hologram.getArmorStands()) {
       stand.setPersistent(false);
+      if(stand.getCustomName() != null) {
+        stand.customName(HalloweenChat.component(stand.getCustomName()));
+      }
     }
     return hologram;
   }

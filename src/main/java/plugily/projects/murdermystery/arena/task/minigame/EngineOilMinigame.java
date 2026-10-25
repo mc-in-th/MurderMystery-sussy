@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class EngineOilMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>เช็คน้ำมันเครื่องยนต์<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เช็คน้ำมันเครื่องยนต์<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static class OilSession {
     int oilLevel = 1;
@@ -88,7 +88,7 @@ public class EngineOilMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>คลิกกระป๋องน้ำมันตรงกลางเพื่อเติมให้ถึงขีดสีเขียว แล้วกดปิดฝาด้านล่าง"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกกระป๋องน้ำมันตรงกลางเพื่อเติมให้ถึงขีดสีเขียว แล้วกดปิดฝาด้านล่าง");
   }
 
   private void buildGui(Inventory inv, OilSession session) {
@@ -109,13 +109,14 @@ public class EngineOilMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Engine Oil<#5A4E7C>]"));
-      iMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(iMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Engine Oil<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        iMeta,
         "",
         "<#F4F1DE>1. คลิกกระป๋องน้ำมันเครื่องตรงกลางเพื่อเติมน้ำมัน",
         "<#F4F1DE>2. เติมจนเกจวัดด้านบนถึงขีดมาตรฐานสีเขียว",
         "<#F4F1DE>3. กดปิดฝาน้ำมันเครื่องด้านล่างเพื่อจบภารกิจ"
-      ));
+      );
       instruction.setItemMeta(iMeta);
     }
     inv.setItem(INSTRUCTION_SLOT, instruction);
@@ -135,19 +136,19 @@ public class EngineOilMinigame implements TaskMinigame {
       ItemMeta bMeta = bar.getItemMeta();
       if(bMeta != null) {
         if(i == 0) {
-          bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ขีดต่ำสุด<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ขีดต่ำสุด<shadow:#000000FF><#5A4E7C>]</shadow>");
         } else if(i == 1) {
-          bMeta.setDisplayName(HalloweenChat.color(session.oilLevel >= 1
-            ? "<#5A4E7C>[<#FF7518>ระดับต่ำ<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>ว่าง<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, session.oilLevel >= 1
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ระดับต่ำ<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ว่าง<shadow:#000000FF><#5A4E7C>]</shadow>");
         } else if(i == 2) {
-          bMeta.setDisplayName(HalloweenChat.color(session.oilLevel >= 2
-            ? "<#5A4E7C>[<#FFB703>ระดับปานกลาง<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>ว่าง<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, session.oilLevel >= 2
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ระดับปานกลาง<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ว่าง<shadow:#000000FF><#5A4E7C>]</shadow>");
         } else {
-          bMeta.setDisplayName(HalloweenChat.color(session.oilLevel >= 3
-            ? "<#5A4E7C>[<#6EEB83>ขีดมาตรฐานเต็ม<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>ขีดเป้าหมาย<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, session.oilLevel >= 3
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ขีดมาตรฐานเต็ม<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ขีดเป้าหมาย<shadow:#000000FF><#5A4E7C>]</shadow>");
         }
         bar.setItemMeta(bMeta);
       }
@@ -158,19 +159,21 @@ public class EngineOilMinigame implements TaskMinigame {
     ItemMeta oMeta = oilCan.getItemMeta();
     if(oMeta != null) {
       if(session.oilLevel >= 3) {
-        oMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>น้ำมันเครื่องเต็มขีดมาตรฐานแล้ว<#5A4E7C>]"));
-        oMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(oMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>น้ำมันเครื่องเต็มขีดมาตรฐานแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          oMeta,
           "",
-          "<#5A4E7C>(<#6EEB83>กดปิดฝาน้ำมันเครื่องด้านล่างได้เลย<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>กดปิดฝาน้ำมันเครื่องด้านล่างได้เลย<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       } else {
-        oMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>กระป๋องน้ำมันเครื่อง<#5A4E7C>]"));
-        oMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(oMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>กระป๋องน้ำมันเครื่อง<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          oMeta,
           "",
-          "<#F4F1DE>ระดับปัจจุบัน <#FFB703>" + session.oilLevel + "<#5A4E7C>/<#F4F1DE>3",
+          "<#F4F1DE>ระดับปัจจุบัน <#FFB703>" + session.oilLevel + "<shadow:#000000FF><#5A4E7C>/</shadow><#F4F1DE>3",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเติมน้ำมัน +1 ขีด<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเติมน้ำมัน +1 ขีด<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       oilCan.setItemMeta(oMeta);
     }
@@ -180,21 +183,23 @@ public class EngineOilMinigame implements TaskMinigame {
     ItemMeta cMeta = cap.getItemMeta();
     if(cMeta != null) {
       if(session.oilLevel >= 3) {
-        cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ปิดฝาน้ำมันเครื่อง<#5A4E7C>]"));
-        cMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ปิดฝาน้ำมันเครื่อง<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          cMeta,
           "",
           "<#F4F1DE>น้ำมันเครื่องได้ระดับมาตรฐานแล้ว",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อจบภารกิจ<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อจบภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       } else {
-        cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#B8B0C8>ปิดฝาน้ำมันเครื่อง<#5A4E7C>]"));
-        cMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ปิดฝาน้ำมันเครื่อง<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          cMeta,
           "",
           "<#FF3B47>ต้องเติมน้ำมันให้ถึงขีดสีเขียวก่อน",
           "",
-          "<#5A4E7C>(<#B8B0C8>ระดับปัจจุบัน " + session.oilLevel + "/3<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ระดับปัจจุบัน " + session.oilLevel + "/3<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       cap.setItemMeta(cMeta);
     }
@@ -227,9 +232,9 @@ public class EngineOilMinigame implements TaskMinigame {
 
         if(session.oilLevel >= 3) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>น้ำมันเครื่องเต็มแล้ว กดปิดฝาด้านล่างได้เลย"));
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>น้ำมันเครื่องเต็มแล้ว กดปิดฝาด้านล่างได้เลย");
         } else {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เติมน้ำมันเครื่อง <#FFB703>" + session.oilLevel + "/3"));
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เติมน้ำมันเครื่อง <#FFB703>" + session.oilLevel + "/3");
         }
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
@@ -245,7 +250,7 @@ public class EngineOilMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>เช็คน้ำมันเครื่องยนต์สำเร็จ"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เช็คน้ำมันเครื่องยนต์สำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -257,7 +262,7 @@ public class EngineOilMinigame implements TaskMinigame {
         }, 8L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>ต้องคลิกเติมน้ำมันตรงกลางให้ครบ 3 ระดับก่อน"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ต้องคลิกเติมน้ำมันตรงกลางให้ครบ 3 ระดับก่อน");
       }
       return true;
     }

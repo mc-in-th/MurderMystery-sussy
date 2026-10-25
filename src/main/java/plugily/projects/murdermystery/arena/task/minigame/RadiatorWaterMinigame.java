@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class RadiatorWaterMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>เช็คระดับน้ำในหม้อน้ำ<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เช็คระดับน้ำในหม้อน้ำ<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static class RadiatorSession {
     boolean capOpen = false;
@@ -91,7 +91,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เปิดฝาหม้อน้ำทางซ้าย แล้วเทน้ำยาหล่อเย็นทางขวาให้เต็ม"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เปิดฝาหม้อน้ำทางซ้าย แล้วเทน้ำยาหล่อเย็นทางขวาให้เต็ม");
   }
 
   private void buildGui(Inventory inv, RadiatorSession session) {
@@ -112,15 +112,16 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     ItemStack instruction = new ItemStack(Material.BOOK);
     ItemMeta iMeta = instruction.getItemMeta();
     if(iMeta != null) {
-      iMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>Radiator Coolant<#5A4E7C>]"));
-      iMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(iMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>Radiator Coolant<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        iMeta,
         "",
         "<#F4F1DE>1. คลิกเปิดฝาหม้อน้ำทางซ้าย",
         "<#F4F1DE>2. คลิกขวดน้ำยาหล่อเย็นทางขวาจนถึงขีดสีเขียว",
         "<#F4F1DE>3. กดปิดฝาหม้อน้ำด้านล่างเพื่อจบภารกิจ",
         "",
-        "<#5A4E7C>(<#72EFDD>Visual Task ยืนยันตัวตนต่อผู้เล่นรอบข้าง<#5A4E7C>)"
-      ));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>Visual Task ยืนยันตัวตนต่อผู้เล่นรอบข้าง<shadow:#000000FF><#5A4E7C>)</shadow>"
+      );
       instruction.setItemMeta(iMeta);
     }
     inv.setItem(INSTRUCTION_SLOT, instruction);
@@ -140,15 +141,15 @@ public class RadiatorWaterMinigame implements TaskMinigame {
       ItemMeta bMeta = bar.getItemMeta();
       if(bMeta != null) {
         if(i == 0) {
-          bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF3B47>ระดับต่ำ<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ระดับต่ำ<shadow:#000000FF><#5A4E7C>]</shadow>");
         } else if(i == 3) {
-          bMeta.setDisplayName(HalloweenChat.color(session.waterLevel >= 3
-            ? "<#5A4E7C>[<#6EEB83>ขีดมาตรฐานเต็ม<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>ขีดเป้าหมาย<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, session.waterLevel >= 3
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ขีดมาตรฐานเต็ม<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ขีดเป้าหมาย<shadow:#000000FF><#5A4E7C>]</shadow>");
         } else {
-          bMeta.setDisplayName(HalloweenChat.color(session.waterLevel >= i
-            ? "<#5A4E7C>[<#72EFDD>ระดับน้ำยาหล่อเย็น<#5A4E7C>]"
-            : "<#5A4E7C>[<#B8B0C8>ว่าง<#5A4E7C>]"));
+          HalloweenChat.setItemName(bMeta, session.waterLevel >= i
+            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>ระดับน้ำยาหล่อเย็น<shadow:#000000FF><#5A4E7C>]</shadow>"
+            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ว่าง<shadow:#000000FF><#5A4E7C>]</shadow>");
         }
         bar.setItemMeta(bMeta);
       }
@@ -160,21 +161,22 @@ public class RadiatorWaterMinigame implements TaskMinigame {
       cap = XMaterial.BREWING_STAND.parseItem();
       ItemMeta cMeta = cap.getItemMeta();
       if(cMeta != null) {
-        cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>เปิดฝาหม้อน้ำแล้ว<#5A4E7C>]"));
-        cMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>คลิกขวดน้ำยาทางขวาเพื่อเติม<#5A4E7C>)"));
+        HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>เปิดฝาหม้อน้ำแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(cMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกขวดน้ำยาทางขวาเพื่อเติม<shadow:#000000FF><#5A4E7C>)</shadow>");
         cap.setItemMeta(cMeta);
       }
     } else {
       cap = XMaterial.CAULDRON.parseItem();
       ItemMeta cMeta = cap.getItemMeta();
       if(cMeta != null) {
-        cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>ฝาหม้อน้ำ<#5A4E7C>]"));
-        cMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ฝาหม้อน้ำ<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          cMeta,
           "",
           "<#F4F1DE>เปิดฝาระบายแรงดันก่อนเติมน้ำยา",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเปิดฝาหม้อน้ำ<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเปิดฝาหม้อน้ำ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
         cap.setItemMeta(cMeta);
       }
     }
@@ -183,13 +185,14 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     ItemStack funnel = new ItemStack(session.waterLevel >= 3 ? Material.WATER_BUCKET : Material.BUCKET);
     ItemMeta fMeta = funnel.getItemMeta();
     if(fMeta != null) {
-      fMeta.setDisplayName(HalloweenChat.color(session.waterLevel >= 3
-        ? "<#5A4E7C>[<#6EEB83>น้ำยาหล่อเย็นเต็มแล้ว<#5A4E7C>]"
-        : "<#5A4E7C>[<#72EFDD>ช่องเติมน้ำยาหม้อน้ำ<#5A4E7C>]"));
-      fMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(fMeta, session.waterLevel >= 3
+        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>น้ำยาหล่อเย็นเต็มแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"
+        : "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>ช่องเติมน้ำยาหม้อน้ำ<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        fMeta,
         "",
         "<#F4F1DE>สถานะ " + (!session.capOpen ? "<#FF3B47>ฝาปิดอยู่" : (session.waterLevel >= 3 ? "<#6EEB83>เต็มมาตรฐาน" : "<#FFB703>พร้อมเติมน้ำยา"))
-      ));
+      );
       funnel.setItemMeta(fMeta);
     }
     inv.setItem(FUNNEL_SLOT, funnel);
@@ -198,19 +201,20 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     ItemMeta bMeta = bottle.getItemMeta();
     if(bMeta != null) {
       if(!session.capOpen) {
-        bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#B8B0C8>ขวดน้ำยาหล่อเย็น<#5A4E7C>]"));
-        bMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#FF3B47>กรุณาเปิดฝาหม้อน้ำทางซ้ายก่อน<#5A4E7C>)"));
+        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ขวดน้ำยาหล่อเย็น<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(bMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#FF3B47>กรุณาเปิดฝาหม้อน้ำทางซ้ายก่อน<shadow:#000000FF><#5A4E7C>)</shadow>");
       } else if(session.waterLevel >= 3) {
-        bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>เติมถึงขีดมาตรฐานแล้ว<#5A4E7C>]"));
-        bMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#6EEB83>กดปิดฝาหม้อน้ำด้านล่างได้เลย<#5A4E7C>)"));
+        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>เติมถึงขีดมาตรฐานแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(bMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>กดปิดฝาหม้อน้ำด้านล่างได้เลย<shadow:#000000FF><#5A4E7C>)</shadow>");
       } else {
-        bMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#72EFDD>ขวดน้ำยาหล่อเย็น<#5A4E7C>]"));
-        bMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>ขวดน้ำยาหล่อเย็น<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          bMeta,
           "",
           "<#F4F1DE>เทน้ำยาหล่อเย็นลงในหม้อน้ำรถบัส",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อเทน้ำยา +1 ระดับ<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเทน้ำยา +1 ระดับ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       bottle.setItemMeta(bMeta);
     }
@@ -220,21 +224,23 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     ItemMeta sMeta = seal.getItemMeta();
     if(sMeta != null) {
       if(session.capOpen && session.waterLevel >= 3) {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#6EEB83>ปิดฝาหม้อน้ำให้แน่น<#5A4E7C>]"));
-        sMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ปิดฝาหม้อน้ำให้แน่น<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          sMeta,
           "",
           "<#F4F1DE>ระดับน้ำยาหล่อเย็นพร้อมใช้งาน",
           "",
-          "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อจบภารกิจ<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อจบภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       } else {
-        sMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#B8B0C8>ปิดฝาหม้อน้ำ<#5A4E7C>]"));
-        sMeta.setLore(HalloweenChat.colorLines(
+        HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ปิดฝาหม้อน้ำ<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(
+          sMeta,
           "",
           "<#FF3B47>ต้องเติมน้ำยาให้ถึงขีดสีเขียวก่อน",
           "",
-          "<#5A4E7C>(<#B8B0C8>ระดับปัจจุบัน " + session.waterLevel + "/3<#5A4E7C>)"
-        ));
+          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ระดับปัจจุบัน " + session.waterLevel + "/3<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
       seal.setItemMeta(sMeta);
     }
@@ -265,7 +271,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 1F, 1.2F);
         XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
         arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, 1, 4);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#6EEB83>เปิดฝาหม้อน้ำแล้ว คลิกขวดน้ำยาทางขวาเพื่อเติม"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เปิดฝาหม้อน้ำแล้ว คลิกขวดน้ำยาทางขวาเพื่อเติม");
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
       }
@@ -276,7 +282,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     if(rawSlot == BOTTLE_SLOT) {
       if(!session.capOpen) {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.8F, 1F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>กรุณาเปิดฝาหม้อน้ำทางซ้ายก่อน"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กรุณาเปิดฝาหม้อน้ำทางซ้ายก่อน");
         return true;
       }
 
@@ -288,9 +294,9 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
         if(session.waterLevel >= 3) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>น้ำยาหล่อเย็นเต็มแล้ว กดปิดฝาหม้อน้ำด้านล่างได้เลย"));
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>น้ำยาหล่อเย็นเต็มแล้ว กดปิดฝาหม้อน้ำด้านล่างได้เลย");
         } else {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>เติมน้ำยาหล่อเย็น <#72EFDD>" + session.waterLevel + "/3"));
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เติมน้ำยาหล่อเย็น <#72EFDD>" + session.waterLevel + "/3");
         }
       } else {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
@@ -307,7 +313,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>เช็คระดับน้ำในหม้อน้ำสำเร็จ"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เช็คระดับน้ำในหม้อน้ำสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -319,7 +325,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         }, 8L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>Task<#5A4E7C>] <#FF3B47>ต้องเปิดฝาและเติมน้ำยาให้ครบ 3 ระดับก่อน"));
+        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ต้องเปิดฝาและเติมน้ำยาให้ครบ 3 ระดับก่อน");
       }
       return true;
     }

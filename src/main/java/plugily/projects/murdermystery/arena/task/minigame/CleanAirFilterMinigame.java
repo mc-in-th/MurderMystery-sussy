@@ -42,7 +42,7 @@ import java.util.UUID;
 
 public class CleanAirFilterMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<#5A4E7C>[<#FF7518>ทำความสะอาดไส้กรองอากาศ<#5A4E7C>]");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ทำความสะอาดไส้กรองอากาศ<shadow:#000000FF><#5A4E7C>]</shadow>");
   private static final int TOTAL_LEAVES = 6;
   private static final int[] FILTER_SLOTS = {
     11, 12, 13, 14, 15, 16,
@@ -100,7 +100,7 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#F4F1DE>คลิกหยิบใบไม้ที่อุดตันไส้กรองออกให้หมด"));
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกหยิบใบไม้ที่อุดตันไส้กรองออกให้หมด");
   }
 
   private void buildGui(Inventory inv, FilterSession session) {
@@ -127,13 +127,14 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     ItemStack chute = new ItemStack(Material.HOPPER);
     ItemMeta cMeta = chute.getItemMeta();
     if(cMeta != null) {
-      cMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FF7518>Air Filter<#5A4E7C>]"));
-      cMeta.setLore(HalloweenChat.colorLines(
+      HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Air Filter<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemLore(
+        cMeta,
         "",
-        "<#F4F1DE>สิ่งอุดตันที่เหลือ <#FFB703>" + remaining + "<#5A4E7C>/<#F4F1DE>" + TOTAL_LEAVES,
+        "<#F4F1DE>สิ่งอุดตันที่เหลือ <#FFB703>" + remaining + "<shadow:#000000FF><#5A4E7C>/</shadow><#F4F1DE>" + TOTAL_LEAVES,
         "",
-        "<#5A4E7C>(<#B8B0C8>คลิกใบไม้ในช่องกรองเพื่อดูดทิ้ง<#5A4E7C>)"
-      ));
+        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกใบไม้ในช่องกรองเพื่อดูดทิ้ง<shadow:#000000FF><#5A4E7C>)</shadow>"
+      );
       chute.setItemMeta(cMeta);
     }
     inv.setItem(CHUTE_SLOT, chute);
@@ -143,8 +144,8 @@ public class CleanAirFilterMinigame implements TaskMinigame {
       ItemStack leaf = leafMats[slot % leafMats.length].parseItem();
       ItemMeta lMeta = leaf.getItemMeta();
       if(lMeta != null) {
-        lMeta.setDisplayName(HalloweenChat.color("<#5A4E7C>[<#FFB703>เศษใบไม้อุดตัน<#5A4E7C>]"));
-        lMeta.setLore(HalloweenChat.colorLines("", "<#5A4E7C>(<#B8B0C8>กดคลิกเพื่อกำจัดออก<#5A4E7C>)"));
+        HalloweenChat.setItemName(lMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>เศษใบไม้อุดตัน<shadow:#000000FF><#5A4E7C>]</shadow>");
+        HalloweenChat.setItemLore(lMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อกำจัดออก<shadow:#000000FF><#5A4E7C>)</shadow>");
         leaf.setItemMeta(lMeta);
       }
       inv.setItem(slot, leaf);
@@ -195,4 +196,3 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
-
