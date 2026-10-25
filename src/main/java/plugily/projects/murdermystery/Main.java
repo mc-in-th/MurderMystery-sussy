@@ -18,10 +18,13 @@
 
 package plugily.projects.murdermystery;
 
+import java.io.File;
+import java.lang.reflect.Field;
 import org.jetbrains.annotations.TestOnly;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.setup.SetupInventory;
 import plugily.projects.minigamesbox.classic.handlers.setup.categories.PluginSetupCategoryManager;
+import plugily.projects.minigamesbox.classic.utils.services.ServiceRegistry;
 import plugily.projects.minigamesbox.classic.utils.services.metrics.Metrics;
 import plugily.projects.murdermystery.arena.*;
 import plugily.projects.murdermystery.arena.special.SpecialBlockEvents;
@@ -63,8 +66,12 @@ public class Main extends PluginMain {
   @Override
   public void onEnable() {
     long start = System.currentTimeMillis();
+    disableExternalServiceRegistry();
     MessageInitializer messageInitializer = new MessageInitializer(this);
     super.onEnable();
+    if(!isEnabled()) {
+      return;
+    }
     getDebugger().debug("[System] [Plugin] Initialization start");
     arenaRegistry = new ArenaRegistry(this);
     new PlaceholderInitializer(this);
@@ -83,6 +90,23 @@ public class Main extends PluginMain {
       .debug(
         "[System] [Plugin] Initialization finished took {0}ms",
         System.currentTimeMillis() - start);
+  }
+
+  private void disableExternalServiceRegistry() {
+    try {
+      File corruptLocaleData = new File(getDataFolder(), "locales/locale_data.yml");
+      if(corruptLocaleData.exists()) {
+        corruptLocaleData.delete();
+      }
+      Field registeredServiceField = ServiceRegistry.class.getDeclaredField("registeredService");
+      registeredServiceField.setAccessible(true);
+      registeredServiceField.set(null, this);
+
+      Field serviceEnabledField = ServiceRegistry.class.getDeclaredField("serviceEnabled");
+      serviceEnabledField.setAccessible(true);
+      serviceEnabledField.setBoolean(null, false);
+    } catch(ReflectiveOperationException ignored) {
+    }
   }
 
   @Override
