@@ -491,9 +491,13 @@ public final class HalloweenChat {
                 || existingStr.contains("กองไฟ")
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
+            boolean hasServerIp = false;
             for(Object item : (List<?>) existing) {
               if(item instanceof String) {
                 String itemStr = (String) item;
+                if(itemStr.contains("mcth.gg")) {
+                  hasServerIp = true;
+                }
                 if(itemStr.contains("<gradient:")
                     || itemStr.contains("MurderMystery")
                     || itemStr.contains("%plugin_name%")
@@ -504,6 +508,9 @@ public final class HalloweenChat {
                   break;
                 }
               }
+            }
+            if(key.startsWith("Scoreboard.Content.") && !hasServerIp) {
+              hasStaleGradient = true;
             }
           }
           if(isMissing || hasStaleGradient) {

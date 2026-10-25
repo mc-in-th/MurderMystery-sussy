@@ -94,6 +94,8 @@ Scoreboard:
       - ""
       - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
       - "<#F4F1DE>ขั้นต่ำ: <#FFB703>%arena_min_players% คน"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     Starting:
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
@@ -102,6 +104,8 @@ Scoreboard:
       - ""
       - "<#F4F1DE>เริ่มใน: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while ingame
     In-Game:
@@ -109,18 +113,24 @@ Scoreboard:
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     In-Game-Murderer:
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while state is ending
     Ending:
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>จบเกมแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"
       - "<#F4F1DE>ฆาตกร: <#FF3B47>%arena_murderer_list%"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
     # Contents of scoreboard while state is restarting
     Restarting:
@@ -129,6 +139,8 @@ Scoreboard:
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
       - "<#B8B0C8>กำลังเตรียมสนามประลองใหม่"
+      - ""
+      - "<#FF7518>mcth.gg"
       - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
 
 #

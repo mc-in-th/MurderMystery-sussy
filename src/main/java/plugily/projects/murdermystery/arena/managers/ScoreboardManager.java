@@ -167,6 +167,8 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add("");
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
+      lines.add("");
+      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
       lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
@@ -185,6 +187,8 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add("");
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
+      lines.add("");
+      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
       lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
@@ -205,8 +209,13 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ภารกิจหลอก<shadow:#000000FF><#5A4E7C>]</shadow>"));
         List<GameTask> sampleTasks = gameArena.getTaskManager().getTasksForMurderer();
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
+          int shown = 0;
           for(GameTask task : sampleTasks) {
+            if(shown >= 6) {
+              break;
+            }
             lines.add(HalloweenChat.color("<#B8B0C8>- <#F4F1DE>" + task.getTaskType().getDisplayName()));
+            shown++;
           }
         } else {
           lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจในห้องนี้"));
@@ -217,7 +226,11 @@ public class ScoreboardManager extends PluginScoreboardManager {
         int total = gameArena.getTaskManager().getPlayerTotalTasks(player);
         lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ภารกิจของคุณ<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + completed + "<shadow:#000000FF><#5A4E7C>/</shadow><#FFB703>" + total));
         if(tasks != null && !tasks.isEmpty()) {
+          int shown = 0;
           for(GameTask task : tasks) {
+            if(shown >= 6) {
+              break;
+            }
             String visualTag = (task.getTaskType().isVisual() && gameArena.isVisualTasksEnabled())
               ? " <#72EFDD>[V]"
               : "";
@@ -226,11 +239,14 @@ public class ScoreboardManager extends PluginScoreboardManager {
             } else {
               lines.add(HalloweenChat.color("<#FF3B47>[x] <#F4F1DE>" + task.getTaskType().getDisplayName() + visualTag));
             }
+            shown++;
           }
         } else {
           lines.add(HalloweenChat.color("<#B8B0C8>ไม่มีภารกิจ"));
         }
       }
+      lines.add("");
+      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
       lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
@@ -257,6 +273,8 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<#F4F1DE>ฆาตกร: <#FF3B47>" + murdererNames));
       }
       lines.add(HalloweenChat.color("<#F4F1DE>กลับล็อบบี้ใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
+      lines.add("");
+      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
       lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
@@ -268,6 +286,8 @@ public class ScoreboardManager extends PluginScoreboardManager {
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add("");
       lines.add(HalloweenChat.color("<#B8B0C8>กำลังเตรียมสนามประลองใหม่"));
+      lines.add("");
+      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
       lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
       return lines;
     }
