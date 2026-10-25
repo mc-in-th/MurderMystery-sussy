@@ -8,19 +8,6 @@
 #
 # Also see the wiki for further reference!
 
-Role-Pass:
-  permission: ""
-  execute:
-    - "p:mm roleselector"
-  displayname: "&#FF7518&lเลือกใช้บัตรบทบาท &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
-  lore:
-    - "&#B8B0C8ใช้บัตรเพื่อเลือกรับบทบาทที่ต้องการในรอบนี้"
-  material: CHEST
-  slot: 4
-  stage: LOBBY
-  force: true
-  move: false
-
 # Uses bungee.yml configuration - if enabled it tries to connect to your hub
 Lobby-Leave:
   permission: ""

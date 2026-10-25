@@ -253,22 +253,6 @@ In-Game:
         Bow: "<#72EFDD>เข็มทิศค้นหาธนู"
         Innocent: "<#FF3B47>เข็มทิศตามล่าผู้โดยสาร"
         Watch-Out: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ระวังตัวไว้<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ตอนนี้ฆาตกรสามารถตามรอยผู้รอดชีวิตได้แล้ว"
-      Pass:
-        Name: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เลือกใช้บัตรบทบาท<shadow:#000000FF><#5A4E7C>]</shadow>"
-        Role:
-          Murderer:
-            Name: "<#FF3B47>รับบทฆาตกร"
-            Lore:
-              - "<#B8B0C8>ใช้บัตรฆาตกร 1 ใบ"
-              - "<#F4F1DE>คุณมีอยู่ <#FFB703>%number% ใบ"
-          Detective:
-            Name: "<#72EFDD>รับบทนักสืบ"
-            Lore:
-              - "<#B8B0C8>ใช้บัตรนักสืบ 1 ใบ"
-              - "<#F4F1DE>คุณมีอยู่ <#FFB703>%number% ใบ"
-        Fail: "%color_chat_issue%%plugin_prefix% คุณมีบัตรบทบาท %value% ไม่เพียงพอ"
-        Success: "%plugin_prefix% <#6EEB83>คุณจะได้รับบท %value% ในรอบถัดไป"
-        Change: "%plugin_prefix% ตอนนี้คุณมีบัตรบทบาท %value% จำนวน %number% ใบ"
       Playing:
         Time-Left: "5,20,5;<#FFB703>เหลือเวลาอีก %arena_time%;<#B8B0C8>อดทนไว้ หากหมดเวลาฆาตกรจะเป็นฝ่ายแพ้"
         Role:
@@ -435,8 +419,6 @@ Leaderboard:
     Next-Level-Exp: "ประสบการณ์สู่เลเวลถัดไป ▸ %number%"
     Kills: "จำนวนการสังหาร ▸ %number%"
     Deaths: "จำนวนครั้งที่เสียชีวิต ▸ %number%"
-    Murderer-Pass: "บัตรฆาตกร ▸ %number%"
-    Detective-Pass: "บัตรนักสืบ ▸ %number%"
     Murderer-Contribution: "แต้มสะสมโอกาสฆาตกร ▸ %number%"
     Detective-Contribution: "แต้มสะสมโอกาสนักสืบ ▸ %number%"
   Invalid-Name: "%color_chat_issue%ชื่อสถิติไม่ถูกต้อง ประเภทที่ใช้ได้: %value%"

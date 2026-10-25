@@ -20,6 +20,7 @@ package plugily.projects.murdermystery;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.TestOnly;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.setup.SetupInventory;
@@ -98,6 +99,14 @@ public class Main extends PluginMain {
       if(corruptLocaleData.exists()) {
         corruptLocaleData.delete();
       }
+      File specialItemsFile = new File(getDataFolder(), "special_items.yml");
+      if(specialItemsFile.exists()) {
+        YamlConfiguration specialItemsConfig = YamlConfiguration.loadConfiguration(specialItemsFile);
+        if(specialItemsConfig.contains("Role-Pass")) {
+          specialItemsConfig.set("Role-Pass", null);
+          specialItemsConfig.save(specialItemsFile);
+        }
+      }
       Field registeredServiceField = ServiceRegistry.class.getDeclaredField("registeredService");
       registeredServiceField.setAccessible(true);
       registeredServiceField.set(null, this);
@@ -105,7 +114,7 @@ public class Main extends PluginMain {
       Field serviceEnabledField = ServiceRegistry.class.getDeclaredField("serviceEnabled");
       serviceEnabledField.setAccessible(true);
       serviceEnabledField.setBoolean(null, false);
-    } catch(ReflectiveOperationException ignored) {
+    } catch(Exception ignored) {
     }
   }
 

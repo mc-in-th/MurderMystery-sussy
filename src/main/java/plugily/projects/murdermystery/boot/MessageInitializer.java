@@ -57,14 +57,6 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW", new Message("In-Game.Messages.Arena.Locator.Bow", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT", new Message("In-Game.Messages.Arena.Locator.Innocent", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT", new Message("In-Game.Messages.Arena.Locator.Watch-Out", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_NAME", new Message("In-Game.Messages.Arena.Pass.Name", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_ROLE_MURDERER_NAME", new Message("In-Game.Messages.Arena.Pass.Role.Murderer.Name", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_ROLE_MURDERER_LORE", new Message("In-Game.Messages.Arena.Pass.Role.Murderer.Lore", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_ROLE_DETECTIVE_NAME", new Message("In-Game.Messages.Arena.Pass.Role.Detective.Name", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_ROLE_DETECTIVE_LORE", new Message("In-Game.Messages.Arena.Pass.Role.Detective.Lore", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_FAIL", new Message("In-Game.Messages.Arena.Pass.Fail", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_SUCCESS", new Message("In-Game.Messages.Arena.Pass.Success", ""));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PASS_CHANGE", new Message("In-Game.Messages.Arena.Pass.Change", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT", new Message("In-Game.Messages.Arena.Playing.Time-Left", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_CHANGE", new Message("In-Game.Messages.Arena.Playing.Role.Change", ""));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_ROLE_MURDERER", new Message("In-Game.Messages.Arena.Playing.Role.Murderer", ""));
@@ -94,9 +86,6 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_SHOT_TITLE", new Message("In-Game.Messages.Arena.Playing.Bow.Shot.Title", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_CONTRIBUTION_DETECTIVE", new Message("Leaderboard.Statistics.Detective-Contribution", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_CONTRIBUTION_MURDERER", new Message("Leaderboard.Statistics.Murderer-Contribution", ""));
-
-    getMessageManager().registerMessage("LEADERBOARD_STATISTICS_PASS_DETECTIVE", new Message("Leaderboard.Statistics.Detective-Pass", ""));
-    getMessageManager().registerMessage("LEADERBOARD_STATISTICS_PASS_MURDERER", new Message("Leaderboard.Statistics.Murderer-Pass", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_KILLS", new Message("Leaderboard.Statistics.Kills", ""));
     getMessageManager().registerMessage("LEADERBOARD_STATISTICS_DEATHS", new Message("Leaderboard.Statistics.Deaths", ""));
 
