@@ -304,12 +304,20 @@ public final class HalloweenChat {
           Object existing = isMissing ? null : languageConfig.get(key);
           boolean hasStaleGradient = false;
           if(existing instanceof String) {
-            hasStaleGradient = ((String) existing).contains("<gradient:");
+            String existingStr = (String) existing;
+            hasStaleGradient = existingStr.contains("<gradient:")
+                || existingStr.contains("MurderMystery")
+                || existingStr.contains("%plugin_name%");
           } else if(existing instanceof List<?>) {
             for(Object item : (List<?>) existing) {
-              if(item instanceof String && ((String) item).contains("<gradient:")) {
-                hasStaleGradient = true;
-                break;
+              if(item instanceof String) {
+                String itemStr = (String) item;
+                if(itemStr.contains("<gradient:")
+                    || itemStr.contains("MurderMystery")
+                    || itemStr.contains("%plugin_name%")) {
+                  hasStaleGradient = true;
+                  break;
+                }
               }
             }
           }

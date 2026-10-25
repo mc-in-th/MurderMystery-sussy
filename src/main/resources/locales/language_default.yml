@@ -60,13 +60,13 @@ Commands:
     Adjust-Statistic: "%plugin_prefix% ค่าสถิติ %value% ของ %player% เปลี่ยนเป็น %number% แล้ว"
     Reload-Success: "%plugin_prefix% รีโหลดข้อมูลห้องเกมเรียบร้อยแล้ว"
     List:
-      Header: "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>รายชื่อห้องเกม <#5A4E7C>(<#B8B0C8>ชื่อ สถานะ ผู้เล่น<#5A4E7C>)"
+      Header: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>รายชื่อห้องเกม <#5A4E7C>(<#B8B0C8>ชื่อ สถานะ ผู้เล่น<#5A4E7C>)"
       Format: "<#FFB703>%arena_name% <#5A4E7C>| %arena_state_placeholder% <#5A4E7C>| <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players%"
       No-Arenas: "%color_chat_issue%%plugin_prefix% ยังไม่มีห้องเกมที่สร้างไว้"
     Spychat:
       Toggled: "%plugin_prefix% เปลี่ยนสถานะแชทผู้ดูแลเป็น %value%"
   Main:
-    Header: "<#5A4E7C>----------------[<#FF7518> คำสั่ง %plugin_name% <#5A4E7C>]----------------"
+    Header: "<#5A4E7C>----------------[<#FF7518> คำสั่ง Event <#5A4E7C>]----------------"
     Description:
       - "<#FFB703>คำสั่งผู้เล่น:"
       - "<#72EFDD>/%plugin_short_command% stats <#5A4E7C>- <#F4F1DE>ดูสถิติการเล่นของคุณ"
@@ -86,7 +86,7 @@ Commands:
 # Placeholders:
 # https://wiki.plugily.xyz/REPLACEWITHPROJECTNAME/placeholders/language
 Scoreboard:
-  Title: "<#5A4E7C>[<#FF7518>MurderMystery<#5A4E7C>]"
+  Title: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
   Roles:
     Detective: "<#72EFDD>นักสืบ"
     Murderer: "<#FF3B47>ฆาตกร"
@@ -147,25 +147,25 @@ Scoreboard:
 #
 # Bossbar needs to be enabled on config.yml
 Bossbar:
-  Title: "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>]"
+  Title: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
   Content:
     Waiting:
-      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
+      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#B8B0C8>กำลังรอผู้โดยสารเพิ่มเติม"
     Starting:
-      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
+      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
     In-Game:
-      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>บทบาทของคุณ %arena_player_role%"
+      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>บทบาทของคุณ %arena_player_role%"
     Ending:
-      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#FFB703>เกมจบลงแล้ว"
+      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#FFB703>เกมจบลงแล้ว"
     Restarting:
-      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
+      - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
 
 #
 # In-Game Messages
 #
 In-Game:
   #Used in most game messages.
-  Plugin-Prefix: "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>]"
+  Plugin-Prefix: "<#5A4E7C>[<#FF7518>Event<#5A4E7C>]"
   Game-Chat-Format: "<#5A4E7C>[<#FFB703>%user_statistic_level%<#5A4E7C>] <#C77DFF>%player% <#5A4E7C>| <#F4F1DE>%message%"
   You-Leveled-Up: "%plugin_prefix% <#6EEB83>เลเวลอัปแล้ว ตอนนี้คุณอยู่เลเวล <#FFB703>%number%"
   Commands-Blocked: "%color_chat_issue%%plugin_prefix% ไม่สามารถใช้คำสั่งอื่นขณะอยู่ในเกมได้ ใช้ได้เฉพาะ /%plugin_short_command% leave เพื่อออกจากห้อง"
@@ -220,7 +220,7 @@ In-Game:
     Game-End:
       Summary:
         - "<#5A4E7C>--------------------------------------------------"
-        - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>สรุปผลการเอาชีวิตรอด"
+        - "<#5A4E7C>[<#FF7518>Event<#5A4E7C>] <#F4F1DE>สรุปผลการเอาชีวิตรอด"
         - ""
         - "%arena_summary%"
         - "%arena_summary_player%"
