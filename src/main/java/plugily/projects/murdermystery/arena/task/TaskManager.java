@@ -28,6 +28,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
@@ -140,73 +141,99 @@ public class TaskManager {
     return visualEffectManager;
   }
 
+  private static Location toBlockLocation(Location loc) {
+    if(loc == null || loc.getWorld() == null) {
+      return loc;
+    }
+    return new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+  }
+
+  private static boolean isSameBlock(Location a, Location b) {
+    if(a == null || b == null || a.getWorld() == null || b.getWorld() == null) {
+      return false;
+    }
+    return a.getWorld().equals(b.getWorld())
+      && a.getBlockX() == b.getBlockX()
+      && a.getBlockY() == b.getBlockY()
+      && a.getBlockZ() == b.getBlockZ();
+  }
+
   public void assignTasks(List<Player> innocents, List<Location> taskLocations, int tasksPerPlayer) {
     playerTasks.clear();
     visualEffectManager.cleanup();
     for(TaskStationDisplay station : stationDisplays) {
+      if(station.getGlowingBlock() != null) {
+        arena.removeEntityGlowColor(station.getGlowingBlock());
+      }
       station.remove();
     }
     stationDisplays.clear();
     completedTasks = 0;
     allTasksCompleted = false;
+    taskWinTriggered = false;
 
-    if(taskLocations.isEmpty()) {
+    List<Location> genericLocations = arena.getTaskLocations();
+    boolean hasGenericLocations = !genericLocations.isEmpty();
+
+    List<TaskType> assignableTypes = new ArrayList<>();
+    for(TaskType type : TaskType.getValues()) {
+      if(hasGenericLocations || !arena.getTaskLocations(type).isEmpty()) {
+        assignableTypes.add(type);
+      }
+    }
+
+    if(assignableTypes.isEmpty()) {
       arena.getPlugin().getDebugger().debug("No task locations configured for arena {0}, skipping task assignment", arena.getId());
       return;
     }
-
-    TaskType[] allTaskTypes = TaskType.getValues();
 
     Random random = new Random();
     List<Set<TaskType>> assignedSets = new ArrayList<>();
 
     for(Player player : innocents) {
-      List<TaskType> pool = new ArrayList<>(Arrays.asList(allTaskTypes));
+      List<TaskType> pool = new ArrayList<>(assignableTypes);
       Collections.shuffle(pool, random);
 
       int count = Math.max(1, Math.min(tasksPerPlayer, pool.size()));
-      Set<TaskType> playerTypes = new HashSet<>(pool.subList(0, count));
+      Set<TaskType> playerTypes = new LinkedHashSet<>(pool.subList(0, count));
 
       int attempts = 0;
       while(attempts < 15 && assignedSets.contains(playerTypes)) {
         Collections.shuffle(pool, random);
-        playerTypes = new HashSet<>(pool.subList(0, count));
+        playerTypes = new LinkedHashSet<>(pool.subList(0, count));
         attempts++;
       }
       assignedSets.add(playerTypes);
 
-      List<Location> shuffledLocations = new ArrayList<>(taskLocations);
-      Collections.shuffle(shuffledLocations, random);
+      List<Location> shuffledGeneric = new ArrayList<>(genericLocations);
+      Collections.shuffle(shuffledGeneric, random);
 
       List<GameTask> tasks = new ArrayList<>();
-      int i = 0;
+      int genericIdx = 0;
       for(TaskType type : playerTypes) {
         Location taskLoc = null;
         List<Location> specificLocs = arena.getTaskLocations(type);
         if(!specificLocs.isEmpty()) {
-          taskLoc = specificLocs.get(random.nextInt(specificLocs.size()));
-        } else if(!arena.getTaskLocations().isEmpty()) {
-          List<Location> genericLocs = arena.getTaskLocations();
-          taskLoc = genericLocs.get(random.nextInt(genericLocs.size()));
-        } else if(!shuffledLocations.isEmpty()) {
-          for(int attempt = 0; attempt < shuffledLocations.size(); attempt++) {
-            Location candidate = shuffledLocations.get((i + attempt) % shuffledLocations.size());
+          taskLoc = toBlockLocation(specificLocs.get(random.nextInt(specificLocs.size())));
+        } else if(!shuffledGeneric.isEmpty()) {
+          for(int attempt = 0; attempt < shuffledGeneric.size(); attempt++) {
+            Location candidate = toBlockLocation(shuffledGeneric.get((genericIdx + attempt) % shuffledGeneric.size()));
             boolean alreadyUsed = false;
             for(GameTask existing : tasks) {
-              if(existing.getLocation() != null && existing.getLocation().equals(candidate)) {
+              if(isSameBlock(existing.getLocation(), candidate)) {
                 alreadyUsed = true;
                 break;
               }
             }
             if(!alreadyUsed) {
               taskLoc = candidate;
-              i += attempt + 1;
+              genericIdx += attempt + 1;
               break;
             }
           }
           if(taskLoc == null) {
-            taskLoc = shuffledLocations.get(i % shuffledLocations.size());
-            i++;
+            taskLoc = toBlockLocation(shuffledGeneric.get(genericIdx % shuffledGeneric.size()));
+            genericIdx++;
           }
         }
         if(taskLoc != null) {
@@ -228,7 +255,7 @@ public class TaskManager {
     for(Map.Entry<TaskType, List<Location>> entry : arena.getSpecificTaskLocations().entrySet()) {
       for(Location loc : entry.getValue()) {
         if(loc != null && loc.getWorld() != null) {
-          locationTasks.computeIfAbsent(loc, k -> new LinkedHashSet<>()).add(entry.getKey());
+          locationTasks.computeIfAbsent(toBlockLocation(loc), k -> new LinkedHashSet<>()).add(entry.getKey());
         }
       }
     }
@@ -237,14 +264,14 @@ public class TaskManager {
       for(GameTask gt : pTasks) {
         Location loc = gt.getLocation();
         if(loc != null && loc.getWorld() != null) {
-          locationTasks.computeIfAbsent(loc, k -> new LinkedHashSet<>()).add(gt.getTaskType());
+          locationTasks.computeIfAbsent(toBlockLocation(loc), k -> new LinkedHashSet<>()).add(gt.getTaskType());
         }
       }
     }
 
-    for(Location loc : taskLocations) {
+    for(Location loc : genericLocations) {
       if(loc != null && loc.getWorld() != null) {
-        locationTasks.computeIfAbsent(loc, k -> new LinkedHashSet<>());
+        locationTasks.computeIfAbsent(toBlockLocation(loc), k -> new LinkedHashSet<>());
       }
     }
 
@@ -414,6 +441,32 @@ public class TaskManager {
     return minigameManager;
   }
 
+  public boolean isStationDisplayEntity(Entity entity) {
+    return findStationByEntity(entity) != null;
+  }
+
+  private TaskStationDisplay findStationByEntity(Entity entity) {
+    if(entity == null) {
+      return null;
+    }
+    for(TaskStationDisplay station : stationDisplays) {
+      if(entity.equals(station.getActiveHologram())
+        || entity.equals(station.getCompletedHologram())
+        || entity.equals(station.getGlowingBlock())) {
+        return station;
+      }
+    }
+    return null;
+  }
+
+  public boolean interactTaskEntity(Player player, Entity entity) {
+    TaskStationDisplay station = findStationByEntity(entity);
+    if(station == null) {
+      return false;
+    }
+    return interactAtStation(player, station.getLocation());
+  }
+
   public boolean interactTask(Player player) {
     return interactTask(player, null);
   }
@@ -424,76 +477,114 @@ public class TaskManager {
       return false;
     }
 
-    double range = arena.getPlugin().getConfig().getDouble("Tasks.Complete-Range", 4.5);
-    if(range < 4.5) {
-      range = 4.5;
+    if(targetLoc != null && targetLoc.getWorld() != null) {
+      Location matchedStation = findStationForClickedBlock(targetLoc);
+      if(matchedStation == null) {
+        return false;
+      }
+      return interactAtStation(player, matchedStation);
     }
+
+    double maxDistSq = 7.5625;
+    GameTask closestTask = null;
+    double closestDistSq = maxDistSq;
 
     for(GameTask task : tasks) {
-      if(task.isCompleted()) {
+      if(task.isCompleted() || task.getLocation() == null || task.getLocation().getWorld() == null) {
         continue;
       }
-
-      Location taskLoc = task.getLocation();
-      boolean match = false;
-
-      if(targetLoc != null && taskLoc != null && targetLoc.getWorld() != null && targetLoc.getWorld().equals(taskLoc.getWorld())) {
-        if(targetLoc.getBlockX() == taskLoc.getBlockX() && targetLoc.getBlockY() == taskLoc.getBlockY() && targetLoc.getBlockZ() == taskLoc.getBlockZ()) {
-          match = true;
-        } else if(targetLoc.distanceSquared(taskLoc) <= 4.0) {
-          match = true;
-        }
+      if(!task.getLocation().getWorld().equals(player.getWorld())) {
+        continue;
       }
-
-      if(!match && task.isInRange(player.getLocation(), range)) {
-        match = true;
-      }
-
-      if(match) {
-        if(minigameManager.hasMinigame(task.getTaskType())) {
-          boolean opened = minigameManager.openMinigame(player, task.getTaskType());
-          if(opened && task.getTaskType().isVisual()) {
-            visualEffectManager.startVisualSession(player, task.getTaskType(), task.getLocation());
-          }
-          return opened;
-        } else {
-          return completeTaskFromMinigame(player, task.getTaskType());
-        }
+      double distSq = task.getLocation().clone().add(0.5, 0.5, 0.5).distanceSquared(player.getLocation());
+      if(distSq <= closestDistSq) {
+        closestDistSq = distSq;
+        closestTask = task;
       }
     }
 
+    if(closestTask != null) {
+      return openOrCompleteTask(player, closestTask);
+    }
+
+    Location nearestStation = null;
+    double nearestStationDistSq = maxDistSq;
     for(Location loc : arena.getAllTaskLocations()) {
       if(loc == null || loc.getWorld() == null || !loc.getWorld().equals(player.getWorld())) {
         continue;
       }
-
-      boolean nearStation = false;
-      if(targetLoc != null && (targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ())) {
-        nearStation = true;
-      } else if(targetLoc != null && targetLoc.distanceSquared(loc) <= 4.0) {
-        nearStation = true;
-      } else if(player.getLocation().distanceSquared(loc) <= (range * range)) {
-        nearStation = true;
+      double distSq = loc.clone().add(0.5, 0.5, 0.5).distanceSquared(player.getLocation());
+      if(distSq <= nearestStationDistSq) {
+        nearestStationDistSq = distSq;
+        nearestStation = loc;
       }
+    }
 
-      if(nearStation) {
-        boolean wasCompletedHere = false;
-        for(GameTask gt : tasks) {
-          if(gt.isCompleted() && gt.getLocation() != null && gt.getLocation().getBlockX() == loc.getBlockX() && gt.getLocation().getBlockY() == loc.getBlockY() && gt.getLocation().getBlockZ() == loc.getBlockZ()) {
-            wasCompletedHere = true;
-            break;
-          }
+    if(nearestStation != null) {
+      return interactAtStation(player, nearestStation);
+    }
+
+    return false;
+  }
+
+  private Location findStationForClickedBlock(Location targetLoc) {
+    List<Location> allStations = arena.getAllTaskLocations();
+    for(Location loc : allStations) {
+      if(isSameBlock(loc, targetLoc)) {
+        return loc;
+      }
+    }
+    for(Location loc : allStations) {
+      if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
+        if(loc.getBlockX() == targetLoc.getBlockX()
+          && loc.getBlockZ() == targetLoc.getBlockZ()
+          && targetLoc.getBlockY() - loc.getBlockY() == 1) {
+          return loc;
         }
-        if(wasCompletedHere) {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว"));
-        } else {
-          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
-        }
+      }
+    }
+    return null;
+  }
+
+  private boolean interactAtStation(Player player, Location stationLoc) {
+    if(stationLoc == null || stationLoc.getWorld() == null || !stationLoc.getWorld().equals(player.getWorld())) {
+      return false;
+    }
+    if(player.getLocation().distanceSquared(stationLoc.clone().add(0.5, 0.5, 0.5)) > 36.0) {
+      return false;
+    }
+
+    List<GameTask> tasks = playerTasks.get(player);
+    if(tasks == null || tasks.isEmpty()) {
+      return false;
+    }
+
+    for(GameTask task : tasks) {
+      if(!task.isCompleted() && isSameBlock(task.getLocation(), stationLoc)) {
+        return openOrCompleteTask(player, task);
+      }
+    }
+
+    for(GameTask task : tasks) {
+      if(task.isCompleted() && isSameBlock(task.getLocation(), stationLoc)) {
+        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#6EEB83>Task<#5A4E7C>] <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว"));
         return true;
       }
     }
 
-    return false;
+    HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF7518>Task<#5A4E7C>] <#B8B0C8>ไม่มีภารกิจที่จุดนี้"));
+    return true;
+  }
+
+  private boolean openOrCompleteTask(Player player, GameTask task) {
+    if(minigameManager.hasMinigame(task.getTaskType())) {
+      boolean opened = minigameManager.openMinigame(player, task.getTaskType());
+      if(opened && task.getTaskType().isVisual()) {
+        visualEffectManager.startVisualSession(player, task.getTaskType(), task.getLocation());
+      }
+      return opened;
+    }
+    return completeTaskFromMinigame(player, task.getTaskType());
   }
 
   public boolean completeTaskFromMinigame(Player player, TaskType taskType) {

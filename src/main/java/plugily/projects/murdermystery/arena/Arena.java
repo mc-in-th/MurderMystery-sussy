@@ -955,12 +955,38 @@ public class Arena extends PluginArena {
     return sabotageManager;
   }
 
+  private static Location normalizeBlockLocation(Location loc) {
+    if(loc == null || loc.getWorld() == null) {
+      return loc;
+    }
+    return new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+  }
+
+  private static boolean isSameBlockLocation(Location a, Location b) {
+    if(a == null || b == null || a.getWorld() == null || b.getWorld() == null) {
+      return false;
+    }
+    return a.getWorld().equals(b.getWorld())
+      && a.getBlockX() == b.getBlockX()
+      && a.getBlockY() == b.getBlockY()
+      && a.getBlockZ() == b.getBlockZ();
+  }
+
   public List<Location> getTaskLocations() {
     return taskLocations;
   }
 
   public void setTaskLocations(List<Location> taskLocations) {
-    this.taskLocations = taskLocations;
+    List<Location> normalized = new ArrayList<>();
+    if(taskLocations != null) {
+      for(Location loc : taskLocations) {
+        Location blockLoc = normalizeBlockLocation(loc);
+        if(blockLoc != null && normalized.stream().noneMatch(existing -> isSameBlockLocation(existing, blockLoc))) {
+          normalized.add(blockLoc);
+        }
+      }
+    }
+    this.taskLocations = normalized;
   }
 
   public Map<TaskType, List<Location>> getSpecificTaskLocations() {
@@ -972,7 +998,29 @@ public class Arena extends PluginArena {
   }
 
   public void addSpecificTaskLocation(TaskType type, Location loc) {
-    specificTaskLocations.computeIfAbsent(type, k -> new ArrayList<>()).add(loc);
+    if(type == null || loc == null) {
+      return;
+    }
+    Location blockLoc = normalizeBlockLocation(loc);
+    List<Location> list = specificTaskLocations.computeIfAbsent(type, k -> new ArrayList<>());
+    if(list.stream().noneMatch(existing -> isSameBlockLocation(existing, blockLoc))) {
+      list.add(blockLoc);
+    }
+  }
+
+  public void removeTaskLocationAtBlock(Location loc) {
+    if(loc == null || loc.getWorld() == null) {
+      return;
+    }
+    taskLocations.removeIf(existing -> isSameBlockLocation(existing, loc));
+    Iterator<Map.Entry<TaskType, List<Location>>> it = specificTaskLocations.entrySet().iterator();
+    while(it.hasNext()) {
+      Map.Entry<TaskType, List<Location>> entry = it.next();
+      entry.getValue().removeIf(existing -> isSameBlockLocation(existing, loc));
+      if(entry.getValue().isEmpty()) {
+        it.remove();
+      }
+    }
   }
 
   public void clearSpecificTaskLocations(TaskType type) {
@@ -984,10 +1032,15 @@ public class Arena extends PluginArena {
   }
 
   public List<Location> getAllTaskLocations() {
-    List<Location> all = new ArrayList<>(taskLocations);
+    List<Location> all = new ArrayList<>();
+    for(Location loc : taskLocations) {
+      if(loc != null && all.stream().noneMatch(existing -> isSameBlockLocation(existing, loc))) {
+        all.add(loc);
+      }
+    }
     for(List<Location> list : specificTaskLocations.values()) {
       for(Location loc : list) {
-        if(!all.contains(loc)) {
+        if(loc != null && all.stream().noneMatch(existing -> isSameBlockLocation(existing, loc))) {
           all.add(loc);
         }
       }

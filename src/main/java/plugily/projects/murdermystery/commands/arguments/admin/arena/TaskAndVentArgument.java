@@ -90,6 +90,7 @@ public class TaskAndVentArgument {
               return;
             }
 
+            removeBlockFromConfigTasks(config, arenaId, loc);
             List<String> list = config.getStringList("instances." + arenaId + ".tasks." + type.name());
             if(!list.contains(serialized)) {
               list.add(serialized);
@@ -97,6 +98,7 @@ public class TaskAndVentArgument {
             config.set("instances." + arenaId + ".tasks." + type.name(), list);
             ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
 
+            arena.removeTaskLocationAtBlock(loc);
             arena.addSpecificTaskLocation(type, loc);
 
             msg(player, "<#6EEB83>[+] ตั้งจุดภารกิจ <#FF7518>" + type.getIcon() + " " + type.getDisplayName()
@@ -165,6 +167,7 @@ public class TaskAndVentArgument {
 
           FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
           String serialized = LocationSerializer.locationToString(loc);
+          removeBlockFromConfigTasks(config, arenaId, loc);
           List<String> list = config.getStringList("instances." + arenaId + ".tasks." + type.name());
           if(!list.contains(serialized)) {
             list.add(serialized);
@@ -172,6 +175,7 @@ public class TaskAndVentArgument {
           config.set("instances." + arenaId + ".tasks." + type.name(), list);
           ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
 
+          arena.removeTaskLocationAtBlock(loc);
           arena.addSpecificTaskLocation(type, loc);
 
           msg(player, "<#6EEB83>[+] ตั้งจุดภารกิจ <#FF7518>" + type.getIcon() + " " + type.getDisplayName()
@@ -212,8 +216,11 @@ public class TaskAndVentArgument {
             List<Location> locs = arena.getTaskLocations(type);
             String visualTag = type.isVisual() ? " <#72EFDD>[Visual]" : "";
             if(locs.isEmpty()) {
+              String fallbackNote = arena.getTaskLocations().isEmpty()
+                ? "ยังไม่ได้ตั้งค่า (จะไม่สุ่มภารกิจนี้)"
+                : "ยังไม่ได้ตั้งค่า (จะสุ่มจุดทั่วไป)";
               msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName() + visualTag
-                + " <#B8B0C8>(" + type.getShortId() + "): <#FF3B47>ยังไม่ได้ตั้งค่า (จะสุ่มจุดทั่วไป)");
+                + " <#B8B0C8>(" + type.getShortId() + "): <#FF3B47>" + fallbackNote);
             } else {
               msg(player, "<#FFB703>" + idx + ". " + type.getIcon() + " " + type.getDisplayName() + visualTag
                 + " <#B8B0C8>(" + type.getShortId() + "): <#6EEB83>" + locs.size() + " จุด");
@@ -993,6 +1000,36 @@ public class TaskAndVentArgument {
     msg(player, "<#6EEB83>[+] ตั้งบล็อกแก้ Sabotage <#FF3B47>" + type.getIcon() + " " + type.getDisplayName()
       + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+  }
+
+  private static void removeBlockFromConfigTasks(FileConfiguration config, String arenaId, Location targetLoc) {
+    if(config == null || targetLoc == null || targetLoc.getWorld() == null) {
+      return;
+    }
+    List<String> generic = new ArrayList<>(config.getStringList("instances." + arenaId + ".tasklocations"));
+    if(generic.removeIf(entry -> isSameSerializedBlock(entry, targetLoc))) {
+      config.set("instances." + arenaId + ".tasklocations", generic);
+    }
+    org.bukkit.configuration.ConfigurationSection tasksSec = config.getConfigurationSection("instances." + arenaId + ".tasks");
+    if(tasksSec != null) {
+      for(String key : new ArrayList<>(tasksSec.getKeys(false))) {
+        List<String> entries = new ArrayList<>(tasksSec.getStringList(key));
+        if(entries.removeIf(entry -> isSameSerializedBlock(entry, targetLoc))) {
+          tasksSec.set(key, entries.isEmpty() ? null : entries);
+        }
+      }
+    }
+  }
+
+  private static boolean isSameSerializedBlock(String serialized, Location targetLoc) {
+    Location parsed = LocationSerializer.getLocation(serialized);
+    if(parsed == null || parsed.getWorld() == null) {
+      return false;
+    }
+    return parsed.getWorld().equals(targetLoc.getWorld())
+      && parsed.getBlockX() == targetLoc.getBlockX()
+      && parsed.getBlockY() == targetLoc.getBlockY()
+      && parsed.getBlockZ() == targetLoc.getBlockZ();
   }
 
   private static void sendTaskTypesHelp(CommandSender sender) {

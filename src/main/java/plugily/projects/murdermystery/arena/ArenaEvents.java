@@ -541,7 +541,7 @@ public class ArenaEvents extends PluginArenaEvents {
       if(!arena.getVotingManager().isVotingActive()
         && event.getRightClicked() instanceof Display
         && arena.getTaskManager().hasAssignedTasks(player)) {
-        if(arena.getTaskManager().interactTask(player, event.getRightClicked().getLocation())) {
+        if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
           event.setCancelled(true);
         }
       }
@@ -606,12 +606,14 @@ public class ArenaEvents extends PluginArenaEvents {
       }
 
       if(!Role.isRole(Role.MURDERER, user, arena)) {
-        if(arena.getTaskManager().interactTask(player, event.getRightClicked().getLocation())) {
+        if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
           event.setCancelled(true);
         }
       } else {
-        event.setCancelled(true);
-        HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>] <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้"));
+        if(arena.getTaskManager().isStationDisplayEntity(event.getRightClicked())) {
+          event.setCancelled(true);
+          HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>] <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้"));
+        }
       }
     }
   }
@@ -711,8 +713,7 @@ public class ArenaEvents extends PluginArenaEvents {
       if(targetLoc != null) {
         for(Location loc : arena.getAllTaskLocations()) {
           if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
-            if((targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ())
-              || targetLoc.distanceSquared(loc) <= 4.0) {
+            if(targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ()) {
               event.setCancelled(true);
               HalloweenChat.sendActionBar(player, HalloweenChat.color("<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>] <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้"));
               return;

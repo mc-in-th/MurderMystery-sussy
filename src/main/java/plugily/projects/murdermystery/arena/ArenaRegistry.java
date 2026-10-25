@@ -90,15 +90,7 @@ public class ArenaRegistry extends PluginArenaRegistry {
     arena.setArenaOption("MURDERER_DIVIDER",section.getInt(id + ".playerpermurderer", 5));
     ((Arena) arena).setPlayerSpawnPoints(playerSpawnPoints);
 
-    List<Location> taskLocations = new ArrayList<>();
-    for(String loc : section.getStringList(id + ".tasklocations")) {
-      Location l = LocationSerializer.getLocation(loc);
-      if(l != null) {
-        taskLocations.add(l);
-      }
-    }
-    ((Arena) arena).setTaskLocations(taskLocations);
-
+    ((Arena) arena).clearSpecificTaskLocations(null);
     ConfigurationSection tasksSec = section.getConfigurationSection(id + ".tasks");
     if(tasksSec != null) {
       for(String key : tasksSec.getKeys(false)) {
@@ -106,13 +98,31 @@ public class ArenaRegistry extends PluginArenaRegistry {
         if(type != null) {
           for(String locStr : tasksSec.getStringList(key)) {
             Location l = LocationSerializer.getLocation(locStr);
-            if(l != null) {
+            if(l != null && l.getWorld() != null) {
+              ((Arena) arena).removeTaskLocationAtBlock(l);
               ((Arena) arena).addSpecificTaskLocation(type, l);
             }
           }
         }
       }
     }
+
+    List<Location> specificLoaded = ((Arena) arena).getAllTaskLocations();
+    List<Location> taskLocations = new ArrayList<>();
+    for(String loc : section.getStringList(id + ".tasklocations")) {
+      Location l = LocationSerializer.getLocation(loc);
+      if(l != null && l.getWorld() != null) {
+        boolean alreadySpecific = specificLoaded.stream().anyMatch(s ->
+          s.getWorld() != null && s.getWorld().equals(l.getWorld())
+            && s.getBlockX() == l.getBlockX()
+            && s.getBlockY() == l.getBlockY()
+            && s.getBlockZ() == l.getBlockZ());
+        if(!alreadySpecific) {
+          taskLocations.add(l);
+        }
+      }
+    }
+    ((Arena) arena).setTaskLocations(taskLocations);
 
     ConfigurationSection sabotageSec = section.getConfigurationSection(id + ".sabotages");
     if(sabotageSec != null) {
