@@ -87,9 +87,49 @@ public class ScoreboardManager extends PluginScoreboardManager {
     if(shouldHideScoreboard(player)) {
       return Collections.emptyList();
     }
-    if(arena.getArenaState() == IArenaState.IN_GAME && arena instanceof Arena) {
-      Arena gameArena = (Arena) arena;
-      IUser user = arena.getPlugin().getUserManager().getUser(player);
+    if(!(arena instanceof Arena)) {
+      return super.getScoreboardLines(player);
+    }
+
+    Arena gameArena = (Arena) arena;
+    IArenaState state = gameArena.getArenaState();
+    IUser user = gameArena.getPlugin().getUserManager().getUser(player);
+
+    if(state == IArenaState.WAITING_FOR_PLAYERS) {
+      List<String> lines = new ArrayList<>();
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>รอผู้เล่น<#5A4E7C>]"));
+      lines.add("");
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ขั้นต่ำ: <#FFB703>%arena_min_players% คน"));
+      if(!gameArena.isHideChances()) {
+        lines.add("");
+        lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
+      }
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      return lines;
+    }
+
+    if(state == IArenaState.STARTING || state == IArenaState.FULL_GAME) {
+      List<String> lines = new ArrayList<>();
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: " + (state == IArenaState.FULL_GAME
+        ? "<#5A4E7C>[<#6EEB83>ห้องเต็ม<#5A4E7C>]"
+        : "<#5A4E7C>[<#6EEB83>กำลังจะเริ่ม<#5A4E7C>]")));
+      lines.add("");
+      lines.add(HalloweenChat.color("<#F4F1DE>เริ่มใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<#5A4E7C>/<#72EFDD>%arena_max_players% คน"));
+      if(!gameArena.isHideChances()) {
+        lines.add("");
+        lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
+      }
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      return lines;
+    }
+
+    if(state == IArenaState.IN_GAME) {
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
 
       List<String> lines = new ArrayList<>();
@@ -134,6 +174,64 @@ public class ScoreboardManager extends PluginScoreboardManager {
       lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
       return lines;
     }
+
+    if(state == IArenaState.ENDING) {
+      boolean murderWon = gameArena.isMurdererVictory();
+      Player mainMurderer = gameArena.getCharacter(Arena.CharacterType.MURDERER);
+      List<String> lines = new ArrayList<>();
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FFB703>จบเกมแล้ว<#5A4E7C>]"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ผู้ชนะ: " + (murderWon
+        ? "<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>]"
+        : "<#5A4E7C>[<#6EEB83>ผู้โดยสาร<#5A4E7C>]")));
+      lines.add("");
+      if(user != null && !user.isPermanentSpectator()) {
+        boolean isMurderer = gameArena.getMurdererList().contains(player)
+          || Role.isRole(Role.MURDERER, user, gameArena)
+          || player.equals(mainMurderer);
+        boolean playerWon = (murderWon && isMurderer) || (!murderWon && !isMurderer);
+        lines.add(HalloweenChat.color("<#F4F1DE>ผลลัพธ์: " + (playerWon ? "<#6EEB83>ชนะ" : "<#FF3B47>แพ้")));
+      }
+      String murdererNames = formatMurdererNames(gameArena, mainMurderer);
+      if(!murdererNames.isEmpty()) {
+        lines.add(HalloweenChat.color("<#F4F1DE>ฆาตกร: <#FF3B47>" + murdererNames));
+      }
+      lines.add(HalloweenChat.color("<#F4F1DE>กลับล็อบบี้ใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      return lines;
+    }
+
+    if(state == IArenaState.RESTARTING) {
+      List<String> lines = new ArrayList<>();
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
+      lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <#5A4E7C>[<#FF3B47>กำลังรีเซ็ต<#5A4E7C>]"));
+      lines.add("");
+      lines.add(HalloweenChat.color("<#B8B0C8>กำลังเตรียมสนามประลองใหม่"));
+      lines.add(HalloweenChat.color("<#5A4E7C>----------------"));
+      return lines;
+    }
+
     return super.getScoreboardLines(player);
+  }
+
+  private String formatMurdererNames(Arena gameArena, Player fallbackMurderer) {
+    List<Player> murderers = gameArena.getMurdererList();
+    StringBuilder sb = new StringBuilder();
+    if(murderers != null) {
+      for(Player murderer : murderers) {
+        if(murderer == null) {
+          continue;
+        }
+        if(sb.length() > 0) {
+          sb.append(", ");
+        }
+        sb.append(murderer.getName());
+      }
+    }
+    if(sb.length() == 0 && fallbackMurderer != null) {
+      return fallbackMurderer.getName();
+    }
+    return sb.toString();
   }
 }
