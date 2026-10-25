@@ -25,17 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.utils.HalloweenChat;
@@ -48,7 +44,6 @@ public class VisualTaskEffectManager {
     final TaskType taskType;
     final Location stationLocation;
     TextDisplay statusDisplay;
-    BlockDisplay scanPadDisplay;
     int tickCount = 0;
     int currentStep = 0;
     int totalSteps = 5;
@@ -64,7 +59,6 @@ public class VisualTaskEffectManager {
   private final Arena arena;
   private final Map<UUID, ActiveVisualSession> activeSessions = new HashMap<>();
   private final List<TextDisplay> completionDisplays = new ArrayList<>();
-  private final List<BlockDisplay> temporaryBlockDisplays = new ArrayList<>();
   private BukkitTask animationTask;
 
   public VisualTaskEffectManager(Arena arena) {
@@ -93,22 +87,6 @@ public class VisualTaskEffectManager {
     String initialText = buildStatusText(session);
     session.statusDisplay = arena.spawnTextDisplay(holoLoc, initialText, true);
 
-    if(taskType == TaskType.SUBMIT_SCAN && session.stationLocation.getWorld() != null) {
-      session.scanPadDisplay = arena.spawnBlockDisplay(
-        session.stationLocation,
-        Material.SEA_LANTERN.createBlockData(),
-        ChatColor.AQUA
-      );
-      if(session.scanPadDisplay != null) {
-        for(Player p : arena.getPlayers()) {
-          try {
-            p.showEntity(arena.getPlugin(), session.scanPadDisplay);
-          } catch(Throwable ignored) {
-          }
-        }
-      }
-    }
-
     activeSessions.put(player.getUniqueId(), session);
     ensureAnimationLoopRunning();
   }
@@ -136,16 +114,10 @@ public class VisualTaskEffectManager {
 
     Particle dustParticle = resolveDustParticle();
 
-    if(taskType == TaskType.CLEAR_ASTEROIDS) {
-      spawnLaserBeamBurst(player, origin, dustParticle);
-    } else if(taskType == TaskType.EMPTY_GARBAGE) {
-      spawnGarbageEjectBurst(origin, dustParticle);
-    } else if(taskType == TaskType.CHECK_RADIATOR_WATER) {
+    if(taskType == TaskType.CHECK_RADIATOR_WATER) {
       spawnRadiatorSteamBurst(origin, dustParticle);
     } else if(taskType == TaskType.CHECK_TIRE_PRESSURE) {
       spawnTirePumpWave(origin, dustParticle);
-    } else if(taskType == TaskType.SUBMIT_SCAN) {
-      XSound.BLOCK_NOTE_BLOCK_CHIME.play(origin, 0.7F, 1.0F + (0.08F * currentStep));
     }
   }
 
@@ -223,16 +195,6 @@ public class VisualTaskEffectManager {
       }
       session.statusDisplay = null;
     }
-    if(session.scanPadDisplay != null) {
-      arena.removeEntityGlowColor(session.scanPadDisplay);
-      if(session.scanPadDisplay.isValid()) {
-        try {
-          session.scanPadDisplay.remove();
-        } catch(Throwable ignored) {
-        }
-      }
-      session.scanPadDisplay = null;
-    }
   }
 
   private void ensureAnimationLoopRunning() {
@@ -276,47 +238,7 @@ public class VisualTaskEffectManager {
       ? session.stationLocation.clone().add(0.5, 0.8, 0.5)
       : pLoc.clone().add(0.0, 0.8, 0.0);
 
-    if(session.taskType == TaskType.SUBMIT_SCAN) {
-      double phase = (session.tickCount % 20) / 20.0;
-      double yOffset = phase <= 0.5 ? (phase * 2.0) * 1.9 : ((1.0 - phase) * 2.0) * 1.9;
-      if(dustParticle != null) {
-        try {
-          Particle.DustOptions scanCyan = new Particle.DustOptions(Color.fromRGB(114, 239, 221), 1.25F);
-          Particle.DustOptions scanLime = new Particle.DustOptions(Color.fromRGB(110, 235, 131), 1.25F);
-          for(int a = 0; a < 360; a += 24) {
-            double rad = Math.toRadians(a + (session.tickCount * 9));
-            double rx = Math.cos(rad) * 0.78;
-            double rz = Math.sin(rad) * 0.78;
-            Particle.DustOptions opt = (a % 48 == 0) ? scanCyan : scanLime;
-            world.spawnParticle(dustParticle, pLoc.clone().add(rx, yOffset, rz), 1, 0, 0, 0, 0, opt);
-          }
-        } catch(Exception ignored) {
-        }
-      }
-      if(session.tickCount % 6 == 0) {
-        XSound.BLOCK_BEACON_AMBIENT.play(pLoc, 0.45F, 1.7F);
-      }
-    } else if(session.taskType == TaskType.EMPTY_GARBAGE) {
-      if(dustParticle != null) {
-        try {
-          Particle.DustOptions green = new Particle.DustOptions(Color.fromRGB(56, 176, 0), 1.2F);
-          double angle = Math.toRadians((session.tickCount * 30) % 360);
-          world.spawnParticle(dustParticle, sLoc.clone().add(Math.cos(angle) * 0.6, 0.3, Math.sin(angle) * 0.6), 2, 0.05, 0.05, 0.05, 0, green);
-        } catch(Exception ignored) {
-        }
-      }
-      spawnSafeParticle(world, "SMOKE", "SMOKE_NORMAL", sLoc, 3, 0.25, 0.25, 0.25, 0.02);
-    } else if(session.taskType == TaskType.CLEAR_ASTEROIDS) {
-      if(dustParticle != null) {
-        try {
-          Particle.DustOptions targetRed = new Particle.DustOptions(Color.fromRGB(255, 59, 71), 1.15F);
-          double angle = Math.toRadians((session.tickCount * 28) % 360);
-          world.spawnParticle(dustParticle, pLoc.clone().add(Math.cos(angle) * 0.85, 1.35, Math.sin(angle) * 0.85), 1, 0, 0, 0, 0, targetRed);
-          world.spawnParticle(dustParticle, pLoc.clone().add(-Math.cos(angle) * 0.85, 1.35, -Math.sin(angle) * 0.85), 1, 0, 0, 0, 0, targetRed);
-        } catch(Exception ignored) {
-        }
-      }
-    } else if(session.taskType == TaskType.CHECK_RADIATOR_WATER) {
+    if(session.taskType == TaskType.CHECK_RADIATOR_WATER) {
       spawnSafeParticle(world, "CLOUD", "CLOUD", sLoc.clone().add(0, 0.4, 0), 2, 0.2, 0.25, 0.2, 0.01);
       spawnSafeParticle(world, "SPLASH", "WATER_SPLASH", sLoc.clone().add(0, 0.3, 0), 4, 0.25, 0.2, 0.25, 0.05);
     } else if(session.taskType == TaskType.CHECK_TIRE_PRESSURE) {
@@ -329,74 +251,6 @@ public class VisualTaskEffectManager {
         }
       }
     }
-  }
-
-  private void spawnLaserBeamBurst(Player player, Location origin, Particle dustParticle) {
-    World world = origin.getWorld();
-    if(world == null) {
-      return;
-    }
-    Vector dir = player.getLocation().getDirection().normalize();
-    if(Math.abs(dir.getY()) < 0.15) {
-      dir.setY(0.25).normalize();
-    }
-    Location start = player.getEyeLocation().clone().add(dir.clone().multiply(0.6));
-    if(dustParticle != null) {
-      try {
-        Particle.DustOptions laserGreen = new Particle.DustOptions(Color.fromRGB(110, 235, 131), 1.35F);
-        Particle.DustOptions laserCore = new Particle.DustOptions(Color.fromRGB(114, 239, 221), 1.1F);
-        for(double d = 0.4; d <= 5.2; d += 0.35) {
-          Location point = start.clone().add(dir.clone().multiply(d));
-          world.spawnParticle(dustParticle, point, 1, 0, 0, 0, 0, laserGreen);
-          world.spawnParticle(dustParticle, point, 1, 0.02, 0.02, 0.02, 0, laserCore);
-        }
-      } catch(Exception ignored) {
-      }
-    }
-    Location impact = start.clone().add(dir.clone().multiply(5.2));
-    spawnSafeParticle(world, "FIREWORK", "FIREWORKS_SPARK", impact, 12, 0.18, 0.18, 0.18, 0.06);
-    spawnSafeParticle(world, "CRIT", "CRIT", impact, 8, 0.2, 0.2, 0.2, 0.05);
-    XSound.ENTITY_FIREWORK_ROCKET_BLAST.play(origin, 0.85F, 1.65F);
-    XSound.BLOCK_DISPENSER_LAUNCH.play(origin, 0.7F, 1.8F);
-  }
-
-  private void spawnGarbageEjectBurst(Location origin, Particle dustParticle) {
-    World world = origin.getWorld();
-    if(world == null) {
-      return;
-    }
-    spawnSafeParticle(world, "CLOUD", "CLOUD", origin, 10, 0.35, 0.35, 0.35, 0.04);
-    spawnSafeParticle(world, "SMOKE", "SMOKE_LARGE", origin, 8, 0.3, 0.3, 0.3, 0.03);
-    if(dustParticle != null) {
-      try {
-        Particle.DustOptions trashBrown = new Particle.DustOptions(Color.fromRGB(184, 176, 200), 1.3F);
-        world.spawnParticle(dustParticle, origin, 8, 0.35, 0.35, 0.35, 0, trashBrown);
-      } catch(Exception ignored) {
-      }
-    }
-    BlockDisplay debris = arena.spawnBlockDisplay(
-      origin,
-      Material.DRIED_KELP_BLOCK.createBlockData(),
-      ChatColor.GREEN
-    );
-    if(debris != null) {
-      temporaryBlockDisplays.add(debris);
-      for(Player p : arena.getPlayers()) {
-        try {
-          p.showEntity(arena.getPlugin(), debris);
-        } catch(Throwable ignored) {
-        }
-      }
-      Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
-        arena.removeEntityGlowColor(debris);
-        if(debris.isValid()) {
-          debris.remove();
-        }
-        temporaryBlockDisplays.remove(debris);
-      }, 16L);
-    }
-    XSound.BLOCK_PISTON_CONTRACT.play(origin, 0.85F, 0.9F);
-    XSound.BLOCK_COMPOSTER_FILL_SUCCESS.play(origin, 1.0F, 1.1F);
   }
 
   private void spawnRadiatorSteamBurst(Location origin, Particle dustParticle) {
@@ -497,17 +351,5 @@ public class VisualTaskEffectManager {
       }
     }
     completionDisplays.clear();
-    for(BlockDisplay bd : temporaryBlockDisplays) {
-      if(bd != null) {
-        arena.removeEntityGlowColor(bd);
-        if(bd.isValid()) {
-          try {
-            bd.remove();
-          } catch(Throwable ignored) {
-          }
-        }
-      }
-    }
-    temporaryBlockDisplays.clear();
   }
 }

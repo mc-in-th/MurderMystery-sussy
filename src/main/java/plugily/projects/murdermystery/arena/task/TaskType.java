@@ -30,13 +30,12 @@ public enum TaskType {
   CHECK_ENGINE_OIL("เช็คน้ำมันเครื่อง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_ENGINE_OIL", "[น้ำมันเครื่อง]", "oil", false),
   CHECK_TIRE_PRESSURE("เช็คลมยาง", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", "[ลมยาง]", "tire", true),
   CHECK_STEERING_FLUID("เช็คน้ำมันพวงมาลัย", "IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", "[พวงมาลัย]", "steering", false),
-  SUBMIT_SCAN("สแกนร่างกายยืนยันตัวตน", "IN_GAME_MESSAGES_ARENA_TASK_SUBMIT_SCAN", "[สแกน]", "scan", true),
-  EMPTY_GARBAGE("ทิ้งขยะออกนอกรถบัส", "IN_GAME_MESSAGES_ARENA_TASK_EMPTY_GARBAGE", "[ทิ้งขยะ]", "trash", true),
-  CLEAR_ASTEROIDS("ยิงสกัดสิ่งกีดขวาง", "IN_GAME_MESSAGES_ARENA_TASK_CLEAR_ASTEROIDS", "[ป้อมปืน]", "asteroids", true),
   CLEAN_WINDSHIELD("เช็ดคราบโคลนกระจกหน้ารถ", "IN_GAME_MESSAGES_ARENA_TASK_CLEAN_WINDSHIELD", "[กระจกหน้า]", "windshield", false),
   UNLOCK_MANIFOLDS("ปลดล็อกท่อแรงดัน", "IN_GAME_MESSAGES_ARENA_TASK_UNLOCK_MANIFOLDS", "[ปลดล็อก]", "manifolds", false),
   CHARGE_BATTERY("พ่วงชาร์จแบตเตอรี่รถบัส", "IN_GAME_MESSAGES_ARENA_TASK_CHARGE_BATTERY", "[แบตเตอรี่]", "battery", false),
   CLEAN_AIR_FILTER("ทำความสะอาดไส้กรองอากาศ", "IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", "[ไส้กรอง]", "filter", false);
+
+  private static final TaskType[] VALUES = values();
 
   private final String defaultName;
   private final String messageKey;
@@ -99,50 +98,15 @@ public enum TaskType {
     }
     String clean = input.trim().toUpperCase().replace("-", "_").replace(" ", "_");
 
-    if(clean.equals("1")) {
-      return FIND_DIESEL_FUEL;
-    }
-    if(clean.equals("2")) {
-      return CHECK_CONTROL_PANEL;
-    }
-    if(clean.equals("3")) {
-      return REPAIR_ENGINE_WIRING;
-    }
-    if(clean.equals("4")) {
-      return CHECK_RADIATOR_WATER;
-    }
-    if(clean.equals("5")) {
-      return CHECK_ENGINE_OIL;
-    }
-    if(clean.equals("6")) {
-      return CHECK_TIRE_PRESSURE;
-    }
-    if(clean.equals("7")) {
-      return CHECK_STEERING_FLUID;
-    }
-    if(clean.equals("8")) {
-      return SUBMIT_SCAN;
-    }
-    if(clean.equals("9")) {
-      return EMPTY_GARBAGE;
-    }
-    if(clean.equals("10")) {
-      return CLEAR_ASTEROIDS;
-    }
-    if(clean.equals("11")) {
-      return CLEAN_WINDSHIELD;
-    }
-    if(clean.equals("12")) {
-      return UNLOCK_MANIFOLDS;
-    }
-    if(clean.equals("13")) {
-      return CHARGE_BATTERY;
-    }
-    if(clean.equals("14")) {
-      return CLEAN_AIR_FILTER;
+    try {
+      int idx = Integer.parseInt(clean);
+      if(idx >= 1 && idx <= VALUES.length) {
+        return VALUES[idx - 1];
+      }
+    } catch(NumberFormatException ignored) {
     }
 
-    for(TaskType t : values()) {
+    for(TaskType t : VALUES) {
       if(t.name().equalsIgnoreCase(clean) || t.getShortId().equalsIgnoreCase(clean)) {
         return t;
       }
@@ -169,15 +133,6 @@ public enum TaskType {
     if(clean.contains("STEERING") || clean.contains("FLUID") || clean.contains("พวงมาลัย")) {
       return CHECK_STEERING_FLUID;
     }
-    if(clean.contains("SCAN") || clean.contains("MEDBAY") || clean.contains("สแกน")) {
-      return SUBMIT_SCAN;
-    }
-    if(clean.contains("TRASH") || clean.contains("GARBAGE") || clean.contains("CHUTE") || clean.contains("ขยะ")) {
-      return EMPTY_GARBAGE;
-    }
-    if(clean.contains("ASTEROID") || clean.contains("WEAPON") || clean.contains("LASER") || clean.contains("TURRET") || clean.contains("ป้อมปืน")) {
-      return CLEAR_ASTEROIDS;
-    }
     if(clean.contains("WINDSHIELD") || clean.contains("WIPE") || clean.contains("GLASS") || clean.contains("กระจก") || clean.contains("โคลน")) {
       return CLEAN_WINDSHIELD;
     }
@@ -193,8 +148,6 @@ public enum TaskType {
 
     return null;
   }
-
-  private static final TaskType[] VALUES = values();
 
   public static TaskType[] getValues() {
     return VALUES;
