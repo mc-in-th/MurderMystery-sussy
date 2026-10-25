@@ -25,6 +25,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -145,7 +146,9 @@ public class SpecialBlockEvents implements Listener {
     }
 
     if(arena.getVentManager().isInsideVent(player)) {
-      arena.getVentManager().exitVent(player);
+      if(!arena.getVentManager().hasJustEntered(player)) {
+        arena.getVentManager().exitVent(player);
+      }
       return;
     }
 
@@ -195,6 +198,9 @@ public class SpecialBlockEvents implements Listener {
     if(ServerVersion.Version.isCurrentEqualOrHigher(ServerVersion.Version.v1_11) && event.getHand() == EquipmentSlot.OFF_HAND) {
       return;
     }
+    if(event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+      return;
+    }
     Player player = event.getPlayer();
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena == null || arena.getArenaState() != IArenaState.IN_GAME || arena.getVentManager() == null) {
@@ -205,6 +211,9 @@ public class SpecialBlockEvents implements Listener {
     }
 
     event.setCancelled(true);
+    if(arena.getVentManager().hasJustEntered(player)) {
+      return;
+    }
 
     ItemStack item = event.getItem();
     int slot = player.getInventory().getHeldItemSlot();

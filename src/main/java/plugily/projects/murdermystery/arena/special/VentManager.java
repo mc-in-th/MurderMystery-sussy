@@ -57,6 +57,7 @@ public class VentManager {
     final ItemStack savedOffHand;
     int currentVentIndex;
     final List<SpecialBlock> sewerBlocks;
+    final long enteredAtMs;
 
     VentSession(ItemStack[] savedInventory, ItemStack[] savedArmor, ItemStack savedOffHand, int currentVentIndex, List<SpecialBlock> sewerBlocks) {
       this.savedInventory = savedInventory;
@@ -64,6 +65,7 @@ public class VentManager {
       this.savedOffHand = savedOffHand;
       this.currentVentIndex = currentVentIndex;
       this.sewerBlocks = sewerBlocks;
+      this.enteredAtMs = System.currentTimeMillis();
     }
   }
 
@@ -74,6 +76,11 @@ public class VentManager {
 
   public boolean isInsideVent(Player player) {
     return activeSessions.containsKey(player.getUniqueId());
+  }
+
+  public boolean hasJustEntered(Player player) {
+    VentSession session = activeSessions.get(player.getUniqueId());
+    return session != null && (System.currentTimeMillis() - session.enteredAtMs) < 300L;
   }
 
   public Location getCurrentVentLocation(Player player) {

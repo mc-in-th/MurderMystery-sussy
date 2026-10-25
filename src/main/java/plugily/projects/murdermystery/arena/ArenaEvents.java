@@ -589,16 +589,27 @@ public class ArenaEvents extends PluginArenaEvents {
       if(arena.getVentDisplays().contains(event.getRightClicked()) || arena.getVentBlockDisplays().contains(event.getRightClicked())) {
         if(Role.isRole(Role.MURDERER, user, arena) && arena.getVentManager() != null) {
           event.setCancelled(true);
+          SpecialBlock closestVent = null;
+          double closestDistSq = 16.0;
+          Location clickLoc = event.getRightClicked().getLocation();
           for(SpecialBlock sb : arena.getSpecialBlocks()) {
-            if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
-              if(sb.getLocation().getWorld() != null && sb.getLocation().getWorld().equals(player.getWorld()) && sb.getLocation().distanceSquared(player.getLocation()) <= 16.0) {
-                if(arena.getVentManager().isInsideVent(player)) {
-                  arena.getVentManager().exitVent(player);
-                } else {
-                  arena.getVentManager().enterVent(player, sb);
-                }
-                return;
+            if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION
+              && sb.getLocation() != null && sb.getLocation().getWorld() != null
+              && sb.getLocation().getWorld().equals(clickLoc.getWorld())) {
+              double dSq = sb.getLocation().clone().add(0.5, 0.5, 0.5).distanceSquared(clickLoc);
+              if(dSq <= closestDistSq) {
+                closestDistSq = dSq;
+                closestVent = sb;
               }
+            }
+          }
+          if(closestVent != null) {
+            if(arena.getVentManager().isInsideVent(player)) {
+              if(!arena.getVentManager().hasJustEntered(player)) {
+                arena.getVentManager().exitVent(player);
+              }
+            } else {
+              arena.getVentManager().enterVent(player, closestVent);
             }
           }
         }
