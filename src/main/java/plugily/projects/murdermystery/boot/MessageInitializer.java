@@ -120,7 +120,7 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_TITLE", new Message("In-Game.Messages.Arena.Task.Win.Title",
         HalloweenChat.color("<#5A4E7C>[<#6EEB83>ซ่อมแซมรถบัสสำเร็จ<#5A4E7C>]")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE", new Message("In-Game.Messages.Arena.Task.Win.Subtitle",
-        HalloweenChat.color("<#B8B0C8>ผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ")));
+        HalloweenChat.color("<#B8B0C8>ผู้โดยสารหลบหนีออกจากป่ามืดได้สำเร็จ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", new Message("In-Game.Messages.Arena.Task.Types.Find-Diesel-Fuel", "หาน้ำมันดีเซล"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", new Message("In-Game.Messages.Arena.Task.Types.Check-Control-Panel", "ตรวจสอบแผงควบคุมรถบัส"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_REPAIR_ENGINE_WIRING", new Message("In-Game.Messages.Arena.Task.Types.Repair-Engine-Wiring", "ซ่อมสายไฟเครื่องยนต์"));

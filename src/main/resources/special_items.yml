@@ -12,9 +12,9 @@ Role-Pass:
   permission: ""
   execute:
     - "p:mm roleselector"
-  displayname: "&c&lClick to open role pass menu &7(Right Click)"
+  displayname: "&#FF7518&lเลือกใช้บัตรบทบาท &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Enjoy one round of guaranteed role with pass"
+    - "&#B8B0C8ใช้บัตรเพื่อเลือกรับบทบาทที่ต้องการในรอบนี้"
   material: CHEST
   slot: 4
   stage: LOBBY
@@ -26,9 +26,9 @@ Lobby-Leave:
   permission: ""
   execute:
     - ""
-  displayname: "&c&lReturn to Lobby &7(Right Click)"
+  displayname: "&#FF3B47&lออกจากห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to leave to the lobby"
+    - "&#B8B0C8คลิกขวาเพื่อกลับไปยังล็อบบี้"
   material: RED_BED
   slot: 8
   stage: LOBBY
@@ -40,9 +40,9 @@ Spectator-Leave:
   permission: ""
   execute:
     - ""
-  displayname: "&c&lLeave the Game &7(Right Click)"
+  displayname: "&#FF3B47&lออกจากห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to leave to the lobby"
+    - "&#B8B0C8คลิกขวาเพื่อกลับไปยังล็อบบี้"
   material: RED_BED
   slot: 8
   stage: SPECTATOR
@@ -53,9 +53,9 @@ Player-List:
   permission: ""
   execute:
     - ""
-  displayname: "&a&lAlive Players &7(Right Click)"
+  displayname: "&#6EEB83&lรายชื่อผู้รอดชีวิต &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to see alive players list"
+    - "&#B8B0C8คลิกขวาเพื่อดูรายชื่อผู้รอดชีวิต"
   material: PLAYER_HEAD
   slot: 0
   stage: SPECTATOR
@@ -66,9 +66,9 @@ Spectator-Settings:
   permission: ""
   execute:
     - ""
-  displayname: "&b&lSpectator Settings &7(Right Click)"
+  displayname: "&#72EFDD&lตั้งค่าโหมดผู้ชม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to adjust spectator settings"
+    - "&#B8B0C8คลิกขวาเพื่อปรับตั้งค่าการเข้าชม"
   material: COMPASS
   slot: 4
   stage: SPECTATOR
@@ -79,10 +79,10 @@ Forcestart:
   permission: "murdermystery.admin.forcestart"
   execute:
     - ""
-  displayname: "&c&lStart the game &7(Right Click)"
+  displayname: "&#FFB703&lบังคับเริ่มเกมทันที &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7You need the following permission for it"
-    - "&7murdermystery.admin.forcestart"
+    - "&#B8B0C8สำหรับผู้ดูแลระบบที่มีสิทธิ์"
+    - "&#5A4E7Cmurdermystery.admin.forcestart"
   material: EMERALD
   slot: 2
   stage: ENOUGH_PLAYERS_TO_START
@@ -94,9 +94,9 @@ Arena-Selector:
   permission: ""
   execute:
     - "p:mm arenas"
-  displayname: "&c&lArena selector &7(Right Click)"
+  displayname: "&#FF7518&lเลือกห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to see all arenas"
+    - "&#B8B0C8คลิกขวาเพื่อดูรายชื่อห้องเกมทั้งหมด"
   material: CHEST
   slot: 4
   stage: SERVER_JOIN
@@ -108,9 +108,9 @@ Stats:
   permission: ""
   execute:
     - "p:mm stats"
-  displayname: "&c&lStats &7(Right Click)"
+  displayname: "&#FFB703&lสถิติการเล่น &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to see your Stats"
+    - "&#B8B0C8คลิกขวาเพื่อดูสถิติของคุณ"
   material: PLAYER_HEAD
   slot: 0
   stage: SERVER_JOIN
@@ -123,9 +123,9 @@ Back-To-Hub:
   permission: ""
   execute:
     - "p:hub"
-  displayname: "&c&lBack to Hub &7(Right Click)"
+  displayname: "&#FF3B47&lกลับสู่ล็อบบี้หลัก &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&7Right-click to return to lobby"
+    - "&#B8B0C8คลิกขวาเพื่อกลับไปยังเซิร์ฟเวอร์หลัก"
   material: RED_BED
   slot: 8
   stage: SERVER_JOIN
