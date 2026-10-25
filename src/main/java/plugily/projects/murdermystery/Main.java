@@ -102,8 +102,24 @@ public class Main extends PluginMain {
       File specialItemsFile = new File(getDataFolder(), "special_items.yml");
       if(specialItemsFile.exists()) {
         YamlConfiguration specialItemsConfig = YamlConfiguration.loadConfiguration(specialItemsFile);
+        boolean modified = false;
         if(specialItemsConfig.contains("Role-Pass")) {
           specialItemsConfig.set("Role-Pass", null);
+          modified = true;
+        }
+        String lobbyLeaveName = specialItemsConfig.getString("Lobby-Leave.displayname", "");
+        if(lobbyLeaveName.contains("ออกจากห้องเกม")) {
+          specialItemsConfig.set("Lobby-Leave.displayname", "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)");
+          specialItemsConfig.set("Lobby-Leave.lore", java.util.Collections.singletonList("&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"));
+          modified = true;
+        }
+        String spectatorLeaveName = specialItemsConfig.getString("Spectator-Leave.displayname", "");
+        if(spectatorLeaveName.contains("ออกจากห้องเกม")) {
+          specialItemsConfig.set("Spectator-Leave.displayname", "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)");
+          specialItemsConfig.set("Spectator-Leave.lore", java.util.Collections.singletonList("&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"));
+          modified = true;
+        }
+        if(modified) {
           specialItemsConfig.save(specialItemsFile);
         }
       }

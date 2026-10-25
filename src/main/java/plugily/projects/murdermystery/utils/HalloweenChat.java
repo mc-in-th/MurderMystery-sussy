@@ -497,6 +497,9 @@ public final class HalloweenChat {
                 || existingStr.contains("กองไฟ")
                 || existingStr.contains(">Event<")
                 || existingStr.contains("คำสั่ง Event")
+                || existingStr.contains("เพื่อออกจากห้อง")
+                || existingStr.contains("อยู่ในห้องเกม")
+                || existingStr.contains("ออกจากขบวนรถบัส")
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             boolean hasServerIp = false;
@@ -513,6 +516,9 @@ public final class HalloweenChat {
                     || itemStr.contains("กองไฟ")
                     || itemStr.contains(">Event<")
                     || itemStr.contains("คำสั่ง Event")
+                    || itemStr.contains("ออกจากห้องเกม")
+                    || itemStr.contains("สนามประลอง")
+                    || (key.startsWith("Scoreboard.Content.") && itemStr.contains("----------------"))
                     || (itemStr.contains("<#5A4E7C>") && !itemStr.contains("<shadow:"))) {
                   hasStaleGradient = true;
                   break;

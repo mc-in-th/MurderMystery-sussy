@@ -13,9 +13,9 @@ Lobby-Leave:
   permission: ""
   execute:
     - ""
-  displayname: "&#FF3B47&lออกจากห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
+  displayname: "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&#B8B0C8คลิกขวาเพื่อกลับไปยังล็อบบี้"
+    - "&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"
   material: RED_BED
   slot: 8
   stage: LOBBY
@@ -27,9 +27,9 @@ Spectator-Leave:
   permission: ""
   execute:
     - ""
-  displayname: "&#FF3B47&lออกจากห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
+  displayname: "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&#B8B0C8คลิกขวาเพื่อกลับไปยังล็อบบี้"
+    - "&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"
   material: RED_BED
   slot: 8
   stage: SPECTATOR
@@ -81,9 +81,9 @@ Arena-Selector:
   permission: ""
   execute:
     - "p:mm arenas"
-  displayname: "&#FF7518&lเลือกห้องเกม &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
+  displayname: "&#FF7518&lเลือกขบวนรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)"
   lore:
-    - "&#B8B0C8คลิกขวาเพื่อดูรายชื่อห้องเกมทั้งหมด"
+    - "&#B8B0C8คลิกขวาเพื่อดูขบวนรถบัสทั้งหมด"
   material: CHEST
   slot: 4
   stage: SERVER_JOIN

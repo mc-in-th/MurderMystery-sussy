@@ -157,7 +157,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
 
     if(state == IArenaState.WAITING_FOR_PLAYERS) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>รอผู้เล่น<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add("");
@@ -168,14 +168,13 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
       lines.add("");
-      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#FF7518>mcth.gg</shadow>"));
       return lines;
     }
 
     if(state == IArenaState.STARTING || state == IArenaState.FULL_GAME) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: " + (state == IArenaState.FULL_GAME
         ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ห้องเต็ม<shadow:#000000FF><#5A4E7C>]</shadow>"
@@ -188,8 +187,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         lines.add(HalloweenChat.color("<#F4F1DE>โอกาสเป็นฆาตกร: <#FF3B47>%arena_murderer_chance%"));
       }
       lines.add("");
-      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#FF7518>mcth.gg</shadow>"));
       return lines;
     }
 
@@ -197,7 +195,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean isMurderer = Role.isRole(Role.MURDERER, user, gameArena);
 
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>บทบาท: " + (isMurderer
         ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>"
         : "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ผู้โดยสาร<shadow:#000000FF><#5A4E7C>]</shadow>")));
@@ -211,7 +209,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         if(sampleTasks != null && !sampleTasks.isEmpty()) {
           int shown = 0;
           for(GameTask task : sampleTasks) {
-            if(shown >= 6) {
+            if(shown >= 7) {
               break;
             }
             lines.add(HalloweenChat.color("<#B8B0C8>- <#F4F1DE>" + task.getTaskType().getDisplayName()));
@@ -228,7 +226,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         if(tasks != null && !tasks.isEmpty()) {
           int shown = 0;
           for(GameTask task : tasks) {
-            if(shown >= 6) {
+            if(shown >= 7) {
               break;
             }
             String visualTag = (task.getTaskType().isVisual() && gameArena.isVisualTasksEnabled())
@@ -246,8 +244,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
         }
       }
       lines.add("");
-      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#FF7518>mcth.gg</shadow>"));
       return lines;
     }
 
@@ -255,7 +252,7 @@ public class ScoreboardManager extends PluginScoreboardManager {
       boolean murderWon = gameArena.isMurdererVictory();
       Player mainMurderer = gameArena.getCharacter(Arena.CharacterType.MURDERER);
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>จบเกมแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add(HalloweenChat.color("<#F4F1DE>ผู้ชนะ: " + (murderWon
         ? "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>"
@@ -274,21 +271,19 @@ public class ScoreboardManager extends PluginScoreboardManager {
       }
       lines.add(HalloweenChat.color("<#F4F1DE>กลับล็อบบี้ใน: <#FFB703>" + Math.max(0, gameArena.getTimer()) + " วิ"));
       lines.add("");
-      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#FF7518>mcth.gg</shadow>"));
       return lines;
     }
 
     if(state == IArenaState.RESTARTING) {
       List<String> lines = new ArrayList<>();
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add("");
       lines.add(HalloweenChat.color("<#F4F1DE>ด่าน: <#FF7518>" + gameArena.getMapName()));
       lines.add(HalloweenChat.color("<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"));
       lines.add("");
-      lines.add(HalloweenChat.color("<#B8B0C8>กำลังเตรียมสนามประลองใหม่"));
+      lines.add(HalloweenChat.color("<#B8B0C8>กำลังเตรียมขบวนรถบัสใหม่"));
       lines.add("");
-      lines.add(HalloweenChat.color("<#FF7518>mcth.gg"));
-      lines.add(HalloweenChat.color("<shadow:#000000FF><#5A4E7C>----------------</shadow>"));
+      lines.add(HalloweenChat.color("<shadow:#000000FF><#FF7518>mcth.gg</shadow>"));
       return lines;
     }
 

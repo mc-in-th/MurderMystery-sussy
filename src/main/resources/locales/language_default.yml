@@ -40,7 +40,7 @@ Commands:
   Hold-Any-Item: "%color_chat_issue%%plugin_prefix% กรุณาถือไอเทมในมือก่อนใช้คำสั่ง"
   No-Free-Arenas: "%color_chat_issue%%plugin_prefix% ขณะนี้ไม่มีห้องเกมที่ว่างอยู่"
   Only-By-Player: "%color_chat_issue%%plugin_prefix% คำสั่งนี้ใช้ได้เฉพาะผู้เล่นในเกมเท่านั้น"
-  Not-Playing: "%color_chat_issue%%plugin_prefix% คุณต้องอยู่ในห้องเกมจึงจะใช้คำสั่งนี้ได้"
+  Not-Playing: "%color_chat_issue%%plugin_prefix% คุณต้องอยู่บนรถบัสจึงจะใช้คำสั่งนี้ได้"
   No-Permission: "%color_chat_issue%%plugin_prefix% คุณไม่มีสิทธิ์ใช้งานคำสั่งนี้"
   Player-Not-Found: "%color_chat_issue%%plugin_prefix% ไม่พบผู้เล่น %player%"
   Invalid-Location-Teleport: "%color_chat_issue%%plugin_prefix% ตำแหน่งสำหรับวาร์ปไม่ถูกต้อง"
@@ -59,10 +59,10 @@ Commands:
     Description:
       - "<#FFB703>คำสั่งผู้เล่น:"
       - "<#72EFDD>/%plugin_short_command% stats <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดูสถิติการเล่นของคุณ"
-      - "<#72EFDD>/%plugin_short_command% leave <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ออกจากห้องเกมปัจจุบัน"
-      - "<#72EFDD>/%plugin_short_command% join <arena> <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>เข้าร่วมห้องเกมที่ระบุ"
+      - "<#72EFDD>/%plugin_short_command% leave <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ลงจากรถบัส"
+      - "<#72EFDD>/%plugin_short_command% join <arena> <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ขึ้นรถบัสขบวนที่ระบุ"
       - "<#72EFDD>/%plugin_short_command% top <statistic> <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดู 10 อันดับผู้เล่นสูงสุด"
-      - "<#72EFDD>/%plugin_short_command% randomjoin <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>สุ่มเข้าร่วมห้องเกมที่ว่าง"
+      - "<#72EFDD>/%plugin_short_command% randomjoin <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>สุ่มขึ้นรถบัสขบวนที่ว่าง"
     Admin-Bonus-Description: "<#FF7518>/%plugin_short_command%a <shadow:#000000FF><#5A4E7C>-</shadow> <#F4F1DE>ดูคำสั่งสำหรับผู้ดูแลระบบทั้งหมด"
     Footer: "<shadow:#000000FF><#5A4E7C>--------------------------------------------------</shadow>"
 
@@ -88,60 +88,54 @@ Scoreboard:
       Picked: "<#FFB703>มีผู้เก็บธนูแล้ว"
   Content:
     Waiting:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>รอผู้เล่น<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
       - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
       - "<#F4F1DE>ขั้นต่ำ: <#FFB703>%arena_min_players% คน"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
     Starting:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังจะเริ่ม<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
       - "<#F4F1DE>เริ่มใน: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้เล่น: <#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players% คน"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
     # Contents of scoreboard while ingame
     In-Game:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
     In-Game-Murderer:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>บทบาท: %arena_player_role%"
       - "<#F4F1DE>เวลา: <#FFB703>%arena_time%"
       - "<#F4F1DE>ผู้รอดชีวิต: <#72EFDD>%arena_innocent_size% คน"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
     # Contents of scoreboard while state is ending
     Ending:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>จบเกมแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"
       - "<#F4F1DE>ฆาตกร: <#FF3B47>%arena_murderer_list%"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
     # Contents of scoreboard while state is restarting
     Restarting:
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - ""
       - "<#F4F1DE>ด่าน: <#FF7518>%arena_name%"
       - "<#F4F1DE>สถานะ: <shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>กำลังรีเซ็ต<shadow:#000000FF><#5A4E7C>]</shadow>"
       - ""
-      - "<#B8B0C8>กำลังเตรียมสนามประลองใหม่"
+      - "<#B8B0C8>กำลังเตรียมขบวนรถบัสใหม่"
       - ""
-      - "<#FF7518>mcth.gg"
-      - "<shadow:#000000FF><#5A4E7C>----------------</shadow>"
+      - "<shadow:#000000FF><#FF7518>mcth.gg</shadow>"
 
 #
 # Bossbar messages
@@ -159,7 +153,7 @@ Bossbar:
     Ending:
       - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>เกมจบลงแล้ว"
     Restarting:
-      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
+      - "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>กำลังเตรียมขบวนรถบัสใหม่"
 
 #
 # In-Game Messages
@@ -169,9 +163,9 @@ In-Game:
   Plugin-Prefix: "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Haunted Bus<shadow:#000000FF><#5A4E7C>]</shadow>"
   Game-Chat-Format: "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>%user_statistic_level%<shadow:#000000FF><#5A4E7C>]</shadow> <#C77DFF>%player% <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>%message%"
   You-Leveled-Up: "%plugin_prefix% <#6EEB83>เลเวลอัปแล้ว ตอนนี้คุณอยู่เลเวล <#FFB703>%number%"
-  Commands-Blocked: "%color_chat_issue%%plugin_prefix% ไม่สามารถใช้คำสั่งอื่นขณะอยู่ในเกมได้ ใช้ได้เฉพาะ /%plugin_short_command% leave เพื่อออกจากห้อง"
+  Commands-Blocked: "%color_chat_issue%%plugin_prefix% ไม่สามารถใช้คำสั่งอื่นขณะอยู่ในเกมได้ ใช้ได้เฉพาะ /%plugin_short_command% leave เพื่อลงจากรถบัส"
   Join:
-    Already-Playing: "%color_chat_issue%%plugin_prefix% คุณอยู่ในห้องเกมอยู่แล้ว พิมพ์ /%plugin_short_command% leave เพื่อออกจากห้อง"
+    Already-Playing: "%color_chat_issue%%plugin_prefix% คุณอยู่บนรถบัสอยู่แล้ว พิมพ์ /%plugin_short_command% leave เพื่อลงจากรถบัส"
     No-Permission: "%color_chat_issue%%plugin_prefix% คุณไม่มีสิทธิ์ %value% สำหรับเข้าร่วมห้องนี้"
     Full-Game: "%color_chat_issue%%plugin_prefix% ห้องนี้เต็มแล้ว คุณไม่มีสิทธิ์เข้าห้องที่เต็ม"
     No-Slots-For-Premium: "%color_chat_issue%%plugin_prefix% ห้องนี้เต็มไปด้วยผู้เล่นสิทธิ์พิเศษแล้ว"
@@ -205,8 +199,8 @@ In-Game:
           Title: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก"
         Visibility: "%value% <#F4F1DE>การมองเห็นผู้ชมคนอื่น"
   Messages:
-    Join: "%plugin_prefix% %player% เข้าร่วมขบวนรถบัส <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
-    Leave: "%plugin_prefix% %player% ออกจากขบวนรถบัส <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
+    Join: "%plugin_prefix% %player% ขึ้นรถบัสแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
+    Leave: "%plugin_prefix% %player% ลงจากรถบัสแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
     Death: "%plugin_prefix% %player% เสียชีวิตแล้ว"
     Lobby:
       Start-In: "%plugin_prefix% เกมจะเริ่มในอีก %arena_time% วินาที"
