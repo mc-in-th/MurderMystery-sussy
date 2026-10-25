@@ -300,14 +300,20 @@ public final class HalloweenChat {
           if(defaultConfig.isConfigurationSection(key)) {
             continue;
           }
-          if(key.startsWith("Color.")
-              || key.startsWith("Bossbar.")
-              || key.startsWith("Scoreboard.")
-              || key.startsWith("In-Game.Messages.Arena.Playing.Role.")
-              || key.startsWith("In-Game.Messages.Arena.Chances.")
-              || key.startsWith("In-Game.Messages.Game-End.Summary")
-              || key.startsWith("In-Game.Messages.Arena.Task.")
-              || key.startsWith("In-Game.Messages.Arena.Voting.")) {
+          boolean isMissing = !languageConfig.isSet(key);
+          Object existing = isMissing ? null : languageConfig.get(key);
+          boolean hasStaleGradient = false;
+          if(existing instanceof String) {
+            hasStaleGradient = ((String) existing).contains("<gradient:");
+          } else if(existing instanceof List<?>) {
+            for(Object item : (List<?>) existing) {
+              if(item instanceof String && ((String) item).contains("<gradient:")) {
+                hasStaleGradient = true;
+                break;
+              }
+            }
+          }
+          if(isMissing || hasStaleGradient) {
             languageConfig.set(key, defaultConfig.get(key));
           }
         }

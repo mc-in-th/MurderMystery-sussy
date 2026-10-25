@@ -86,11 +86,11 @@ Commands:
 # Placeholders:
 # https://wiki.plugily.xyz/REPLACEWITHPROJECTNAME/placeholders/language
 Scoreboard:
-  Title: "<gradient:#FF5400:#FFB703><bold>MurderMystery</bold></gradient>"
+  Title: "<#5A4E7C>[<#FF7518>MurderMystery<#5A4E7C>]"
   Roles:
-    Detective: "<gradient:#00B4D8:#72EFDD>นักสืบ</gradient>"
-    Murderer: "<gradient:#D90429:#FF5400>ฆาตกร</gradient>"
-    Innocent: "<gradient:#FF7518:#FFB703>ผู้บริสุทธิ์</gradient>"
+    Detective: "<#72EFDD>นักสืบ"
+    Murderer: "<#FF3B47>ฆาตกร"
+    Innocent: "<#FFB703>ผู้บริสุทธิ์"
     Dead: "<#5A4E7C>เสียชีวิต"
   Detective:
     Alive: "Detective &aAlive"
@@ -165,18 +165,18 @@ Scoreboard:
 #
 # Bossbar needs to be enabled on config.yml
 Bossbar:
-  Title: "<gradient:#9D4EDD:#FF7518><bold>%plugin_name%</bold></gradient>"
+  Title: "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>]"
   Content:
     Waiting:
-      - "<#B8B0C8>กำลังรอผู้เล่นเพิ่มเติม... <#5A4E7C>(<#FFB703>Waiting for more players...<#5A4E7C>)"
+      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#B8B0C8>กำลังรอผู้เล่นเพิ่มเติม"
     Starting:
-      - "<gradient:#FF5400:#FFB703><bold>กำลังจะเริ่มใน:</bold></gradient> <#6EEB83>%arena_time% <#B8B0C8>วินาที"
+      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>เกมกำลังจะเริ่มใน <#FFB703>%arena_time% วิ"
     In-Game:
-      - "<gradient:#9D4EDD:#FF7518><bold>%plugin_name%</bold></gradient> <#5A4E7C>| <#B8B0C8>บทบาทของคุณ: %arena_player_role%"
+      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#F4F1DE>บทบาทของคุณ %arena_player_role%"
     Ending:
-      - "<gradient:#FF5400:#FFB703><bold>เกมจบลงแล้ว! (Game Over)</bold></gradient>"
+      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#FFB703>เกมจบลงแล้ว"
     Restarting:
-      - "<#B8B0C8>กำลังรีเซ็ตสนามประลอง คุณจะถูกย้ายในไม่ช้า..."
+      - "<#5A4E7C>[<#FF7518>%plugin_name%<#5A4E7C>] <#B8B0C8>กำลังรีเซ็ตสนามประลอง"
 
 #
 # In-Game Messages
@@ -264,7 +264,7 @@ In-Game:
       Set-Starting-In-To-0: "%plugin_prefix% An admin set waiting time to 0. The game starts now!"
     Arena:
       Chances:
-        Action-Bar: "<#FF3B47>โอกาสเป็นฆาตกร (Murderer Chance): <#FFB703>%arena_murderer_chance%"
+        Action-Bar: "<#5A4E7C>[<#FF3B47>Murderer Chance<#5A4E7C>] <#F4F1DE>โอกาสเป็นฆาตกร <#FFB703>%arena_murderer_chance%"
       Cooldown: "&8&l[%value%&8&l] &6%number% seconds"
       Locator:
         Bow: "Bow locator"
@@ -283,16 +283,16 @@ In-Game:
             Lore:
               - "Cost 1 detective pass"
               - "You got %number%"
-        Fail: "You do not got enough passes for %value% role"
-        Success: "You will be %value% next round!"
-        Change: "You now got %number% %value% passes!"
+        Fail: "%plugin_prefix% You do not got enough passes for %value% role"
+        Success: "%plugin_prefix% You will be %value% next round!"
+        Change: "%plugin_prefix% You now got %number% %value% passes!"
       Playing:
         Time-Left: "5,20,5;%arena_time% seconds left!;After %arena_time%s the Murderer will lose"
         Role:
           Change: "5,20,5;Previous %arena_player_role% has left!"
-          Murderer: "5,20,5;<gradient:#D90429:#FF5400><bold>บทบาท | ฆาตกร</bold></gradient>;<#B8B0C8>กำจัดผู้โดยสารทุกคนและใช้ท่อระบายน้ำแฝงตัว!"
-          Detective: "5,20,5;<gradient:#00B4D8:#72EFDD><bold>บทบาท | นักสืบ</bold></gradient>;<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร!"
-          Innocent: "5,20,5;<gradient:#FF7518:#FFB703><bold>บทบาท | ผู้บริสุทธิ์</bold></gradient>;<#B8B0C8>ร่วมมือกันซ่อมรถบัสและเปิดโปงฆาตกร!"
+          Murderer: "5,20,5;<#5A4E7C>[<#FF3B47>ฆาตกร<#5A4E7C>];<#B8B0C8>กำจัดผู้โดยสารทุกคนและใช้ท่อระบายน้ำแฝงตัว"
+          Detective: "5,20,5;<#5A4E7C>[<#72EFDD>นักสืบ<#5A4E7C>];<#B8B0C8>สืบหาความจริงและเปิดโปงฆาตกร"
+          Innocent: "5,20,5;<#5A4E7C>[<#FFB703>ผู้บริสุทธิ์<#5A4E7C>];<#B8B0C8>ร่วมมือกันซ่อมรถบัสและเปิดโปงฆาตกร"
         Score:
           Bonus: "+%number% score (%value%)"
           Gold: "Picked up gold!"
@@ -345,12 +345,12 @@ In-Game:
             Gold: "&a+1 Bow Shot!"
             Title: "5,20,5;;You collected 10 gold and got an arrow!"
       Task:
-        Bossbar: "<gradient:#FF5400:#FFB703><bold>ซ่อมแซมรถบัส:</bold></gradient> <#6EEB83>%number%<#5A4E7C>/<#6EEB83>%value% <#FFB703>(Bus Repair)"
-        Completed: "<#6EEB83>สำเร็จภารกิจ: <#FFB703>%value%<#6EEB83>!"
-        All-Completed: "<gradient:#38B000:#9EF01A><bold>ซ่อมแซมรถบัสสำเร็จแล้ว! ผู้โดยสารหลบหนีออกจากเมืองได้และคว้าชัยชนะ!</bold></gradient>"
+        Bossbar: "<#5A4E7C>[<#FF7518>Bus Repair<#5A4E7C>] <#F4F1DE>ซ่อมแซมรถบัส <#FFB703>%number%<#5A4E7C>/<#FFB703>%value%"
+        Completed: "<#5A4E7C>[<#6EEB83>Task Completed<#5A4E7C>] <#F4F1DE>สำเร็จภารกิจ <#FFB703>%value%"
+        All-Completed: "<#5A4E7C>[<#6EEB83>Bus Repair<#5A4E7C>] <#6EEB83>ซ่อมแซมรถบัสสำเร็จแล้ว ผู้โดยสารหลบหนีและคว้าชัยชนะ"
         Win:
-          Title: "<gradient:#38B000:#9EF01A><bold>รถบัสซ่อมแซมสำเร็จ!</bold></gradient>"
-          Subtitle: "<gradient:#FF7518:#FFB703>ผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ!</gradient>"
+          Title: "<#5A4E7C>[<#6EEB83>ซ่อมแซมรถบัสสำเร็จ<#5A4E7C>]"
+          Subtitle: "<#B8B0C8>ผู้โดยสารหลบหนีออกจากเมืองได้สำเร็จ"
         Types:
           Find-Diesel-Fuel: "หาน้ำมันดีเซล"
           Check-Control-Panel: "ตรวจสอบแผงควบคุมรถบัส"
@@ -359,26 +359,28 @@ In-Game:
           Check-Engine-Oil: "เช็คน้ำมันเครื่อง"
           Check-Tire-Pressure: "เช็คลมยาง"
           Check-Steering-Fluid: "เช็คน้ำมันพวงมาลัย"
+          Submit-Scan: "สแกนร่างกายยืนยันตัวตน"
+          Empty-Garbage: "ทิ้งขยะออกนอกรถบัส"
+          Clear-Asteroids: "ยิงสกัดสิ่งกีดขวาง"
+          Clean-Windshield: "เช็ดคราบโคลนกระจกหน้ารถ"
+          Unlock-Manifolds: "ปลดล็อกท่อแรงดัน"
+          Charge-Battery: "พ่วงชาร์จแบตเตอรี่รถบัส"
+          Clean-Air-Filter: "ทำความสะอาดไส้กรองอากาศ"
       Voting:
-        Cooldown: "%color_chat_issue%การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่ กรุณารอสักครู่!"
-        Body-Reported: "<gradient:#D90429:#FF5400><bold>[รายงานศพ]</bold></gradient> <#C77DFF>%player% <#FF3B47>พบศพผู้เสียชีวิตและเรียกประชุมด่วนรอบกองไฟ!"
-        Discussion-Start: "<gradient:#FF5400:#FFB703><bold>[ประชุมรอบกองไฟ]</bold></gradient> <#C77DFF>%player% <#FFB703>เรียกประชุมด่วน! เริ่มเวลาปรึกษาหารือ (<#FF3B47>%number% วินาที<#FFB703>)"
-        Vote-Now: "<gradient:#9D4EDD:#FF7518><bold>[เปิดโหวต]</bold></gradient> <#FFB703>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก (<#FF3B47>%number% วินาที<#FFB703>)"
-        Discussion-Timer: "<gradient:#FF5400:#FFB703>เวลาปรึกษาที่เหลือ:</gradient> <#FF3B47>%number% วินาที"
-        Vote-Timer: "<gradient:#D90429:#FF5400>เวลาโหวตที่เหลือ:</gradient> <#FFB703>%number% วินาที"
-        Already-Voted: "%color_chat_issue%คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว!"
-        Player-Voted: "<#C77DFF>%player% <#B8B0C8>ได้ยืนยันการลงคะแนนโหวตแล้ว"
-        No-Eject: "<gradient:#FF5400:#FFB703>ไม่มีใครถูกโหวตคัดออกในรอบนี้</gradient> <#B8B0C8>(คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม)"
-        No-Eject-Title: "<gradient:#FF5400:#FFB703><bold>ไม่มีใครถูกโหวตออก</bold></gradient>"
+        Cooldown: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FF3B47>การเรียกประชุมฉุกเฉินยังติดคูลดาวน์อยู่"
+        Body-Reported: "<#5A4E7C>[<#FF3B47>Dead Body<#5A4E7C>] <#FFB703>%player% <#F4F1DE>พบศพผู้เสียชีวิตและเรียกประชุมด่วน"
+        Discussion-Start: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#FFB703>%player% <#F4F1DE>เรียกประชุมฉุกเฉิน เวลาปรึกษา <#FFB703>%number% วิ"
+        Vote-Now: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>คลิกเลือกผู้ต้องสงสัยเพื่อโหวตคัดออก <#5A4E7C>(<#FFB703>%number% วิ<#5A4E7C>)"
+        Discussion-Timer: "<#5A4E7C>[<#FF7518>Emergency Campfire<#5A4E7C>] <#F4F1DE>เวลาปรึกษา <#FFB703>%number% วิ"
+        Vote-Timer: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>เวลาโหวต <#FFB703>%number% วิ"
+        Already-Voted: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FF3B47>คุณได้ยืนยันการลงคะแนนโหวตไปแล้ว"
+        Player-Voted: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ได้ยืนยันการลงคะแนนโหวตแล้ว"
+        No-Eject: "<#5A4E7C>[<#FF7518>Voting<#5A4E7C>] <#F4F1DE>ไม่มีใครถูกโหวตคัดออกในรอบนี้ <#5A4E7C>(<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม<#5A4E7C>)"
+        No-Eject-Title: "<#5A4E7C>[<#FF7518>ไม่มีใครถูกโหวตออก<#5A4E7C>]"
         No-Eject-Subtitle: "<#B8B0C8>คะแนนโหวตเสมอ หรือเสียงส่วนใหญ่เลือกข้าม"
-        Ejected: "<#C77DFF>%player% <#FF3B47>ถูกโหวตคัดออก %value%"
-        Was-Impostor: "<gradient:#38B000:#9EF01A><bold>(เขาคือฆาตกร!)</bold></gradient>"
-        Was-Not-Impostor: "<gradient:#D90429:#FF5400><bold>(เขาไม่ใช่ฆาตกร...)</bold></gradient>"
-
-
-
-
-
+        Ejected: "<#5A4E7C>[<#FF3B47>Voting<#5A4E7C>] <#FFB703>%player% <#F4F1DE>ถูกโหวตคัดออก %value%"
+        Was-Impostor: "<#5A4E7C>(<#6EEB83>เขาคือฆาตกร<#5A4E7C>)"
+        Was-Not-Impostor: "<#5A4E7C>(<#FF3B47>เขาไม่ใช่ฆาตกร<#5A4E7C>)"
 
 
 #
@@ -484,4 +486,4 @@ Leaderboard:
 # You edited it, huh? Next time hurt yourself!
 Do-Not-Edit:
   File-Version: 1
-  Core-Version: 1
+  Core-Version: 2

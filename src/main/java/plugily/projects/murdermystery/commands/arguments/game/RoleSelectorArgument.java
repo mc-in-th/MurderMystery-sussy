@@ -21,6 +21,8 @@ package plugily.projects.murdermystery.commands.arguments.game;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.commands.arguments.data.CommandArgument;
@@ -39,6 +41,8 @@ import java.util.List;
 
 public class RoleSelectorArgument implements Listener {
 
+  private static final int PASS_CONTRIBUTION_BONUS = 1_000_000;
+
   public RoleSelectorArgument(ArgumentsRegistry registry) {
     registry.mapArgument("murdermystery", new LabeledCommandArgument("roleselector", "murdermystery.command.roleselector", CommandArgument.ExecutorType.PLAYER,
       new LabelData("/mm roleselector", "/mm roleselector", "&7Select a role\n&6Permission: &7murdermystery.command.roleselector")) {
@@ -46,9 +50,14 @@ public class RoleSelectorArgument implements Listener {
       public void execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
 
-        if(registry.getPlugin().getBukkitHelper().checkIsInGameInstance(player)) {
-          openRolePassMenu(player, registry.getPlugin());
+        if(!registry.getPlugin().getBukkitHelper().checkIsInGameInstance(player)) {
+          return;
         }
+        IPluginArena arena = registry.getPlugin().getArenaRegistry().getArena(player);
+        if(arena == null || (arena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && arena.getArenaState() != IArenaState.STARTING)) {
+          return;
+        }
+        openRolePassMenu(player, registry.getPlugin());
       }
     });
   }
@@ -61,13 +70,25 @@ public class RoleSelectorArgument implements Listener {
       .name(new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_ROLE_MURDERER_NAME").asKey().build())
       .lore(descriptionMurderer)
       .build(), event -> {
+      IPluginArena arena = plugin.getArenaRegistry().getArena(player);
+      if(arena == null || (arena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && arena.getArenaState() != IArenaState.STARTING)) {
+        player.closeInventory();
+        return;
+      }
       IUser user = plugin.getUserManager().getUser(player);
+      if(user.getStatistic("CONTRIBUTION_MURDERER") >= PASS_CONTRIBUTION_BONUS) {
+        player.closeInventory();
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_SUCCESS").asKey().player(player).value(Role.MURDERER.name()).sendPlayer();
+        return;
+      }
       if(user.getStatistic("PASS_MURDERER") <= 0) {
+        player.closeInventory();
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_FAIL").asKey().player(player).value(Role.MURDERER.name()).sendPlayer();
         return;
       }
       user.adjustStatistic("PASS_MURDERER", -1);
-      user.adjustStatistic("CONTRIBUTION_MURDERER", 999999999);
+      user.setStatistic("CONTRIBUTION_MURDERER", PASS_CONTRIBUTION_BONUS);
+      player.closeInventory();
       new MessageBuilder("IN_GAME_MESSAGES_ARENA_PASS_SUCCESS").asKey().player(player).value(Role.MURDERER.name()).sendPlayer();
     }));
     gui.refresh();

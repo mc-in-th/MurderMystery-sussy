@@ -71,8 +71,11 @@ public class RolePassArgument {
           return;
         }
         int amount = opt.orElse(0);
-        //player
-        Player player = args.length == 5 ? Bukkit.getPlayerExact(args[4]) : (Player) sender;
+        if(args.length < 5 && !(sender instanceof Player)) {
+          sender.sendMessage(ChatColor.RED + "Command: /mma rolepass <add/set/remove> MURDERER <amount> <player>");
+          return;
+        }
+        Player player = args.length >= 5 ? Bukkit.getPlayerExact(args[4]) : (Player) sender;
         if(player == null) {
           new MessageBuilder("COMMANDS_PLAYER_NOT_FOUND").asKey().send(sender);
           return;
@@ -84,9 +87,12 @@ public class RolePassArgument {
             break;
           case "remove":
             user.adjustStatistic("PASS_MURDERER", -amount);
+            if(user.getStatistic("PASS_MURDERER") < 0) {
+              user.setStatistic("PASS_MURDERER", 0);
+            }
             break;
           case "set":
-            user.setStatistic("PASS_MURDERER", amount);
+            user.setStatistic("PASS_MURDERER", Math.max(0, amount));
             break;
           default:
             break;

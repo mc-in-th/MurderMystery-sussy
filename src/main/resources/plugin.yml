@@ -16,6 +16,8 @@ commands:
     aliases: [mma, murderadmin]
 
 permissions:
+  murdermystery.command.roleselector:
+    default: true
   murdermystery.admin.*:
     default: op
     children:
@@ -32,4 +34,10 @@ permissions:
       murdermystery.admin.sign.create: true
       murdermystery.admin.sign.break: true
       murdermystery.admin.reload: true
+      murdermystery.admin.addtask: true
+      murdermystery.admin.cleartasks: true
+      murdermystery.admin.addvent: true
+      murdermystery.admin.clearvents: true
+      murdermystery.admin.removeblock: true
+      murdermystery.admin.rolepass: true
       murdermystery.command.override: true

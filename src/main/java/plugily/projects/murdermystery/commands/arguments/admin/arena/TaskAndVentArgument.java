@@ -206,7 +206,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          msg(player, "<#5A4E7C>================= [ <gradient:#FF5400:#FFB703><bold>รายการจุดภารกิจ: " + arenaId + "</bold></gradient> <#5A4E7C>] =================");
+          msg(player, "<#5A4E7C>[<#FF7518>รายการจุดภารกิจ: " + arenaId + "<#5A4E7C>]");
           int idx = 1;
           for(TaskType type : TaskType.values()) {
             List<Location> locs = arena.getTaskLocations(type);
@@ -349,7 +349,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          msg(player, "<#5A4E7C>================= [ <gradient:#D90429:#FF5400><bold>รายการบล็อกแก้ Sabotage: " + arenaId + "</bold></gradient> <#5A4E7C>] =================");
+          msg(player, "<#5A4E7C>[<#FF3B47>รายการบล็อกแก้ Sabotage: " + arenaId + "<#5A4E7C>]");
           int idx = 1;
           for(SabotageType type : SabotageType.values()) {
             Location l = arena.getSabotageLocation(type);
@@ -569,6 +569,7 @@ public class TaskAndVentArgument {
           config.set("instances." + arenaId + ".rapid-teleportation", new ArrayList<String>());
           ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
 
+          arena.clearVentDisplays();
           arena.getSpecialBlocks().removeIf(b -> b.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION);
 
           msg(player, "<#FF3B47>[!] ล้างท่อระบายน้ำทั้งหมดของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
@@ -758,6 +759,10 @@ public class TaskAndVentArgument {
   }
 
   private static void handleRecordCutscene(ArgumentsRegistry registry, Player player, String[] args, String label) {
+    if(registry.getPlugin().getArenaRegistry().isInArena(player)) {
+      msg(player, "<#5A4E7C>[<#FF3B47>Cutscene<#5A4E7C>] <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนบันทึก Cutscene");
+      return;
+    }
     if(args.length < 2) {
       msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma " + label + " <ชื่อห้อง/arena>");
       return;
@@ -770,7 +775,7 @@ public class TaskAndVentArgument {
     }
 
     CutsceneManager.startRecording(registry.getPlugin(), player, arena);
-    msg(player, "<gradient:#D90429:#FF5400><bold>[REC 60FPS]</bold></gradient> <#6EEB83>เริ่มบันทึก Cutscene (60 FPS) สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว!");
+    msg(player, "<#5A4E7C>[<#FF3B47>REC 60FPS<#5A4E7C>] <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว");
     msg(player, "<#B8B0C8>เดินหรือบินไปตามเส้นทางมุมกล้องที่ต้องการ แล้วพิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>เพื่อหยุดและบันทึก");
   }
 
@@ -800,6 +805,10 @@ public class TaskAndVentArgument {
   }
 
   private static void handlePreviewCutscene(ArgumentsRegistry registry, Player player, String[] args) {
+    if(registry.getPlugin().getArenaRegistry().isInArena(player)) {
+      msg(player, "<#5A4E7C>[<#FF3B47>Cutscene<#5A4E7C>] <#FF3B47>กรุณาออกจากห้องเล่นเกมก่อนดูตัวอย่าง Cutscene");
+      return;
+    }
     if(args.length < 2) {
       msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma previewcutscene <ชื่อห้อง/arena>");
       return;
@@ -987,23 +996,23 @@ public class TaskAndVentArgument {
   }
 
   private static void sendTaskTypesHelp(CommandSender sender) {
-    msg(sender, "<gradient:#FF5400:#FFB703><bold>=== ประเภทภารกิจที่ใช้ได้ (Available Tasks) ===</bold></gradient>");
+    msg(sender, "<#5A4E7C>[<#FF7518>ประเภทภารกิจที่ใช้ได้<#5A4E7C>]");
     int i = 1;
     for(TaskType t : TaskType.values()) {
       String visualBadge = t.isVisual() ? " <#72EFDD>[Visual]" : "";
       msg(sender, "<#F4F1DE>" + i + ". <#FFB703>" + t.getShortId() + " <#B8B0C8>- " + t.getIcon() + " " + t.getDisplayName() + visualBadge);
       i++;
     }
-    msg(sender, "<#B8B0C8>(สามารถระบุเป็นหมายเลข 1-" + TaskType.values().length + " หรือชื่อ เช่น diesel, wiring, scan, trash, asteroids)");
+    msg(sender, "<#5A4E7C>(<#B8B0C8>ระบุเป็นหมายเลข 1-" + TaskType.values().length + " หรือชื่อย่อ<#5A4E7C>)");
   }
 
   private static void sendSabotageTypesHelp(Player player) {
-    msg(player, "<gradient:#D90429:#FF5400><bold>=== ประเภท Sabotage ที่ใช้ได้ (Available Sabotages) ===</bold></gradient>");
+    msg(player, "<#5A4E7C>[<#FF3B47>ประเภท Sabotage ที่ใช้ได้<#5A4E7C>]");
     int i = 1;
     for(SabotageType s : SabotageType.values()) {
       msg(player, "<#F4F1DE>" + i + ". <#FF3B47>" + s.getShortId() + " <#B8B0C8>- " + s.getIcon() + " " + s.getDisplayName());
       i++;
     }
-    msg(player, "<#B8B0C8>(สามารถระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms)");
+    msg(player, "<#5A4E7C>(<#B8B0C8>ระบุเป็นหมายเลข 1-3 หรือชื่อ lights, engine, comms<#5A4E7C>)");
   }
 }

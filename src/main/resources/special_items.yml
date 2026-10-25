@@ -17,7 +17,7 @@ Role-Pass:
     - "&7Enjoy one round of guaranteed role with pass"
   material: CHEST
   slot: 4
-  stage: lobby
+  stage: LOBBY
   force: true
   move: false
 
@@ -29,7 +29,7 @@ Lobby-Leave:
   displayname: "&c&lReturn to Lobby &7(Right Click)"
   lore:
     - "&7Right-click to leave to the lobby"
-  material: BED
+  material: RED_BED
   slot: 8
   stage: LOBBY
   force: true
@@ -43,7 +43,7 @@ Spectator-Leave:
   displayname: "&c&lLeave the Game &7(Right Click)"
   lore:
     - "&7Right-click to leave to the lobby"
-  material: BED
+  material: RED_BED
   slot: 8
   stage: SPECTATOR
   force: true
@@ -76,13 +76,13 @@ Spectator-Settings:
   move: false
 
 Forcestart:
-  permission: "plugily.projects.forcestart"
+  permission: "murdermystery.admin.forcestart"
   execute:
     - ""
   displayname: "&c&lStart the game &7(Right Click)"
   lore:
     - "&7You need the following permission for it"
-    - "&7plugily.projects.forcestart"
+    - "&7murdermystery.admin.forcestart"
   material: EMERALD
   slot: 2
   stage: ENOUGH_PLAYERS_TO_START
@@ -126,7 +126,7 @@ Back-To-Hub:
   displayname: "&c&lBack to Hub &7(Right Click)"
   lore:
     - "&7Right-click to return to lobby"
-  material: Bed
+  material: RED_BED
   slot: 8
   stage: SERVER_JOIN
   force: false
