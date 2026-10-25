@@ -24,11 +24,13 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginScoreboardManager;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.GameTask;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -44,8 +46,47 @@ public class ScoreboardManager extends PluginScoreboardManager {
     this.arena = arena;
   }
 
+  private boolean shouldHideScoreboard(Player player) {
+    if(arena instanceof Arena && ((Arena) arena).getCutsceneManager().isPlaying()) {
+      return true;
+    }
+    return player != null && CutsceneManager.isPreviewing(player);
+  }
+
+  @Override
+  public void createScoreboard(IUser user) {
+    if(user == null) {
+      return;
+    }
+    removeScoreboard(user);
+    if(shouldHideScoreboard(user.getPlayer())) {
+      return;
+    }
+    super.createScoreboard(user);
+  }
+
+  @Override
+  public void updateScoreboards() {
+    if(arena instanceof Arena && ((Arena) arena).getCutsceneManager().isPlaying()) {
+      stopAllScoreboards();
+      return;
+    }
+    for(Player player : arena.getPlayers()) {
+      if(CutsceneManager.isPreviewing(player)) {
+        IUser user = arena.getPlugin().getUserManager().getUser(player);
+        if(user != null) {
+          removeScoreboard(user);
+        }
+      }
+    }
+    super.updateScoreboards();
+  }
+
   @Override
   public List<String> getScoreboardLines(Player player) {
+    if(shouldHideScoreboard(player)) {
+      return Collections.emptyList();
+    }
     if(arena.getArenaState() == IArenaState.IN_GAME && arena instanceof Arena) {
       Arena gameArena = (Arena) arena;
       IUser user = arena.getPlugin().getUserManager().getUser(player);

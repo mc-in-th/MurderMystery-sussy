@@ -139,6 +139,7 @@ public class CutsceneManager {
     }
 
     playing = true;
+    arena.getScoreboardManager().stopAllScoreboards();
     Main plugin = arena.getPlugin();
     World fallbackWorld = getFallbackWorld();
     List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
@@ -258,14 +259,16 @@ public class CutsceneManager {
     boolean wasPlaying = playing;
     playing = false;
     activeViewers.clear();
+    if(!wasPlaying) {
+      removeCameraRig();
+      return;
+    }
 
-    if(wasPlaying) {
-      for(Player player : arena.getPlayers()) {
-        if(player != null && player.isOnline()) {
-          restorePlayerFromCutscene(player);
-          if(!isArenaSpectator(player)) {
-            applyPostCutsceneFadeIn(player);
-          }
+    for(Player player : arena.getPlayers()) {
+      if(player != null && player.isOnline()) {
+        restorePlayerFromCutscene(player);
+        if(!isArenaSpectator(player)) {
+          applyPostCutsceneFadeIn(player);
         }
       }
     }
@@ -274,6 +277,7 @@ public class CutsceneManager {
     if(onComplete != null && arena.getArenaState() == IArenaState.IN_GAME) {
       onComplete.run();
     }
+    restoreScoreboards();
   }
 
   public void handlePlayerLeave(Player player) {
@@ -308,8 +312,23 @@ public class CutsceneManager {
           restorePlayerFromCutscene(player);
         }
       }
+      restoreScoreboards();
     }
     removeCameraRig();
+  }
+
+  private void restoreScoreboards() {
+    if(arena.getArenaState() == IArenaState.RESTARTING) {
+      return;
+    }
+    for(Player player : arena.getPlayers()) {
+      if(player != null && player.isOnline() && !isPreviewing(player)) {
+        IUser user = arena.getPlugin().getUserManager().getUser(player);
+        if(user != null) {
+          arena.getScoreboardManager().createScoreboard(user);
+        }
+      }
+    }
   }
 
   private static int computeFadeAlpha(int frameIdx, int totalFrames) {
@@ -742,8 +761,17 @@ public class CutsceneManager {
 
     activePreviews.put(
       player.getUniqueId(),
-      new PreviewSession(originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
+      new PreviewSession(plugin, originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
     );
+    if(plugin instanceof Main) {
+      Arena playerArena = ((Main) plugin).getArenaRegistry().getArena(player);
+      if(playerArena != null) {
+        IUser user = plugin.getUserManager().getUser(player);
+        if(user != null) {
+          playerArena.getScoreboardManager().removeScoreboard(user);
+        }
+      }
+    }
     return true;
   }
 
@@ -833,6 +861,15 @@ public class CutsceneManager {
       }
       applyPostCutsceneFadeIn(player);
       HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>จบการเล่นตัวอย่าง Cutscene แล้ว"));
+      if(session.plugin instanceof Main) {
+        Arena playerArena = ((Main) session.plugin).getArenaRegistry().getArena(player);
+        if(playerArena != null && !playerArena.getCutsceneManager().isPlaying() && playerArena.getArenaState() != IArenaState.RESTARTING) {
+          IUser user = session.plugin.getUserManager().getUser(player);
+          if(user != null) {
+            playerArena.getScoreboardManager().createScoreboard(user);
+          }
+        }
+      }
     }
     if(session.rig != null) {
       try {
@@ -1046,6 +1083,7 @@ public class CutsceneManager {
   }
 
   private static class PreviewSession {
+    private final PluginMain plugin;
     private final Location originalLoc;
     private final GameMode originalGameMode;
     private final float originalFlySpeed;
@@ -1056,7 +1094,8 @@ public class CutsceneManager {
     private final TextDisplay rig;
     private final TextDisplay overlay;
 
-    private PreviewSession(Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
+    private PreviewSession(PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
+      this.plugin = plugin;
       this.originalLoc = originalLoc;
       this.originalGameMode = originalGameMode;
       this.originalFlySpeed = originalFlySpeed;
