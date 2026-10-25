@@ -88,7 +88,6 @@ public class InGameState extends PluginInGameState {
     }
 
     distributeMurdererSword(pluginArena);
-    announceTimeLeft(pluginArena);
     addInnocentLocator(pluginArena);
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer() + 1) {
       addMurdererSpeed(pluginArena);
@@ -142,15 +141,6 @@ public class InGameState extends PluginInGameState {
             pluginArena.getSabotageManager().giveSabotageRemote(p);
           }
         }
-      }
-    }
-  }
-
-  private void announceTimeLeft(Arena pluginArena) {
-    int inGameLength = getPlugin().getConfig().getInt("Time-Manager.In-Game", 270);
-    if(pluginArena.getTimer() > 0 && pluginArena.getTimer() <= inGameLength - 15 && pluginArena.getTimer() % 30 == 0) {
-      for(Player p : pluginArena.getPlayers()) {
-        HalloweenChat.sendTitleEntry(p, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").asKey().player(p).arena(pluginArena).build());
       }
     }
   }

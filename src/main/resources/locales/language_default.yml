@@ -196,7 +196,7 @@ In-Game:
         Night-Vision: "%value% <#F4F1DE>มองเห็นในความมืด"
         First-Person-Mode:
           Action-Bar: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก <shadow:#000000FF><#5A4E7C>|</shadow> <#F4F1DE>มุมมอง <#C77DFF>%player%"
-          Title: "<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก"
+          Title: "5,30,5;;<#FFB703>กดย่อง (SNEAK) <#FF3B47>เพื่อออก"
         Visibility: "%value% <#F4F1DE>การมองเห็นผู้ชมคนอื่น"
   Messages:
     Join: "%plugin_prefix% %player% ขึ้นรถบัสแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#72EFDD>%arena_players_size%<shadow:#000000FF><#5A4E7C>/</shadow><#72EFDD>%arena_max_players%<shadow:#000000FF><#5A4E7C>)</shadow>"
@@ -248,7 +248,7 @@ In-Game:
         Innocent: "<#FF3B47>เข็มทิศตามล่าผู้โดยสาร"
         Watch-Out: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ระวังตัวไว้<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>ตอนนี้ฆาตกรสามารถตามรอยผู้รอดชีวิตได้แล้ว"
       Playing:
-        Time-Left: "5,20,5;<#FFB703>เหลือเวลาอีก %arena_time%;<#B8B0C8>อดทนไว้ หากหมดเวลาฆาตกรจะเป็นฝ่ายแพ้"
+        Time-Left: ""
         Role:
           Change: "5,20,5;<#FFB703>%arena_player_role% คนก่อนออกจากเกม;<#B8B0C8>ระบบทำการสุ่มผู้รับบทแทนใหม่"
           Murderer: "5,20,5;<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow>;<#B8B0C8>กำจัดผู้โดยสารทุกคนและขัดขวางการซ่อมรถบัส"

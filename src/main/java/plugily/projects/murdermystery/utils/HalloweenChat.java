@@ -526,6 +526,7 @@ public final class HalloweenChat {
                 || existingStr.contains("ออกจากขบวนรถบัส")
                 || ("Scoreboard.Roles.Dead".equals(key) && existingStr.contains("เสียชีวิต"))
                 || ("In-Game.Spectator.Menu.Settings.First-Person-Mode.Title".equals(key) && !existingStr.contains(";"))
+                || ("In-Game.Messages.Arena.Playing.Time-Left".equals(key) && !existingStr.isEmpty())
                 || (existingStr.contains("<#5A4E7C>") && !existingStr.contains("<shadow:"));
           } else if(existing instanceof List<?>) {
             boolean hasServerIp = false;
