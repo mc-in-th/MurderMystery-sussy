@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
@@ -49,11 +48,12 @@ public class DieselFuelMinigame implements TaskMinigame {
   private final Map<UUID, FuelSession> sessions = new HashMap<>();
   private final Set<UUID> completedSessions = new HashSet<>();
 
-  private static final int INSTRUCTION_SLOT = 0;
-  private static final int NOZZLE_SLOT = 11;
-  private static final int PUMP_LEVER_SLOT = 15;
-  private static final int SEAL_CAP_SLOT = 22;
-  private static final int[] GAUGE_SLOTS = {1, 2, 3, 4, 5, 6, 7};
+  private static final int BANNER_SLOT = 4;
+  private static final int[] GAUGE_SLOTS = {11, 12, 13, 14, 15};
+  private static final int NOZZLE_SLOT = 20;
+  private static final int PIPE_SLOT = 22;
+  private static final int PUMP_LEVER_SLOT = 24;
+  private static final int SEAL_CAP_SLOT = 31;
 
   public DieselFuelMinigame(Arena arena) {
     this.arena = arena;
@@ -84,133 +84,133 @@ public class DieselFuelMinigame implements TaskMinigame {
     FuelSession session = new FuelSession();
     sessions.put(player.getUniqueId(), session);
 
-    Inventory inv = Bukkit.createInventory(null, 27, GUI_TITLE);
+    Inventory inv = Bukkit.createInventory(null, 36, GUI_TITLE);
     buildGui(inv, session);
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กดคันโยกทางขวาเพื่อปั๊มน้ำมันดีเซลให้เต็ม <#6EEB83>100 ลิตร");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิก <#FFB703>คันโยกเรืองแสงทางขวา <#F4F1DE>เพื่อปั๊มน้ำมันดีเซลให้เต็ม <#6EEB83>100 ลิตร");
   }
 
   private void buildGui(Inventory inv, FuelSession session) {
-    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(" ");
-      try {
-        bgMeta.setHideTooltip(true);
-      } catch(Throwable ignored) {
-      }
-      bg.setItemMeta(bgMeta);
-    }
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
+    TaskGuiHelper.fillBackground(inv);
+
+    boolean full = session.liters >= 100;
+    int filledBars = Math.min(5, session.liters / 20);
+
+    if(full) {
+      inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
+        Material.HOPPER,
+        5,
+        false,
+        TaskGuiHelper.tag("<#6EEB83>", "ขั้นที่ 2/2 - น้ำมันเต็ม 100 ลิตรแล้ว"),
+        "",
+        "<#F4F1DE>คลิกปุ่ม <#6EEB83>มรกตเรืองแสงด้านล่าง <#F4F1DE>เพื่อปิดฝาถังน้ำมัน"
+      ));
+    } else {
+      inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
+        Material.HOPPER,
+        Math.max(1, filledBars),
+        false,
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - ปั๊มน้ำมันดีเซล (" + session.liters + "/100 ลิตร)"),
+        "",
+        "<#F4F1DE>คลิก <#FFB703>คันโยกเรืองแสงทางขวา <#F4F1DE>เพื่อสูบน้ำมันครั้งละ <#6EEB83>+20 ลิตร",
+        "<#F4F1DE>เมื่อครบ <#6EEB83>100 ลิตร <#F4F1DE>จึงกดปิดฝาถังด้านล่าง"
+      ));
     }
 
-    ItemStack instruction = new ItemStack(Material.BOOK);
-    ItemMeta iMeta = instruction.getItemMeta();
-    if(iMeta != null) {
-      HalloweenChat.setItemName(iMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Diesel Fuel<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(
-        iMeta,
-        "",
-        "<#F4F1DE>1. คลิกคันโยกปั๊มน้ำมันทางขวา (+20 ลิตร)",
-        "<#F4F1DE>2. ปั๊มจนเต็ม <#6EEB83>100 ลิตร <#F4F1DE>แล้วกดปิดฝาถังด้านล่าง",
-        "",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>เติมเชื้อเพลิงสำรองสำหรับรถบัส<shadow:#000000FF><#5A4E7C>)</shadow>"
-      );
-      instruction.setItemMeta(iMeta);
-    }
-    inv.setItem(INSTRUCTION_SLOT, instruction);
-
-    int filledBars = Math.min(7, (session.liters * 7) / 100);
-    for(int i = 0; i < 7; i++) {
+    for(int i = 0; i < GAUGE_SLOTS.length; i++) {
+      int barLiters = (i + 1) * 20;
       ItemStack bar;
       if(i < filledBars) {
-        bar = (session.liters >= 100 ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.ORANGE_STAINED_GLASS_PANE).parseItem();
+        bar = TaskGuiHelper.createItem(
+          full ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.ORANGE_STAINED_GLASS_PANE,
+          1,
+          false,
+          TaskGuiHelper.tag(full ? "<#6EEB83>" : "<#FFB703>", "ระดับน้ำมัน " + barLiters + "/100 ลิตร"),
+          "",
+          "<#6EEB83>สูบน้ำมันเข้าถังแล้ว"
+        );
       } else {
-        bar = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
-      }
-      ItemMeta bMeta = bar.getItemMeta();
-      if(bMeta != null) {
-        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>น้ำมันดีเซล " + session.liters + "/100 ลิตร<shadow:#000000FF><#5A4E7C>]</shadow>");
-        bar.setItemMeta(bMeta);
+        bar = TaskGuiHelper.createItem(
+          XMaterial.GRAY_STAINED_GLASS_PANE,
+          1,
+          false,
+          TaskGuiHelper.tag("<#B8B0C8>", "ขีดวัดระดับ " + barLiters + " ลิตร"),
+          "",
+          "<#B8B0C8>ยังว่างอยู่"
+        );
       }
       inv.setItem(GAUGE_SLOTS[i], bar);
     }
 
-    ItemStack canister = new ItemStack(session.liters >= 100 ? Material.LAVA_BUCKET : Material.BUCKET);
-    ItemMeta cMeta = canister.getItemMeta();
-    if(cMeta != null) {
-      HalloweenChat.setItemName(cMeta, session.liters >= 100
-        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>แกลลอนดีเซลเต็ม 100 ลิตร<shadow:#000000FF><#5A4E7C>]</shadow>"
-        : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ถังแกลลอนน้ำมันดีเซล<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(
-        cMeta,
+    inv.setItem(NOZZLE_SLOT, TaskGuiHelper.createItem(
+      full ? Material.LAVA_BUCKET : Material.BUCKET,
+      1,
+      false,
+      TaskGuiHelper.tag(full ? "<#6EEB83>" : "<#FF7518>", "ถังน้ำมันดีเซลรถบัส"),
+      "",
+      "<#F4F1DE>ปริมาณสะสม <#FFB703>" + session.liters + "<shadow:#000000FF><#5A4E7C>/</shadow><#6EEB83>100 ลิตร",
+      "<#F4F1DE>เกจวัด " + TaskGuiHelper.buildPipeBar(session.liters, 100, 10)
+    ));
+
+    XMaterial pipeMat = full
+      ? XMaterial.LIME_STAINED_GLASS_PANE
+      : (session.liters > 0 ? XMaterial.ORANGE_STAINED_GLASS_PANE : XMaterial.GRAY_STAINED_GLASS_PANE);
+    inv.setItem(PIPE_SLOT, TaskGuiHelper.createItem(
+      pipeMat,
+      1,
+      false,
+      TaskGuiHelper.tag("<#B8B0C8>", "ท่อส่งน้ำมันเชื้อเพลิง"),
+      "",
+      full ? "<#6EEB83>จ่ายน้ำมันครบจำนวนแล้ว" : "<#B8B0C8>ส่งน้ำมันจากหัวจ่ายเข้าสู่ถัง"
+    ));
+
+    if(full) {
+      inv.setItem(PUMP_LEVER_SLOT, TaskGuiHelper.createItem(
+        XMaterial.TRIPWIRE_HOOK,
+        1,
+        false,
+        TaskGuiHelper.doneName("สูบน้ำมันครบ 100 ลิตรแล้ว"),
         "",
-        "<#F4F1DE>ปริมาณสะสม <#FFB703>" + session.liters + "<shadow:#000000FF><#5A4E7C>/</shadow><#6EEB83>100 ลิตร",
+        TaskGuiHelper.hint("<#6EEB83>", "กดปุ่มมรกตด้านล่างเพื่อปิดฝาถังได้เลย")
+      ));
+    } else {
+      inv.setItem(PUMP_LEVER_SLOT, TaskGuiHelper.createItem(
+        XMaterial.TRIPWIRE_HOOK,
+        1,
+        true,
+        TaskGuiHelper.clickName("ปั๊มน้ำมันดีเซล (+20 ลิตร)"),
         "",
-        session.liters >= 100
-          ? "<shadow:#000000FF><#5A4E7C>(</shadow><#6EEB83>กดปิดฝาถังด้านล่างเพื่อจบภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>"
-          : "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคันโยกทางขวาเพื่อปั๊มน้ำมัน<shadow:#000000FF><#5A4E7C>)</shadow>"
-      );
-      canister.setItemMeta(cMeta);
+        "<#F4F1DE>ปัจจุบัน <#FFB703>" + session.liters + " ลิตร <shadow:#000000FF><#5A4E7C>-></shadow> <#6EEB83>" + Math.min(100, session.liters + 20) + " ลิตร",
+        "",
+        TaskGuiHelper.hint("<#FFB703>", "กดคลิกที่นี่เพื่อสูบน้ำมัน")
+      ));
     }
-    inv.setItem(NOZZLE_SLOT, canister);
 
-    ItemStack divider = XMaterial.IRON_BARS.parseItem();
-    ItemMeta dMeta = divider.getItemMeta();
-    if(dMeta != null) {
-      HalloweenChat.setItemName(dMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ท่อจ่ายน้ำมัน<shadow:#000000FF><#5A4E7C>]</shadow>");
-      divider.setItemMeta(dMeta);
+    if(full) {
+      inv.setItem(SEAL_CAP_SLOT, TaskGuiHelper.createItem(
+        XMaterial.EMERALD_BLOCK,
+        1,
+        true,
+        TaskGuiHelper.confirmName("ปิดฝาถังน้ำมันและล็อก"),
+        "",
+        "<#F4F1DE>น้ำมันดีเซลเต็มถัง <#6EEB83>100 ลิตร",
+        "",
+        TaskGuiHelper.hint("<#6EEB83>", "กดคลิกที่นี่เพื่อเสร็จสิ้นภารกิจ")
+      ));
+    } else {
+      inv.setItem(SEAL_CAP_SLOT, TaskGuiHelper.createItem(
+        XMaterial.IRON_BARS,
+        1,
+        false,
+        TaskGuiHelper.lockedName("ปิดฝาถังน้ำมัน"),
+        "",
+        "<#FF3B47>ต้องปั๊มน้ำมันให้ครบ 100 ลิตรก่อน",
+        "",
+        TaskGuiHelper.hint("<#B8B0C8>", "ยังขาดอีก " + (100 - session.liters) + " ลิตร")
+      ));
     }
-    inv.setItem(13, divider);
-
-    ItemStack lever = XMaterial.TRIPWIRE_HOOK.parseItem();
-    ItemMeta lMeta = lever.getItemMeta();
-    if(lMeta != null) {
-      if(session.liters >= 100) {
-        HalloweenChat.setItemName(lMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>น้ำมันเต็มถังแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(lMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกปุ่มปิดฝาถังด้านล่าง<shadow:#000000FF><#5A4E7C>)</shadow>");
-      } else {
-        HalloweenChat.setItemName(lMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>คันโยกปั๊มน้ำมัน +20 ลิตร<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          lMeta,
-          "",
-          "<#F4F1DE>สูบน้ำมันดีเซลเข้าถังแกลลอน",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อปั๊มน้ำมัน<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      }
-      lever.setItemMeta(lMeta);
-    }
-    inv.setItem(PUMP_LEVER_SLOT, lever);
-
-    ItemStack cap = (session.liters >= 100 ? XMaterial.EMERALD_BLOCK : XMaterial.IRON_BARS).parseItem();
-    ItemMeta capMeta = cap.getItemMeta();
-    if(capMeta != null) {
-      if(session.liters >= 100) {
-        HalloweenChat.setItemName(capMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ปิดฝาถังน้ำมันและล็อค<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          capMeta,
-          "",
-          "<#F4F1DE>น้ำมันดีเซลเต็ม <#6EEB83>100 ลิตร",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อจบภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      } else {
-        HalloweenChat.setItemName(capMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>ปิดฝาถังน้ำมัน<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          capMeta,
-          "",
-          "<#FF3B47>ต้องเติมน้ำมันให้ครบ 100 ลิตรก่อน",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ปัจจุบัน " + session.liters + "/100 ลิตร<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      }
-      cap.setItemMeta(capMeta);
-    }
-    inv.setItem(SEAL_CAP_SLOT, cap);
   }
 
   @Override
@@ -224,29 +224,25 @@ public class DieselFuelMinigame implements TaskMinigame {
       return true;
     }
 
-    if(rawSlot == INSTRUCTION_SLOT) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      return true;
-    }
-
     Inventory topInv = player.getOpenInventory().getTopInventory();
 
     if(rawSlot == PUMP_LEVER_SLOT) {
       if(session.liters < 100) {
         session.liters = Math.min(100, session.liters + 20);
         XSound.BLOCK_PISTON_EXTEND.play(player.getLocation(), 0.8F, 1.3F);
-        XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.7F, 1.1F);
+        XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.75F, 0.9F + (session.liters / 200.0F));
+        buildGui(topInv, session);
 
         if(session.liters >= 100) {
           XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>น้ำมันเต็ม 100 ลิตรแล้ว กดปิดฝาถังด้านล่างได้เลย");
+          TaskGuiHelper.sendTaskBar(player, "<#6EEB83>น้ำมันเต็ม 100 ลิตรแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อปิดฝาถัง");
         } else {
-          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เติมน้ำมันแล้ว <#FFB703>" + session.liters + "/100 ลิตร");
+          TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เติมน้ำมันแล้ว <#FFB703>" + session.liters + "/100 ลิตร");
         }
       } else {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.0F);
+        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาถังน้ำมัน");
       }
-      buildGui(topInv, session);
       return true;
     }
 
@@ -257,7 +253,7 @@ public class DieselFuelMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.6F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เติมน้ำมันดีเซลสำเร็จ");
+        TaskGuiHelper.sendSuccessBar(player, "เติมน้ำมันดีเซลครบ 100 ลิตรสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -268,12 +264,20 @@ public class DieselFuelMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 1F);
-        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ต้องปั๊มน้ำมันให้ครบ 100 ลิตรก่อนปิดฝาถัง");
+        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 1F);
+        TaskGuiHelper.sendErrorBar(player, "คลิกคันโยกเรืองแสงทางขวาให้ครบ 100 ลิตรก่อน");
       }
       return true;
     }
 
+    if(rawSlot >= 0 && rawSlot < 36) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      if(session.liters < 100) {
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกคันโยกเรืองแสงทางขวา <#F4F1DE>เพื่อสูบน้ำมัน (+20 ลิตร)");
+      } else {
+        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาถังน้ำมัน");
+      }
+    }
     return true;
   }
 

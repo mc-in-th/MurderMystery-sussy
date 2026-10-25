@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
@@ -84,6 +83,8 @@ public class RepairWiringMinigame implements TaskMinigame {
   private final Map<UUID, WiringSession> sessions = new HashMap<>();
   private final Set<UUID> completedSessions = new HashSet<>();
 
+  private static final int BANNER_SLOT = 4;
+  private static final int STATUS_SLOT = 49;
   private static final int[] LEFT_SLOTS = {10, 19, 28, 37};
   private static final int[] RIGHT_SLOTS = {16, 25, 34, 43};
 
@@ -117,61 +118,132 @@ public class RepairWiringMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกเลือกสายไฟฝั่งซ้าย แล้วต่อกับสีเดียวกันฝั่งขวา");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิก <#FFB703>สายไฟเรืองแสงฝั่งซ้าย <#F4F1DE>แล้วคลิกต่อกับ <#6EEB83>สีเดียวกันฝั่งขวา");
   }
 
   private void buildGui(Inventory inv, WiringSession session) {
-    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(" ");
-      try {
-        bgMeta.setHideTooltip(true);
-      } catch(Throwable ignored) {
-      }
-      bg.setItemMeta(bgMeta);
-    }
-    for(int i = 0; i < 54; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
-    ItemStack banner = new ItemStack(Material.BOOK);
-    ItemMeta bannerMeta = banner.getItemMeta();
-    if(bannerMeta != null) {
-      HalloweenChat.setItemName(bannerMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Engine Wiring<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(
-        bannerMeta,
-        "",
-        "<#F4F1DE>1. คลิกเลือกขั้วสายไฟทางฝั่งซ้าย",
-        "<#F4F1DE>2. คลิกต่อเข้ากับขั้วสีเดียวกันทางฝั่งขวา",
-        "",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ต่อสายไฟให้ครบทั้ง 4 เส้น<shadow:#000000FF><#5A4E7C>)</shadow>"
-      );
-      banner.setItemMeta(bannerMeta);
+    int doneCount = 0;
+    for(boolean b : session.connected) {
+      if(b) {
+        doneCount++;
+      }
     }
-    inv.setItem(4, banner);
+    boolean allDone = doneCount == 4;
+
+    if(allDone) {
+      inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
+        Material.EMERALD,
+        1,
+        true,
+        TaskGuiHelper.doneName("เชื่อมต่อสายไฟเครื่องยนต์ครบ 4 เส้นแล้ว"),
+        "",
+        "<#6EEB83>กระแสไฟเครื่องยนต์เดินครบทุกวงจร"
+      ));
+    } else if(session.selectedLeft != -1) {
+      WireColor sel = session.leftWires[session.selectedLeft];
+      inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
+        XMaterial.REDSTONE_LAMP,
+        1,
+        true,
+        TaskGuiHelper.tag("<#FFB703>", "ขั้นที่ 2 - คลิกขั้วสายไฟ" + sel.name + "ทางฝั่งขวา"),
+        "",
+        "<#F4F1DE>กำลังถือสายไฟ " + sel.colorCode + sel.name,
+        "<#F4F1DE>มองหาขั้ว " + sel.colorCode + sel.name + " <#F4F1DE>ในคอลัมน์ขวาสุดแล้วคลิกเชื่อมต่อ"
+      ));
+    } else {
+      inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
+        XMaterial.REDSTONE_LAMP,
+        4 - doneCount,
+        false,
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1 - คลิกเลือกสายไฟเรืองแสงทางฝั่งซ้าย"),
+        "",
+        "<#F4F1DE>1. คลิกขั้วสายไฟที่เรืองแสงในคอลัมน์ซ้าย",
+        "<#F4F1DE>2. คลิกต่อเข้ากับขั้วสีเดียวกันในคอลัมน์ขวา"
+      ));
+    }
 
     for(int i = 0; i < 4; i++) {
       WireColor leftColor = session.leftWires[i];
       boolean isConnected = session.connected[i];
       boolean isSelected = (session.selectedLeft == i);
 
-      ItemStack leftItem = isConnected ? leftColor.wool.parseItem() : (isSelected ? XMaterial.SEA_LANTERN.parseItem() : leftColor.wool.parseItem());
-      ItemMeta leftMeta = leftItem.getItemMeta();
-      if(leftMeta != null) {
-        if(isConnected) {
-          HalloweenChat.setItemName(leftMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + leftColor.colorCode + "สายไฟ" + leftColor.name + "<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เชื่อมแล้ว");
-          HalloweenChat.setItemLore(leftMeta, "", "<#6EEB83>เชื่อมต่อกระแสไฟเรียบร้อย");
-        } else if(isSelected) {
-          HalloweenChat.setItemName(leftMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + leftColor.colorCode + "กำลังเลือกสายไฟ" + leftColor.name + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(leftMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>คลิกขั้วสีเดียวกันทางฝั่งขวา<shadow:#000000FF><#5A4E7C>)</shadow>");
-        } else {
-          HalloweenChat.setItemName(leftMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + leftColor.colorCode + "ขั้วสายไฟ" + leftColor.name + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(leftMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเลือกสายไฟเส้นนี้<shadow:#000000FF><#5A4E7C>)</shadow>");
-        }
-        leftItem.setItemMeta(leftMeta);
+      ItemStack leftItem;
+      if(isConnected) {
+        leftItem = TaskGuiHelper.createItem(
+          leftColor.wool,
+          1,
+          false,
+          TaskGuiHelper.doneName("สายไฟ" + leftColor.colorCode + leftColor.name),
+          "",
+          "<#6EEB83>เชื่อมต่อกระแสไฟเรียบร้อยแล้ว"
+        );
+      } else if(isSelected) {
+        leftItem = TaskGuiHelper.createItem(
+          leftColor.wool,
+          1,
+          true,
+          TaskGuiHelper.tag("<#FFB703>", "กำลังถือสาย") + " " + leftColor.colorCode + "สายไฟ" + leftColor.name,
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "คลิกขั้ว" + leftColor.name + "ทางฝั่งขวาเพื่อเชื่อมต่อ")
+        );
+      } else if(session.selectedLeft == -1) {
+        leftItem = TaskGuiHelper.createItem(
+          leftColor.wool,
+          1,
+          true,
+          TaskGuiHelper.clickName("เลือกสายไฟ" + leftColor.colorCode + leftColor.name),
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "กดคลิกเพื่อหยิบสายไฟเส้นนี้")
+        );
+      } else {
+        leftItem = TaskGuiHelper.createItem(
+          leftColor.wool,
+          1,
+          false,
+          TaskGuiHelper.tag(leftColor.colorCode, "ขั้วสายไฟ" + leftColor.name),
+          "",
+          TaskGuiHelper.hint("<#B8B0C8>", "คลิกเพื่อเปลี่ยนมาจับสายเส้นนี้แทน")
+        );
       }
       inv.setItem(LEFT_SLOTS[i], leftItem);
+
+      int startSlot = LEFT_SLOTS[i] + 1;
+      int endSlot = RIGHT_SLOTS[i] - 1;
+      for(int s = startSlot; s <= endSlot; s++) {
+        int offset = s - startSlot;
+        ItemStack wirePane;
+        if(isConnected) {
+          wirePane = TaskGuiHelper.createItem(
+            leftColor.glass,
+            1,
+            false,
+            TaskGuiHelper.tag(leftColor.colorCode, "สายไฟ" + leftColor.name + " - เชื่อมต่อแล้ว"),
+            "",
+            "<#6EEB83>กระแสไฟไหลปกติ"
+          );
+        } else if(isSelected && offset < 2) {
+          wirePane = TaskGuiHelper.createItem(
+            leftColor.glass,
+            1,
+            offset == 1,
+            TaskGuiHelper.tag(leftColor.colorCode, "กำลังลากสายไฟ" + leftColor.name + " ->"),
+            "",
+            TaskGuiHelper.hint("<#FFB703>", "คลิกขั้ว" + leftColor.name + "ทางฝั่งขวา")
+          );
+        } else {
+          wirePane = TaskGuiHelper.createItem(
+            XMaterial.GRAY_STAINED_GLASS_PANE,
+            1,
+            false,
+            TaskGuiHelper.tag("<#B8B0C8>", "วงจรขาด"),
+            "",
+            "<#B8B0C8>รอเชื่อมต่อสายไฟ"
+          );
+        }
+        inv.setItem(s, wirePane);
+      }
 
       WireColor rightColor = session.rightWires[i];
       boolean rightConnected = false;
@@ -182,60 +254,46 @@ public class RepairWiringMinigame implements TaskMinigame {
         }
       }
 
-      ItemStack rightItem = rightColor.wool.parseItem();
-      ItemMeta rightMeta = rightItem.getItemMeta();
-      if(rightMeta != null) {
-        if(rightConnected) {
-          HalloweenChat.setItemName(rightMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + rightColor.colorCode + "ปลายสาย" + rightColor.name + "<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เชื่อมแล้ว");
-        } else {
-          HalloweenChat.setItemName(rightMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + rightColor.colorCode + "ปลายสาย" + rightColor.name + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(rightMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเชื่อมต่อ<shadow:#000000FF><#5A4E7C>)</shadow>");
-        }
-        rightItem.setItemMeta(rightMeta);
+      ItemStack rightItem;
+      if(rightConnected) {
+        rightItem = TaskGuiHelper.createItem(
+          rightColor.wool,
+          1,
+          false,
+          TaskGuiHelper.doneName("ปลายสาย" + rightColor.colorCode + rightColor.name),
+          "",
+          "<#6EEB83>เชื่อมต่อครบวงจรแล้ว"
+        );
+      } else if(session.selectedLeft != -1) {
+        rightItem = TaskGuiHelper.createItem(
+          rightColor.wool,
+          1,
+          true,
+          TaskGuiHelper.clickName("ต่อเข้ากับปลายสาย" + rightColor.colorCode + rightColor.name),
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "คลิกหากตรงกับสีสายไฟที่ถืออยู่")
+        );
+      } else {
+        rightItem = TaskGuiHelper.createItem(
+          rightColor.wool,
+          1,
+          false,
+          TaskGuiHelper.tag(rightColor.colorCode, "ปลายสาย" + rightColor.name),
+          "",
+          TaskGuiHelper.hint("<#B8B0C8>", "คลิกเลือกสายไฟทางฝั่งซ้ายก่อน")
+        );
       }
       inv.setItem(RIGHT_SLOTS[i], rightItem);
-
-      int startSlot = LEFT_SLOTS[i] + 1;
-      int endSlot = RIGHT_SLOTS[i] - 1;
-
-      ItemStack wireLine;
-      if(isConnected) {
-        wireLine = leftColor.glass.parseItem();
-        ItemMeta wlMeta = wireLine.getItemMeta();
-        if(wlMeta != null) {
-          HalloweenChat.setItemName(wlMeta, "<shadow:#000000FF><#5A4E7C>[</shadow>" + leftColor.colorCode + "กระแสไฟปกติ<shadow:#000000FF><#5A4E7C>]</shadow>");
-          wireLine.setItemMeta(wlMeta);
-        }
-      } else {
-        wireLine = XMaterial.GRAY_STAINED_GLASS_PANE.parseItem();
-        ItemMeta wlMeta = wireLine.getItemMeta();
-        if(wlMeta != null) {
-          HalloweenChat.setItemName(wlMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>สายไฟขาด<shadow:#000000FF><#5A4E7C>]</shadow>");
-          wireLine.setItemMeta(wlMeta);
-        }
-      }
-      for(int s = startSlot; s <= endSlot; s++) {
-        inv.setItem(s, wireLine);
-      }
     }
 
-    int doneCount = 0;
-    for(boolean b : session.connected) {
-      if(b) {
-        doneCount++;
-      }
-    }
-
-    ItemStack status = new ItemStack(doneCount == 4 ? Material.EMERALD : Material.REDSTONE);
-    ItemMeta stMeta = status.getItemMeta();
-    if(stMeta != null) {
-      HalloweenChat.setItemName(stMeta, doneCount == 4
-        ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>เชื่อมต่อสายไฟครบแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>"
-        : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เชื่อมต่อแล้ว " + doneCount + "/4 เส้น<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(stMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>ต่อสายไฟให้ตรงสีครบทุกเส้น<shadow:#000000FF><#5A4E7C>)</shadow>");
-      status.setItemMeta(stMeta);
-    }
-    inv.setItem(49, status);
+    inv.setItem(STATUS_SLOT, TaskGuiHelper.createItem(
+      allDone ? Material.EMERALD : Material.REDSTONE,
+      Math.max(1, doneCount),
+      allDone,
+      TaskGuiHelper.tag(allDone ? "<#6EEB83>" : "<#FF7518>", "เชื่อมต่อสายไฟแล้ว " + doneCount + "/4 เส้น"),
+      "",
+      "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(doneCount, 4, 8)
+    ));
   }
 
   @Override
@@ -249,23 +307,21 @@ public class RepairWiringMinigame implements TaskMinigame {
       return true;
     }
 
-    if(rawSlot == 4) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
-      return true;
-    }
+    Inventory topInv = player.getOpenInventory().getTopInventory();
 
     for(int i = 0; i < 4; i++) {
       if(LEFT_SLOTS[i] == rawSlot) {
         if(session.connected[i]) {
-          XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1F);
+          XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.1F);
+          TaskGuiHelper.sendTaskBar(player, "<#6EEB83>สายเส้นนี้เชื่อมแล้ว <#FFB703>คลิกสายเส้นอื่นที่เรืองแสง");
           return true;
         }
 
         session.selectedLeft = i;
         WireColor color = session.leftWires[i];
-        XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.2F);
-        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>เลือกสายไฟ" + color.colorCode + color.name + " <#F4F1DE>แล้ว คลิกขั้วสีเดียวกันฝั่งขวา");
-        buildGui(player.getOpenInventory().getTopInventory(), session);
+        XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.25F);
+        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>จับสายไฟ" + color.colorCode + color.name + " <#F4F1DE>แล้ว คลิกขั้ว" + color.colorCode + color.name + " <#F4F1DE>ทางฝั่งขวา");
+        buildGui(topInv, session);
         return true;
       }
     }
@@ -273,8 +329,8 @@ public class RepairWiringMinigame implements TaskMinigame {
     for(int j = 0; j < 4; j++) {
       if(RIGHT_SLOTS[j] == rawSlot) {
         if(session.selectedLeft == -1) {
-          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.2F);
-          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กรุณาคลิกเลือกสายไฟทางฝั่งซ้ายก่อน");
+          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.75F, 1.1F);
+          TaskGuiHelper.sendErrorBar(player, "คลิกเลือกสายไฟที่เรืองแสงทางฝั่งซ้ายก่อน");
           return true;
         }
 
@@ -285,16 +341,18 @@ public class RepairWiringMinigame implements TaskMinigame {
           session.connected[session.selectedLeft] = true;
           session.selectedLeft = -1;
 
-          XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.6F, 1.8F);
-          XSound.BLOCK_REDSTONE_TORCH_BURNOUT.play(player.getLocation(), 0.8F, 1.5F);
+          XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.55F, 1.8F);
+          XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.85F, 1.6F);
 
-          buildGui(player.getOpenInventory().getTopInventory(), session);
+          buildGui(topInv, session);
 
           boolean allDone = true;
+          int doneCount = 0;
           for(boolean b : session.connected) {
-            if(!b) {
+            if(b) {
+              doneCount++;
+            } else {
               allDone = false;
-              break;
             }
           }
 
@@ -303,7 +361,7 @@ public class RepairWiringMinigame implements TaskMinigame {
             sessions.remove(player.getUniqueId());
 
             XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-            HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ซ่อมสายไฟเครื่องยนต์สำเร็จ");
+            TaskGuiHelper.sendSuccessBar(player, "ซ่อมสายไฟเครื่องยนต์ครบทั้ง 4 เส้นสำเร็จ");
 
             Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
               if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -314,20 +372,29 @@ public class RepairWiringMinigame implements TaskMinigame {
               }
             }, 8L);
           } else {
-            HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เชื่อมต่อสายไฟ" + selectedColor.name + " สำเร็จ");
+            TaskGuiHelper.sendTaskBar(player, "<#6EEB83>ต่อสายไฟ" + selectedColor.name + "สำเร็จ (" + doneCount + "/4) <#FFB703>เลือกสายถัดไปฝั่งซ้าย");
           }
         } else {
-          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 1F, 0.8F);
-          XSound.ENTITY_CREEPER_PRIMED.play(player.getLocation(), 0.7F, 1.8F);
+          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 0.85F);
+          XSound.BLOCK_REDSTONE_TORCH_BURNOUT.play(player.getLocation(), 0.65F, 1.4F);
 
-          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ขั้วสายไฟคนละสี กรุณาเลือกใหม่");
+          TaskGuiHelper.sendErrorBar(player, "ขั้วคนละสี กรุณาคลิกเลือกสายไฟฝั่งซ้ายใหม่อีกครั้ง");
           session.selectedLeft = -1;
-          buildGui(player.getOpenInventory().getTopInventory(), session);
+          buildGui(topInv, session);
         }
         return true;
       }
     }
 
+    if(rawSlot >= 0 && rawSlot < 54) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      if(session.selectedLeft == -1) {
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกสายไฟที่เรืองแสงทางคอลัมน์ซ้ายก่อน");
+      } else {
+        WireColor sel = session.leftWires[session.selectedLeft];
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกขั้ว" + sel.colorCode + sel.name + " <#FFB703>ทางคอลัมน์ขวาสุด");
+      }
+    }
     return true;
   }
 

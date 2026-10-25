@@ -19,11 +19,11 @@
 package plugily.projects.murdermystery.arena.task.minigame;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
@@ -42,6 +42,9 @@ import java.util.UUID;
 public class UnlockManifoldsMinigame implements TaskMinigame {
 
   public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ปลดล็อกท่อแรงดัน<shadow:#000000FF><#5A4E7C>]</shadow>");
+
+  private static final int INFO_SLOT = 4;
+  private static final int STATUS_SLOT = 31;
   private static final int[] MANIFOLD_SLOTS = {
     11, 12, 13, 14, 15,
     20, 21, 22, 23, 24
@@ -93,57 +96,83 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กดตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ถึง <#FFB703>10");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ไปถึง <#6EEB83>10");
   }
 
   private void buildGui(Inventory inv, ManifoldSession session) {
-    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(" ");
-      try {
-        bgMeta.setHideTooltip(true);
-      } catch(Throwable ignored) {
-      }
-      bg.setItemMeta(bgMeta);
-    }
-    for(int i = 0; i < 36; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
-    ItemStack info = XMaterial.COMPARATOR.parseItem();
-    ItemMeta iMeta = info.getItemMeta();
-    if(iMeta != null) {
-      HalloweenChat.setItemName(iMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Unlock Manifolds<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(
-        iMeta,
+    boolean finished = session.nextExpected > 10;
+    int unlocked = Math.min(10, session.nextExpected - 1);
+
+    if(finished) {
+      inv.setItem(INFO_SLOT, TaskGuiHelper.createItem(
+        Material.EMERALD,
+        10,
+        true,
+        TaskGuiHelper.doneName("ปลดล็อกท่อแรงดันครบ 10 วาล์วแล้ว"),
         "",
-        "<#F4F1DE>หมายเลขถัดไป <#FFB703>" + Math.min(10, session.nextExpected),
+        "<#6EEB83>แรงดันในท่อไอเสียสมดุลเรียบร้อย"
+      ));
+    } else {
+      inv.setItem(INFO_SLOT, TaskGuiHelper.createItem(
+        XMaterial.COMPARATOR,
+        session.nextExpected,
+        false,
+        TaskGuiHelper.tag("<#FFB703>", "กดหมายเลขถัดไป -> #" + session.nextExpected),
         "",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดเรียงลำดับจาก 1 ถึง 10<shadow:#000000FF><#5A4E7C>)</shadow>"
-      );
-      info.setItemMeta(iMeta);
+        "<#F4F1DE>มองหาปุ่มที่มีตัวเลข <#FFB703>" + session.nextExpected + " <#F4F1DE>ในแผงด้านล่าง",
+        "<#F4F1DE>แล้วคลิกเรียงลำดับตั้งแต่ <#FFB703>1 <#F4F1DE>จนถึง <#6EEB83>10"
+      ));
     }
-    inv.setItem(4, info);
 
     for(int i = 0; i < MANIFOLD_SLOTS.length; i++) {
       int num = session.numbers.get(i);
       boolean pressed = num < session.nextExpected;
-      ItemStack btn = (pressed ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.LIGHT_BLUE_STAINED_GLASS_PANE).parseItem();
-      btn.setAmount(num);
-      ItemMeta bMeta = btn.getItemMeta();
-      if(bMeta != null) {
-        if(pressed) {
-          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>หมายเลข " + num + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(bMeta, "", "<#6EEB83>ปลดล็อกแล้ว");
-        } else {
-          HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>หมายเลข " + num + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(bMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อปลดล็อก<shadow:#000000FF><#5A4E7C>)</shadow>");
-        }
-        btn.setItemMeta(bMeta);
+      boolean highlightStart = (num == 1 && session.nextExpected == 1);
+
+      ItemStack btn;
+      if(pressed) {
+        btn = TaskGuiHelper.createItem(
+          XMaterial.LIME_STAINED_GLASS_PANE,
+          num,
+          finished,
+          TaskGuiHelper.doneName("วาล์วหมายเลข #" + num),
+          "",
+          "<#6EEB83>ปลดล็อกเรียบร้อยแล้ว"
+        );
+      } else if(highlightStart) {
+        btn = TaskGuiHelper.createItem(
+          XMaterial.BLUE_STAINED_GLASS_PANE,
+          num,
+          true,
+          TaskGuiHelper.clickName("เริ่มที่วาล์วหมายเลข #1"),
+          "",
+          "<#F4F1DE>คลิกที่นี่เพื่อเริ่มปลดล็อกลำดับที่ <#FFB703>1",
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "จากนั้นไล่กด 2, 3 ... ไปจนถึง 10")
+        );
+      } else {
+        btn = TaskGuiHelper.createItem(
+          XMaterial.BLUE_STAINED_GLASS_PANE,
+          num,
+          false,
+          TaskGuiHelper.tag("<#72EFDD>", "วาล์วหมายเลข #" + num),
+          "",
+          TaskGuiHelper.hint("<#B8B0C8>", "กดเมื่อถึงลำดับหมายเลข " + num)
+        );
       }
       inv.setItem(MANIFOLD_SLOTS[i], btn);
     }
+
+    inv.setItem(STATUS_SLOT, TaskGuiHelper.createItem(
+      finished ? Material.EMERALD : Material.IRON_INGOT,
+      Math.max(1, unlocked),
+      finished,
+      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#FF7518>", "ปลดล็อกแล้ว " + unlocked + "/10 วาล์ว"),
+      "",
+      "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(unlocked, 10, 10)
+    ));
   }
 
   @Override
@@ -164,24 +193,32 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
       }
     }
     if(idx == -1) {
+      if(rawSlot >= 0 && rawSlot < 36) {
+        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นหาแล้วคลิกปุ่ม <#FFB703>หมายเลข #" + session.nextExpected);
+      }
       return true;
     }
 
     int clickedNum = session.numbers.get(idx);
     if(clickedNum < session.nextExpected) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.2F);
+      TaskGuiHelper.sendTaskBar(player, "<#6EEB83>หมายเลข #" + clickedNum + " เปิดแล้ว <#FFB703>คลิกหมายเลข #" + session.nextExpected + " ถัดไป");
       return true;
     }
 
     Inventory topInv = player.getOpenInventory().getTopInventory();
     if(clickedNum == session.nextExpected) {
       session.nextExpected++;
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.8F, 0.9F + (clickedNum * 0.08F));
+      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.85F, 0.85F + (clickedNum * 0.09F));
       buildGui(topInv, session);
 
       if(session.nextExpected > 10) {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+        TaskGuiHelper.sendSuccessBar(player, "ปลดล็อกท่อแรงดันครบ 10 วาล์วสำเร็จ");
+
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
             if(isGui(player.getOpenInventory().getTitle())) {
@@ -190,11 +227,13 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
             arena.getTaskManager().completeTaskFromMinigame(player, TaskType.UNLOCK_MANIFOLDS);
           }
         }, 8L);
+      } else {
+        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>ปลดล็อก #" + clickedNum + " แล้ว <#F4F1DE>ถัดไปคลิก <#FFB703>หมายเลข #" + session.nextExpected);
       }
     } else {
       session.nextExpected = 1;
       XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.6F);
-      HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>กดผิดลำดับ เริ่มต้นใหม่ที่หมายเลข 1");
+      TaskGuiHelper.sendErrorBar(player, "กดผิดลำดับ (#" + clickedNum + ") เริ่มกดใหม่ตั้งแต่หมายเลข #1");
       buildGui(topInv, session);
     }
     return true;

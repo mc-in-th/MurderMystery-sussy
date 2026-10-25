@@ -38,6 +38,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.task.minigame.TaskGuiHelper;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
@@ -339,9 +340,10 @@ public class SabotageManager {
       } else if(onCooldown) {
         lore.add("<#FF3B47>คูลดาวน์ " + cooldownRemaining + " วิ");
       } else {
-        lore.add("<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อก่อวินาศกรรม<shadow:#000000FF><#5A4E7C>)</shadow>");
+        lore.add("<shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>กดคลิกเพื่อก่อวินาศกรรม<shadow:#000000FF><#5A4E7C>)</shadow>");
       }
       HalloweenChat.setItemLore(meta, lore);
+      TaskGuiHelper.setGlint(meta, hasLocation && !isActiveThis && !hasActive && !onCooldown);
       item.setItemMeta(meta);
     }
     return item;
@@ -547,83 +549,133 @@ public class SabotageManager {
   }
 
   private void openFixLightsGUI(Player player) {
-    Inventory inv = Bukkit.createInventory(null, 27, FIX_LIGHTS_TITLE);
+    Inventory inv = Bukkit.createInventory(null, 36, FIX_LIGHTS_TITLE);
     buildFixLightsGUI(inv);
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกสับคัตเอาท์ทั้งหมดให้เปิด");
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิก <#FFB703>คัตเอาท์ที่เรืองแสง <#F4F1DE>เพื่อเปิดไฟให้ครบทั้ง 5 ตัว");
   }
 
   private void buildFixLightsGUI(Inventory inv) {
-    ItemStack bg = createBorderPane();
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
+    TaskGuiHelper.fillBackground(inv);
+
+    int onCount = 0;
+    for(boolean b : breakerSwitches) {
+      if(b) {
+        onCount++;
+      }
     }
 
-    int[] switchSlots = {11, 12, 13, 14, 15};
+    inv.setItem(4, TaskGuiHelper.createItem(
+      XMaterial.REDSTONE_LAMP,
+      Math.max(1, 5 - onCount),
+      false,
+      TaskGuiHelper.tag("<#FF7518>", "กู้ระบบไฟฟ้า - เปิดแล้ว " + onCount + "/5 ตัว"),
+      "",
+      "<#F4F1DE>คลิก <#FFB703>คันโยกคัตเอาท์ที่เรืองแสง <#F4F1DE>ให้เปิดเป็นสีเขียวทั้งหมด",
+      "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(onCount, 5, 10)
+    ));
+
+    int[] lightSlots = {11, 12, 13, 14, 15};
+    int[] switchSlots = {20, 21, 22, 23, 24};
     for(int i = 0; i < 5; i++) {
+      int num = i + 1;
       boolean isOn = breakerSwitches[i];
-      ItemStack sw = isOn ? XMaterial.LIME_STAINED_GLASS_PANE.parseItem() : XMaterial.RED_STAINED_GLASS_PANE.parseItem();
-      ItemMeta sMeta = sw.getItemMeta();
-      if(sMeta != null) {
-        HalloweenChat.setItemName(sMeta, isOn
-          ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>คัตเอาท์ " + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เปิดแล้ว"
-          : "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>คัตเอาท์ " + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ปิดอยู่");
-        HalloweenChat.setItemLore(sMeta, Arrays.asList(isOn
-          ? "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คัตเอาท์เปิดทำงานแล้ว<shadow:#000000FF><#5A4E7C>)</shadow>"
-          : "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อสับคัตเอาท์ขึ้น<shadow:#000000FF><#5A4E7C>)</shadow>"));
-        sw.setItemMeta(sMeta);
-      }
-      inv.setItem(switchSlots[i], sw);
+
+      inv.setItem(lightSlots[i], TaskGuiHelper.createItem(
+        isOn ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.RED_STAINED_GLASS_PANE,
+        1,
+        false,
+        TaskGuiHelper.tag(isOn ? "<#6EEB83>" : "<#FF3B47>", "ไฟสถานะ #" + num + (isOn ? " - ปกติ" : " - ไฟดับ")),
+        "",
+        isOn ? "<#6EEB83>จ่ายกระแสไฟแล้ว" : TaskGuiHelper.hint("<#FFB703>", "คลิกคัตเอาท์ด้านล่างเพื่อเปิดไฟ")
+      ));
+
+      inv.setItem(switchSlots[i], TaskGuiHelper.createItem(
+        isOn ? XMaterial.TRIPWIRE_HOOK : XMaterial.LEVER,
+        num,
+        !isOn,
+        isOn ? TaskGuiHelper.doneName("คัตเอาท์ #" + num + " เปิดแล้ว") : TaskGuiHelper.clickName("สับคัตเอาท์ #" + num + " ขึ้น"),
+        "",
+        isOn ? "<#6EEB83>สวิตช์ทำงานเรียบร้อย" : TaskGuiHelper.hint("<#FFB703>", "กดคลิกเพื่อต่อกระแสไฟ")
+      ));
     }
   }
 
   private void openFixEngineGUI(Player player) {
     Inventory inv = Bukkit.createInventory(null, 27, FIX_ENGINE_TITLE);
-    ItemStack bg = createBorderPane();
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
-    ItemStack coolBtn = XMaterial.ICE.parseItem();
-    ItemMeta cMeta = coolBtn.getItemMeta();
-    if(cMeta != null) {
-      HalloweenChat.setItemName(cMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>ระบายความร้อนฉุกเฉิน<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(cMeta, Arrays.asList(
-        "<#F4F1DE>ฉีดน้ำยาหล่อเย็นดับความร้อนเครื่องยนต์",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อหยุดการระเบิด<shadow:#000000FF><#5A4E7C>)</shadow>"
-      ));
-      coolBtn.setItemMeta(cMeta);
-    }
-    inv.setItem(13, coolBtn);
+    inv.setItem(4, TaskGuiHelper.createItem(
+      XMaterial.BLAZE_POWDER,
+      1,
+      false,
+      TaskGuiHelper.tag("<#FF3B47>", "เตือนภัยเครื่องยนต์ร้อนจัด - เหลือ " + countdownSeconds + " วิ"),
+      "",
+      "<#F4F1DE>คลิกปุ่ม <#72EFDD>วาล์วน้ำแข็งเรืองแสงตรงกลาง <#F4F1DE>เพื่อหยุดการระเบิดทันที"
+    ));
+
+    ItemStack warnGlass = TaskGuiHelper.createItem(
+      XMaterial.RED_STAINED_GLASS_PANE,
+      1,
+      false,
+      TaskGuiHelper.tag("<#FF3B47>", "คลิกปุ่มตรงกลางเพื่อระบายความร้อน")
+    );
+    inv.setItem(12, warnGlass);
+    inv.setItem(14, warnGlass);
+
+    inv.setItem(13, TaskGuiHelper.createItem(
+      XMaterial.PACKED_ICE,
+      1,
+      true,
+      TaskGuiHelper.clickName("เปิดวาล์วระบายความร้อนฉุกเฉิน"),
+      "",
+      "<#F4F1DE>ฉีดน้ำยาหล่อเย็นแรงดันสูงดับความร้อนเครื่องยนต์",
+      "",
+      TaskGuiHelper.hint("<#6EEB83>", "กดคลิกที่นี่เพื่อหยุดการระเบิดทันที")
+    ));
 
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกปุ่มตรงกลางเพื่อระบายความร้อน");
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิก <#72EFDD>ปุ่มน้ำแข็งเรืองแสงตรงกลาง <#F4F1DE>เพื่อระบายความร้อน");
   }
 
   private void openFixCommsGUI(Player player) {
     Inventory inv = Bukkit.createInventory(null, 27, FIX_COMMS_TITLE);
-    ItemStack bg = createBorderPane();
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
-    ItemStack tuner = XMaterial.COMPASS.parseItem();
-    ItemMeta tMeta = tuner.getItemMeta();
-    if(tMeta != null) {
-      HalloweenChat.setItemName(tMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ปรับคลื่นความถี่วิทยุ<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(tMeta, Arrays.asList(
-        "<#F4F1DE>ปรับคลื่นความถี่เพื่อกู้สัญญาณเรดาร์",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อกู้สัญญาณ<shadow:#000000FF><#5A4E7C>)</shadow>"
-      ));
-      tuner.setItemMeta(tMeta);
-    }
-    inv.setItem(13, tuner);
+    inv.setItem(4, TaskGuiHelper.createItem(
+      XMaterial.LIGHTNING_ROD,
+      1,
+      false,
+      TaskGuiHelper.tag("<#FF7518>", "สัญญาณเรดาร์และวิทยุถูกรบกวน"),
+      "",
+      "<#F4F1DE>คลิกปุ่ม <#FFB703>เข็มทิศวิทยุเรืองแสงตรงกลาง <#F4F1DE>เพื่อกู้สัญญาณ"
+    ));
+
+    ItemStack warnGlass = TaskGuiHelper.createItem(
+      XMaterial.ORANGE_STAINED_GLASS_PANE,
+      1,
+      false,
+      TaskGuiHelper.tag("<#FFB703>", "คลิกปุ่มตรงกลางเพื่อจูนคลื่นความถี่")
+    );
+    inv.setItem(12, warnGlass);
+    inv.setItem(14, warnGlass);
+
+    inv.setItem(13, TaskGuiHelper.createItem(
+      XMaterial.COMPASS,
+      1,
+      true,
+      TaskGuiHelper.clickName("ปรับคลื่นความถี่วิทยุกู้เรดาร์"),
+      "",
+      "<#F4F1DE>รีเซ็ตคลื่นความถี่เพื่อเปิดระบบนำทางภารกิจอีกครั้ง",
+      "",
+      TaskGuiHelper.hint("<#6EEB83>", "กดคลิกที่นี่เพื่อกู้สัญญาณทันที")
+    ));
 
     player.openInventory(inv);
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิกปุ่มตรงกลางเพื่อกู้สัญญาณวิทยุ");
+    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>คลิก <#FFB703>เข็มทิศเรืองแสงตรงกลาง <#F4F1DE>เพื่อกู้สัญญาณวิทยุ");
   }
 
   public boolean isSabotageGUI(String title) {
@@ -644,11 +696,16 @@ public class SabotageManager {
     }
 
     if(activeSabotage == SabotageType.LIGHTS) {
-      int[] switchSlots = {11, 12, 13, 14, 15};
+      int[] lightSlots = {11, 12, 13, 14, 15};
+      int[] switchSlots = {20, 21, 22, 23, 24};
       for(int i = 0; i < 5; i++) {
-        if(switchSlots[i] == rawSlot) {
-          breakerSwitches[i] = !breakerSwitches[i];
-          XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, breakerSwitches[i] ? 1.4F : 0.8F);
+        if(switchSlots[i] == rawSlot || lightSlots[i] == rawSlot) {
+          if(breakerSwitches[i]) {
+            XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+            return;
+          }
+          breakerSwitches[i] = true;
+          XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.4F);
 
           boolean allOn = true;
           for(boolean b : breakerSwitches) {
@@ -662,7 +719,11 @@ public class SabotageManager {
             player.closeInventory();
             resolveActiveSabotage(player);
           } else {
-            buildFixLightsGUI(player.getOpenInventory().getTopInventory());
+            for(Player p : arena.getPlayersLeft()) {
+              if(p.isOnline() && isFixGUI(p.getOpenInventory().getTitle())) {
+                buildFixLightsGUI(p.getOpenInventory().getTopInventory());
+              }
+            }
           }
           return;
         }
@@ -688,6 +749,12 @@ public class SabotageManager {
     SabotageType resolved = activeSabotage;
     activeSabotage = null;
     cooldownRemaining = COOLDOWN_DURATION;
+
+    for(Player p : arena.getPlayers()) {
+      if(p != null && p.isOnline() && !p.equals(fixer) && isFixGUI(p.getOpenInventory().getTitle())) {
+        p.closeInventory();
+      }
+    }
 
     removeEmergencyVisuals();
 

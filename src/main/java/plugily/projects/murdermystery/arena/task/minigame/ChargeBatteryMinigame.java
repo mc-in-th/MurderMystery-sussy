@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
@@ -41,7 +40,11 @@ import java.util.UUID;
 public class ChargeBatteryMinigame implements TaskMinigame {
 
   public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>พ่วงชาร์จแบตเตอรี่รถบัส<shadow:#000000FF><#5A4E7C>]</shadow>");
+
+  private static final int STATUS_SLOT = 4;
+  private static final int GENERATOR_SLOT = 10;
   private static final int[] PROGRESS_SLOTS = {11, 12, 13, 14, 15};
+  private static final int BATTERY_SLOT = 16;
   private static final int START_BUTTON_SLOT = 22;
 
   private static class BatterySession {
@@ -86,83 +89,133 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_AMBIENT.play(player.getLocation(), 0.7F, 1.4F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>กดสวิตช์พ่วงแบตเตอรี่ด้านล่างแล้วรอชาร์จไฟจนครบ 100%");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกสวิตช์เรืองแสงด้านล่างเพื่อเริ่มพ่วงชาร์จแบตเตอรี่");
   }
 
   private void buildGui(Inventory inv, BatterySession session) {
-    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(" ");
-      try {
-        bgMeta.setHideTooltip(true);
-      } catch(Throwable ignored) {
-      }
-      bg.setItemMeta(bgMeta);
-    }
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
     int percent = Math.min(100, session.step * 20);
+    boolean finished = session.step >= PROGRESS_SLOTS.length;
 
-    ItemStack generator = new ItemStack(Material.REDSTONE_BLOCK);
-    ItemMeta srcMeta = generator.getItemMeta();
-    if(srcMeta != null) {
-      HalloweenChat.setItemName(srcMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>เครื่องปั่นไฟฉุกเฉิน<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(srcMeta, "", "<#F4F1DE>แรงดันไฟพ่วง <#FFB703>24V DC");
-      generator.setItemMeta(srcMeta);
+    ItemStack status;
+    if(finished) {
+      status = TaskGuiHelper.createItem(
+        Material.EMERALD,
+        1,
+        true,
+        TaskGuiHelper.doneName("ชาร์จแบตเตอรี่เต็ม 100%"),
+        "",
+        "<#6EEB83>ระบบไฟสำรองรถบัสพร้อมทำงานแล้ว"
+      );
+    } else if(session.charging) {
+      status = TaskGuiHelper.createItem(
+        XMaterial.DAYLIGHT_DETECTOR,
+        1,
+        false,
+        TaskGuiHelper.tag("<#FFB703>", "ขั้นที่ 2/2 - กำลังชาร์จไฟ " + percent + "%"),
+        "",
+        "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(session.step, PROGRESS_SLOTS.length, 10) + " <#FFB703>" + percent + "%",
+        "",
+        TaskGuiHelper.hint("<#B8B0C8>", "เปิดหน้าจอนี้ค้างไว้จนกว่าจะครบ 100%")
+      );
+    } else {
+      status = TaskGuiHelper.createItem(
+        XMaterial.DAYLIGHT_DETECTOR,
+        1,
+        false,
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - เริ่มพ่วงสายแบตเตอรี่"),
+        "",
+        "<#F4F1DE>คลิกปุ่ม <#FFB703>สวิตช์พ่วงไฟ <#F4F1DE>ที่เรืองแสงด้านล่าง",
+        "<#F4F1DE>แล้วถือหน้าจอนี้รอจนประจุเต็ม <#6EEB83>100%"
+      );
     }
-    inv.setItem(10, generator);
+    inv.setItem(STATUS_SLOT, status);
 
-    ItemStack busBattery = new ItemStack(Material.IRON_BLOCK);
-    ItemMeta dstMeta = busBattery.getItemMeta();
-    if(dstMeta != null) {
-      HalloweenChat.setItemName(dstMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#72EFDD>แบตเตอรี่หลักรถบัส<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(dstMeta, "", "<#F4F1DE>ประจุไฟสะสม <#6EEB83>" + percent + "%");
-      busBattery.setItemMeta(dstMeta);
-    }
-    inv.setItem(16, busBattery);
+    inv.setItem(GENERATOR_SLOT, TaskGuiHelper.createItem(
+      Material.REDSTONE_BLOCK,
+      1,
+      false,
+      TaskGuiHelper.tag("<#FFB703>", "เครื่องปั่นไฟฉุกเฉิน 24V"),
+      "",
+      "<#F4F1DE>สถานะ " + (session.charging ? "<#6EEB83>กำลังจ่ายกระแสไฟ" : "<#B8B0C8>รอเปิดสวิตช์")
+    ));
 
     for(int i = 0; i < PROGRESS_SLOTS.length; i++) {
-      boolean filled = i < session.step;
-      ItemStack pane = (filled ? XMaterial.LIME_STAINED_GLASS_PANE : XMaterial.GRAY_STAINED_GLASS_PANE).parseItem();
-      ItemMeta pMeta = pane.getItemMeta();
-      if(pMeta != null) {
-        HalloweenChat.setItemName(
-          pMeta,
-          filled
-            ? "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังส่งกระแสไฟ " + percent + "%<shadow:#000000FF><#5A4E7C>]</shadow>"
-            : "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>สายพ่วงแบตเตอรี่<shadow:#000000FF><#5A4E7C>]</shadow>"
+      int segPercent = (i + 1) * 20;
+      ItemStack pane;
+      if(i < session.step) {
+        pane = TaskGuiHelper.createItem(
+          XMaterial.LIME_STAINED_GLASS_PANE,
+          1,
+          finished,
+          TaskGuiHelper.tag("<#6EEB83>", "ประจุไฟสะสม " + segPercent + "%"),
+          "",
+          "<#6EEB83>กระแสไฟไหลผ่านเรียบร้อย"
         );
-        pane.setItemMeta(pMeta);
+      } else if(session.charging && i == session.step) {
+        pane = TaskGuiHelper.createItem(
+          XMaterial.YELLOW_STAINED_GLASS_PANE,
+          1,
+          true,
+          TaskGuiHelper.tag("<#FFB703>", "กำลังส่งกระแสไฟ..."),
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "กำลังชาร์จเข้าสู่ช่องที่ " + (i + 1) + "/5")
+        );
+      } else {
+        pane = TaskGuiHelper.createItem(
+          XMaterial.GRAY_STAINED_GLASS_PANE,
+          1,
+          false,
+          TaskGuiHelper.tag("<#B8B0C8>", "สายพ่วงแบตเตอรี่ ช่องที่ " + (i + 1) + "/5"),
+          "",
+          "<#B8B0C8>ยังไม่มีกระแสไฟไหลผ่าน"
+        );
       }
       inv.setItem(PROGRESS_SLOTS[i], pane);
     }
 
-    ItemStack startBtn = (session.charging ? XMaterial.CLOCK : XMaterial.LEVER).parseItem();
-    ItemMeta bMeta = startBtn.getItemMeta();
-    if(bMeta != null) {
-      if(session.charging) {
-        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กำลังพ่วงไฟ " + percent + "%<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          bMeta,
-          "",
-          "<#F4F1DE>กรุณาถือสายพ่วงค้างไว้จนกว่าจะเต็ม",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>รอให้ชาร์จไฟครบ 100%<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      } else {
-        HalloweenChat.setItemName(bMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>หนีบสายพ่วงแบตเตอรี่<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          bMeta,
-          "",
-          "<#F4F1DE>ส่งกระแสไฟจากเครื่องปั่นไฟเข้าสู่แบตเตอรี่รถบัส",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อเริ่มชาร์จแบตเตอรี่<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      }
-      startBtn.setItemMeta(bMeta);
+    inv.setItem(BATTERY_SLOT, TaskGuiHelper.createItem(
+      finished ? Material.EMERALD_BLOCK : Material.IRON_BLOCK,
+      1,
+      finished,
+      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#72EFDD>", "แบตเตอรี่หลักรถบัส"),
+      "",
+      "<#F4F1DE>ประจุไฟสะสม " + (finished ? "<#6EEB83>" : "<#FFB703>") + percent + "%"
+    ));
+
+    ItemStack startBtn;
+    if(finished) {
+      startBtn = TaskGuiHelper.createItem(
+        XMaterial.EMERALD_BLOCK,
+        1,
+        true,
+        TaskGuiHelper.doneName("พ่วงชาร์จแบตเตอรี่สำเร็จ"),
+        "",
+        "<#6EEB83>ประจุไฟเต็ม 100% พร้อมออกเดินทาง"
+      );
+    } else if(session.charging) {
+      startBtn = TaskGuiHelper.createItem(
+        XMaterial.CLOCK,
+        Math.max(1, session.step),
+        false,
+        TaskGuiHelper.tag("<#6EEB83>", "กำลังชาร์จแบตเตอรี่ " + percent + "%"),
+        "",
+        "<#F4F1DE>กำลังส่งกระแสไฟเข้าแบตเตอรี่รถบัส",
+        "",
+        TaskGuiHelper.hint("<#FFB703>", "ห้ามปิดหน้าจอนี้จนกว่าจะครบ 100%")
+      );
+    } else {
+      startBtn = TaskGuiHelper.createItem(
+        XMaterial.LEVER,
+        1,
+        true,
+        TaskGuiHelper.clickName("หนีบสายพ่วงแบตเตอรี่"),
+        "",
+        "<#F4F1DE>เชื่อมต่อเครื่องปั่นไฟเข้ากับแบตเตอรี่รถบัส",
+        "",
+        TaskGuiHelper.hint("<#FFB703>", "กดคลิกที่นี่เพื่อเริ่มชาร์จไฟ")
+      );
     }
     inv.setItem(START_BUTTON_SLOT, startBtn);
   }
@@ -173,7 +226,14 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       return true;
     }
     BatterySession session = sessions.get(player.getUniqueId());
-    if(session == null || session.charging) {
+    if(session == null) {
+      return true;
+    }
+
+    if(session.charging) {
+      if(rawSlot >= 0 && rawSlot < 27) {
+        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>กำลังชาร์จไฟ <#FFB703>" + (session.step * 20) + "% <#B8B0C8>กรุณารอสักครู่");
+      }
       return true;
     }
 
@@ -182,7 +242,8 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       session.step = 0;
       Inventory topInv = player.getOpenInventory().getTopInventory();
       buildGui(topInv, session);
-      XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 0.8F, 1.2F);
+      XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 0.9F, 1.3F);
+      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เริ่มส่งกระแสไฟ " + TaskGuiHelper.buildPipeBar(0, PROGRESS_SLOTS.length, 10) + " <#FFB703>0%");
 
       session.task = Bukkit.getScheduler().runTaskTimer(arena.getPlugin(), () -> {
         if(!player.isOnline()
@@ -194,7 +255,8 @@ public class ChargeBatteryMinigame implements TaskMinigame {
           return;
         }
         session.step++;
-        XSound.BLOCK_NOTE_BLOCK_HAT.play(player.getLocation(), 0.6F, 1.0F + (session.step * 0.15F));
+        int pct = Math.min(100, session.step * 20);
+        XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.65F, 0.9F + (session.step * 0.18F));
         buildGui(topInv, session);
 
         if(session.step >= PROGRESS_SLOTS.length) {
@@ -205,6 +267,8 @@ public class ChargeBatteryMinigame implements TaskMinigame {
           completedSessions.add(player.getUniqueId());
           sessions.remove(player.getUniqueId());
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+          TaskGuiHelper.sendSuccessBar(player, "พ่วงชาร์จแบตเตอรี่เต็ม 100% สำเร็จ");
+
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
             if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
               if(isGui(player.getOpenInventory().getTitle())) {
@@ -213,8 +277,16 @@ public class ChargeBatteryMinigame implements TaskMinigame {
               arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CHARGE_BATTERY);
             }
           }, 8L);
+        } else {
+          TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>กำลังชาร์จไฟ " + TaskGuiHelper.buildPipeBar(session.step, PROGRESS_SLOTS.length, 10) + " <#FFB703>" + pct + "%");
         }
       }, 15L, 15L);
+      return true;
+    }
+
+    if(rawSlot >= 0 && rawSlot < 27) {
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 0.9F);
+      TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกสวิตช์เรืองแสงช่องล่างสุด <#F4F1DE>เพื่อเริ่มพ่วงไฟ");
     }
     return true;
   }

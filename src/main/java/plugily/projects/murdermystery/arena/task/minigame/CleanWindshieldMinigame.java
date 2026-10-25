@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
@@ -40,14 +39,14 @@ import java.util.UUID;
 public class CleanWindshieldMinigame implements TaskMinigame {
 
   public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เช็ดคราบโคลนกระจกหน้ารถ<shadow:#000000FF><#5A4E7C>]</shadow>");
+
+  private static final int STATUS_SLOT = 4;
   private static final int[] TRACK_SLOTS = {10, 11, 12, 13, 14, 15, 16};
   private static final int BUCKET_SLOT = 22;
 
   private static class WipeSession {
     boolean spongeReady = false;
     int progress = 0;
-    long wipeStartMs = 0L;
-    String statusLine = "<#B8B0C8>ชุบน้ำฟองน้ำจากถังด้านล่างเพื่อเริ่มเช็ดกระจก";
   }
 
   private final Arena arena;
@@ -84,99 +83,114 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.8F, 1.2F);
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>หยิบฟองน้ำด้านล่าง แล้วคลิกเช็ดกระจกจากซ้ายไปขวาด้วยความเร็วพอดี");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ขั้นที่ 1 คลิกถังน้ำเรืองแสงด้านล่างเพื่อชุบน้ำฟองน้ำ");
   }
 
   private void buildGui(Inventory inv, WipeSession session) {
-    ItemStack bg = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-    ItemMeta bgMeta = bg.getItemMeta();
-    if(bgMeta != null) {
-      bgMeta.setDisplayName(" ");
-      try {
-        bgMeta.setHideTooltip(true);
-      } catch(Throwable ignored) {
-      }
-      bg.setItemMeta(bgMeta);
-    }
-    for(int i = 0; i < 27; i++) {
-      inv.setItem(i, bg);
-    }
+    TaskGuiHelper.fillBackground(inv);
 
-    ItemStack statusItem = new ItemStack(Material.GLASS);
-    ItemMeta sMeta = statusItem.getItemMeta();
-    if(sMeta != null) {
-      HalloweenChat.setItemName(sMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Windshield<shadow:#000000FF><#5A4E7C>]</shadow>");
-      HalloweenChat.setItemLore(
-        sMeta,
+    boolean finished = session.progress >= TRACK_SLOTS.length;
+
+    ItemStack statusItem;
+    if(finished) {
+      statusItem = TaskGuiHelper.createItem(
+        Material.EMERALD,
+        1,
+        true,
+        TaskGuiHelper.doneName("กระจกหน้ารถบัสใสสะอาดแล้ว"),
         "",
-        session.statusLine,
-        "",
-        "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกเช็ดกระจกจากซ้ายไปขวาตามลำดับ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        "<#6EEB83>ทัศนวิสัยด้านหน้ารถบัสชัดเจนสมบูรณ์"
       );
-      statusItem.setItemMeta(sMeta);
+    } else if(!session.spongeReady) {
+      statusItem = TaskGuiHelper.createItem(
+        Material.GLASS,
+        1,
+        false,
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - ชุบน้ำฟองน้ำด้านล่าง"),
+        "",
+        "<#F4F1DE>คลิกที่ <#FFB703>ถังน้ำเรืองแสงด้านล่าง <#F4F1DE>เพื่อเตรียมฟองน้ำ",
+        "<#F4F1DE>จากนั้นคลิกเช็ดกระจกแถวกลางจากซ้ายไปขวา"
+      );
+    } else {
+      statusItem = TaskGuiHelper.createItem(
+        Material.GLASS,
+        Math.min(TRACK_SLOTS.length, session.progress + 1),
+        false,
+        TaskGuiHelper.tag("<#FFB703>", "ขั้นที่ 2/2 - เช็ดกระจกช่องที่ " + (session.progress + 1) + "/7"),
+        "",
+        "<#F4F1DE>ความสะอาด " + TaskGuiHelper.buildPipeBar(session.progress, TRACK_SLOTS.length, 7) + " <#FFB703>" + session.progress + "/7",
+        "",
+        TaskGuiHelper.hint("<#FFB703>", "คลิกที่ฟองน้ำเรืองแสงไล่จากซ้ายไปขวา")
+      );
     }
-    inv.setItem(4, statusItem);
+    inv.setItem(STATUS_SLOT, statusItem);
 
     for(int i = 0; i < TRACK_SLOTS.length; i++) {
+      int stepNum = i + 1;
       ItemStack slotItem;
       if(!session.spongeReady) {
-        slotItem = XMaterial.BROWN_STAINED_GLASS_PANE.parseItem();
-        ItemMeta m = slotItem.getItemMeta();
-        if(m != null) {
-          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#B8B0C8>คราบโคลนกระจก #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(m, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กรุณาหยิบฟองน้ำด้านล่างก่อน<shadow:#000000FF><#5A4E7C>)</shadow>");
-          slotItem.setItemMeta(m);
-        }
+        slotItem = TaskGuiHelper.createItem(
+          XMaterial.BROWN_STAINED_GLASS_PANE,
+          stepNum,
+          false,
+          TaskGuiHelper.tag("<#B8B0C8>", "คราบโคลนเกาะกระจก #" + stepNum),
+          "",
+          TaskGuiHelper.hint("<#FF3B47>", "คลิกถังน้ำเรืองแสงด้านล่างก่อน")
+        );
       } else if(i < session.progress) {
-        slotItem = XMaterial.LIGHT_BLUE_STAINED_GLASS_PANE.parseItem();
-        ItemMeta m = slotItem.getItemMeta();
-        if(m != null) {
-          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>กระจกสะอาดแล้ว #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          slotItem.setItemMeta(m);
-        }
+        slotItem = TaskGuiHelper.createItem(
+          XMaterial.LIGHT_BLUE_STAINED_GLASS_PANE,
+          1,
+          finished,
+          TaskGuiHelper.tag("<#6EEB83>", "กระจกใสสะอาดแล้ว #" + stepNum),
+          "",
+          "<#6EEB83>ขจัดคราบโคลนเรียบร้อย"
+        );
       } else if(i == session.progress) {
-        slotItem = XMaterial.WET_SPONGE.parseItem();
-        ItemMeta m = slotItem.getItemMeta();
-        if(m != null) {
-          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>เช็ดคราบโคลนช่องที่ " + (i + 1) + "/7<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(
-            m,
-            "",
-            "<#F4F1DE>คลิกเพื่อปัดคราบโคลนไปทางขวา",
-            "",
-            "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>อย่าเช็ดเร็วหรือช้าเกินไป<shadow:#000000FF><#5A4E7C>)</shadow>"
-          );
-          slotItem.setItemMeta(m);
-        }
+        slotItem = TaskGuiHelper.createItem(
+          XMaterial.WET_SPONGE,
+          stepNum,
+          true,
+          TaskGuiHelper.clickName("เช็ดคราบโคลนช่องที่ " + stepNum + "/7"),
+          "",
+          "<#F4F1DE>ปัดฟองน้ำชุบน้ำล้างโคลนออกจากกระจก",
+          "",
+          TaskGuiHelper.hint("<#FFB703>", "กดคลิกที่นี่เพื่อเช็ดช่องนี้")
+        );
       } else {
-        slotItem = XMaterial.BROWN_STAINED_GLASS_PANE.parseItem();
-        ItemMeta m = slotItem.getItemMeta();
-        if(m != null) {
-          HalloweenChat.setItemName(m, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>คราบโคลนกระจก #" + (i + 1) + "<shadow:#000000FF><#5A4E7C>]</shadow>");
-          HalloweenChat.setItemLore(m, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกช่องที่มีฟองน้ำก่อนหน้าตามลำดับ<shadow:#000000FF><#5A4E7C>)</shadow>");
-          slotItem.setItemMeta(m);
-        }
+        slotItem = TaskGuiHelper.createItem(
+          XMaterial.BROWN_STAINED_GLASS_PANE,
+          stepNum,
+          false,
+          TaskGuiHelper.tag("<#FF7518>", "คราบโคลนช่องถัดไป #" + stepNum),
+          "",
+          TaskGuiHelper.hint("<#B8B0C8>", "เช็ดช่องที่ " + (session.progress + 1) + " ก่อน")
+        );
       }
       inv.setItem(TRACK_SLOTS[i], slotItem);
     }
 
-    ItemStack bucket = new ItemStack(session.spongeReady ? Material.BUCKET : Material.WATER_BUCKET);
-    ItemMeta wMeta = bucket.getItemMeta();
-    if(wMeta != null) {
-      if(session.spongeReady) {
-        HalloweenChat.setItemName(wMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ชุบน้ำฟองน้ำแล้ว<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(wMeta, "", "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกแถวกลางจากซ้ายไปขวาเพื่อเช็ดกระจก<shadow:#000000FF><#5A4E7C>)</shadow>");
-      } else {
-        HalloweenChat.setItemName(wMeta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FFB703>ถังน้ำและฟองน้ำเช็ดกระจก<shadow:#000000FF><#5A4E7C>]</shadow>");
-        HalloweenChat.setItemLore(
-          wMeta,
-          "",
-          "<#F4F1DE>หยิบฟองน้ำชุบน้ำขึ้นมาเช็ดโคลนหน้ากระจกรถบัส",
-          "",
-          "<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกเพื่อหยิบฟองน้ำ<shadow:#000000FF><#5A4E7C>)</shadow>"
-        );
-      }
-      bucket.setItemMeta(wMeta);
+    ItemStack bucket;
+    if(!session.spongeReady) {
+      bucket = TaskGuiHelper.createItem(
+        Material.WATER_BUCKET,
+        1,
+        true,
+        TaskGuiHelper.clickName("ชุบน้ำฟองน้ำเช็ดกระจก"),
+        "",
+        "<#F4F1DE>จุ่มฟองน้ำลงถังน้ำสะอาดเพื่อเริ่มเช็ดโคลน",
+        "",
+        TaskGuiHelper.hint("<#FFB703>", "กดคลิกที่นี่เป็นอันดับแรก")
+      );
+    } else {
+      bucket = TaskGuiHelper.createItem(
+        Material.BUCKET,
+        1,
+        false,
+        TaskGuiHelper.doneName("ชุบน้ำฟองน้ำพร้อมแล้ว"),
+        "",
+        TaskGuiHelper.hint("<#B8B0C8>", "คลิกฟองน้ำเรืองแสงแถวกลางได้เลย")
+      );
     }
     inv.setItem(BUCKET_SLOT, bucket);
   }
@@ -196,52 +210,32 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     if(rawSlot == BUCKET_SLOT && !session.spongeReady) {
       session.spongeReady = true;
       session.progress = 0;
-      session.wipeStartMs = 0L;
-      session.statusLine = "<#FFB703>พร้อมเช็ดกระจก คลิกช่องที่ 1 ถึง 7 ตามลำดับ";
       XSound.ITEM_BUCKET_EMPTY.play(player.getLocation(), 0.9F, 1.2F);
       buildGui(topInv, session);
+      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ขั้นที่ 2 คลิกที่ <#FFB703>ฟองน้ำเรืองแสง <#F4F1DE>ไล่เช็ดจากซ้ายไปขวา (1-7)");
       return true;
     }
 
     if(!session.spongeReady) {
-      if(rawSlot >= 10 && rawSlot <= 16) {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.0F);
+      if(rawSlot >= 0 && rawSlot < 27) {
+        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.1F);
+        TaskGuiHelper.sendErrorBar(player, "คลิกถังน้ำเรืองแสงด้านล่างเพื่อชุบน้ำฟองน้ำก่อน");
       }
       return true;
     }
 
     int expectedSlot = TRACK_SLOTS[session.progress];
     if(rawSlot == expectedSlot) {
-      if(session.progress == 0) {
-        session.wipeStartMs = System.currentTimeMillis();
-      }
       session.progress++;
-      XSound.BLOCK_SLIME_BLOCK_STEP.play(player.getLocation(), 0.8F, 1.0F + (session.progress * 0.12F));
+      XSound.BLOCK_SLIME_BLOCK_STEP.play(player.getLocation(), 0.85F, 1.0F + (session.progress * 0.12F));
+      XSound.BLOCK_NOTE_BLOCK_CHIME.play(player.getLocation(), 0.5F, 0.9F + (session.progress * 0.1F));
+      buildGui(topInv, session);
 
       if(session.progress >= TRACK_SLOTS.length) {
-        long elapsed = System.currentTimeMillis() - session.wipeStartMs;
-        if(elapsed < 700L) {
-          session.progress = 0;
-          session.wipeStartMs = 0L;
-          session.statusLine = "<#FF3B47>เช็ดเร็วเกินไป คราบโคลนยังออกไม่หมด กรุณาลองใหม่";
-          XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.7F);
-          buildGui(topInv, session);
-          return true;
-        }
-        if(elapsed > 5500L) {
-          session.progress = 0;
-          session.wipeStartMs = 0L;
-          session.statusLine = "<#FF3B47>เช็ดช้าเกินไป คราบโคลนแห้งติดกระจก กรุณาลองใหม่";
-          XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.7F);
-          buildGui(topInv, session);
-          return true;
-        }
-
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
-        session.statusLine = "<#6EEB83>กระจกหน้ารถบัสสะอาดใสเรียบร้อยแล้ว";
-        buildGui(topInv, session);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+        TaskGuiHelper.sendSuccessBar(player, "เช็ดคราบโคลนกระจกหน้ารถบัสสะอาดเรียบร้อย");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -251,20 +245,15 @@ public class CleanWindshieldMinigame implements TaskMinigame {
             arena.getTaskManager().completeTaskFromMinigame(player, TaskType.CLEAN_WINDSHIELD);
           }
         }, 8L);
-        return true;
+      } else {
+        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เช็ดคราบโคลนแล้ว <#6EEB83>" + session.progress + "/7 <#B8B0C8>(คลิกฟองน้ำช่องถัดไป)");
       }
-
-      session.statusLine = "<#F4F1DE>กำลังเช็ดคราบโคลน <#FFB703>" + session.progress + "/7";
-      buildGui(topInv, session);
       return true;
     }
 
     if(rawSlot >= 10 && rawSlot <= 16) {
-      session.progress = 0;
-      session.wipeStartMs = 0L;
-      session.statusLine = "<#FF3B47>เช็ดข้ามช่อง กรุณาเริ่มเช็ดจากซ้ายสุดใหม่";
-      XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.8F, 0.8F);
-      buildGui(topInv, session);
+      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.6F, 0.8F);
+      TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่ฟองน้ำเรืองแสงช่องที่ " + (session.progress + 1) + " <#F4F1DE>เพื่อเช็ดต่อ");
     }
     return true;
   }
