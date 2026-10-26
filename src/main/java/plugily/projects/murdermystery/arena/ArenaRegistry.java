@@ -89,6 +89,9 @@ public class ArenaRegistry extends PluginArenaRegistry {
     ((Arena) arena).setHideChances(section.getBoolean(id + ".hidechances"));
     arena.setArenaOption("MURDERER_DIVIDER",section.getInt(id + ".playerpermurderer", 5));
     ((Arena) arena).setPlayerSpawnPoints(playerSpawnPoints);
+    if(!playerSpawnPoints.isEmpty()) {
+      arena.setStartLocation(playerSpawnPoints.get(0));
+    }
 
     ((Arena) arena).clearSpecificTaskLocations(null);
     ConfigurationSection tasksSec = section.getConfigurationSection(id + ".tasks");

@@ -21,11 +21,12 @@ package plugily.projects.murdermystery.arena.states;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginStartingState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
@@ -50,19 +51,50 @@ public class StartingState extends PluginStartingState {
 
   @Override
   public void handleCall(PluginArena arena) {
-    super.handleCall(arena);
     Arena pluginArena = (Arena) getPlugin().getArenaRegistry().getArena(arena.getId());
+    boolean startingNow = pluginArena != null
+      && (arena.getTimer() == 0 || arena.isForceStart())
+      && arena.getPlayers().size() >= arena.getMinimumPlayers();
+    Location savedStartLocation = arena.getStartLocation();
+    if(startingNow) {
+      if((savedStartLocation == null || savedStartLocation.getWorld() == null) && !pluginArena.getPlayerSpawnPoints().isEmpty()) {
+        savedStartLocation = pluginArena.getPlayerSpawnPoints().get(0);
+        arena.setStartLocation(savedStartLocation);
+      }
+      if(pluginArena.getCutsceneManager().hasCutscene()) {
+        Location cutsceneStart = pluginArena.getCutsceneManager().getInitialEyeLocation();
+        if(cutsceneStart != null && cutsceneStart.getWorld() != null) {
+          cutsceneStart.getChunk().load(true);
+          arena.setStartLocation(cutsceneStart);
+        }
+      } else if(arena.getStartLocation() != null && arena.getStartLocation().getWorld() != null) {
+        arena.getStartLocation().getChunk().load(true);
+      }
+    }
+
+    try {
+      super.handleCall(arena);
+    } finally {
+      if(startingNow && savedStartLocation != null) {
+        arena.setStartLocation(savedStartLocation);
+      }
+    }
+
     if(pluginArena == null) {
       return;
     }
 
-    if(!pluginArena.isHideChances()) {
+    if(startingNow && getArenaStateChange() == IArenaState.FULL_GAME) {
+      setArenaState(IArenaState.IN_GAME);
+    }
+
+    if(!pluginArena.isHideChances() && getArenaStateChange() != IArenaState.IN_GAME) {
       for(Player player : arena.getPlayersLeft()) {
         HalloweenChat.sendActionBar(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_ROLE_CHANCES_ACTION_BAR").asKey().player(player).arena(pluginArena).build());
       }
     }
 
-    if(arena.getTimer() == 0 || arena.isForceStart()) {
+    if(startingNow && getArenaStateChange() == IArenaState.IN_GAME) {
       for(Player player : arena.getPlayersLeft()) {
         IUser user = arena.getPlugin().getUserManager().getUser(player);
         user.resetNonePersistentStatistics();
@@ -89,9 +121,17 @@ public class StartingState extends PluginStartingState {
         int size = pluginArena.getPlayerSpawnPoints().size();
         List<Player> innocentPlayers = new ArrayList<>();
         for(Player player : arena.getPlayersLeft()) {
-          if(size > 0) {
-            VersionUtils.teleport(player, pluginArena.getPlayerSpawnPoints().get(getPlugin().getRandom().nextInt(size)));
+          if(player == null || !player.isOnline()) {
+            continue;
           }
+          if(size > 0) {
+            Location spawnPoint = pluginArena.getPlayerSpawnPoints().get(getPlugin().getRandom().nextInt(size));
+            if(spawnPoint != null && spawnPoint.getWorld() != null) {
+              spawnPoint.getChunk().load(true);
+              player.teleport(spawnPoint, PlayerTeleportEvent.TeleportCause.PLUGIN);
+            }
+          }
+          player.setFallDistance(0.0f);
           ArenaUtils.updateNameTagsVisibility(player);
           player.setGameMode(GameMode.ADVENTURE);
           IUser user = arena.getPlugin().getUserManager().getUser(player);
@@ -116,7 +156,14 @@ public class StartingState extends PluginStartingState {
         pluginArena.getVotingManager().initForGame();
 
         for(Player p : pluginArena.getPlayers()) {
-          if(ArenaUtils.isSpectator(p, pluginArena)) {
+          if(p != null && p.isOnline() && ArenaUtils.isSpectator(p, pluginArena)) {
+            if(size > 0) {
+              Location specSpawn = pluginArena.getPlayerSpawnPoints().get(0);
+              if(specSpawn != null && specSpawn.getWorld() != null) {
+                specSpawn.getChunk().load(true);
+                p.teleport(specSpawn, PlayerTeleportEvent.TeleportCause.PLUGIN);
+              }
+            }
             ArenaUtils.applySpectatorState(p, pluginArena, true);
             pluginArena.getTaskManager().addPlayerToBossBar(p);
             pluginArena.getSabotageManager().addPlayerToBossBar(p);

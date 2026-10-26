@@ -26,9 +26,11 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -55,6 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -88,6 +91,54 @@ public class CutsceneManager {
 
   private static final Map<UUID, RecordingSession> activeRecordings = new ConcurrentHashMap<>();
   private static final Map<UUID, PreviewSession> activePreviews = new ConcurrentHashMap<>();
+  private static final Set<UUID> internalBypass = ConcurrentHashMap.newKeySet();
+
+  public static boolean isInternalBypass(Player player) {
+    return player != null && internalBypass.contains(player.getUniqueId());
+  }
+
+  private static void runWithInternalBypass(Player player, Runnable action) {
+    if(player == null || action == null) {
+      return;
+    }
+    UUID uuid = player.getUniqueId();
+    internalBypass.add(uuid);
+    try {
+      action.run();
+    } finally {
+      internalBypass.remove(uuid);
+    }
+  }
+
+  private static boolean isCutsceneAllowedState(IArenaState state) {
+    return state == IArenaState.IN_GAME || state == IArenaState.STARTING || state == IArenaState.FULL_GAME;
+  }
+
+  private static void teleportToCutsceneCamera(Player player, Location targetEyeLoc, TextDisplay rig) {
+    if(player == null || !player.isOnline()) {
+      return;
+    }
+    runWithInternalBypass(player, () -> {
+      if(targetEyeLoc != null && targetEyeLoc.getWorld() != null) {
+        targetEyeLoc.getChunk().load(true);
+        if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
+          player.setSpectatorTarget(null);
+        }
+        if(!player.getWorld().equals(targetEyeLoc.getWorld()) || player.getLocation().distanceSquared(targetEyeLoc) > 1.0) {
+          player.teleport(targetEyeLoc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        }
+      }
+      if(player.getGameMode() != GameMode.SPECTATOR) {
+        player.setGameMode(GameMode.SPECTATOR);
+      }
+      player.setFlySpeed(0.0f);
+      player.setWalkSpeed(0.0f);
+      if(rig != null && rig.isValid() && player.getWorld().equals(rig.getWorld())) {
+        player.setSpectatorTarget(rig);
+        PacketCameraSender.sendSetCamera(rig, Collections.singletonList(player));
+      }
+    });
+  }
 
   private final Arena arena;
   private final List<CutsceneFrame> frames = new ArrayList<>();
@@ -109,6 +160,17 @@ public class CutsceneManager {
 
   public boolean isPlaying() {
     return playing;
+  }
+
+  public boolean isActiveViewer(Player player) {
+    return playing && player != null && activeViewers.contains(player);
+  }
+
+  public Location getInitialEyeLocation() {
+    if(frames.isEmpty()) {
+      return null;
+    }
+    return frames.get(0).toEyeLocation(getFallbackWorld());
   }
 
   public List<CutsceneFrame> getFrames() {
@@ -146,7 +208,7 @@ public class CutsceneManager {
     World fallbackWorld = getFallbackWorld();
     List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
 
-    List<Player> participants = new ArrayList<>(arena.getPlayersLeft());
+    List<Player> participants = new ArrayList<>(arena.getPlayers());
     List<Player> initialViewers = new ArrayList<>(participants.size());
     for(Player participant : participants) {
       if(participant != null && participant.isOnline()) {
@@ -157,14 +219,24 @@ public class CutsceneManager {
     CutsceneFrame firstFrame = snapshotFrames.get(0);
     Location initialEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
     Location initialOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
+    if(initialEyeLoc != null && initialEyeLoc.getWorld() != null) {
+      initialEyeLoc.getChunk().load(true);
+    }
+
+    for(Player player : initialViewers) {
+      preparePlayerForCutscene(player, arena.getPlayers(), initialEyeLoc, null);
+    }
+
     cameraRig = spawnCameraRig(initialEyeLoc);
     fadeOverlay = spawnFadeOverlay(initialOverlayLoc);
 
-    for(Player player : participants) {
-      if(player == null || !player.isOnline()) {
+    for(Player player : initialViewers) {
+      if(!player.isOnline()) {
         continue;
       }
-      preparePlayerForCutscene(player, arena.getPlayers(), initialEyeLoc, cameraRig);
+      if(cameraRig != null && cameraRig.isValid() && player.getWorld().equals(cameraRig.getWorld())) {
+        runWithInternalBypass(player, () -> player.setSpectatorTarget(cameraRig));
+      }
       HalloweenChat.sendTitles(
         player,
         "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>" + arena.getMapName() + "<shadow:#000000FF><#5A4E7C>]</shadow>",
@@ -175,14 +247,19 @@ public class CutsceneManager {
       );
       player.playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.5f, 1.2f);
     }
+    if(cameraRig != null && cameraRig.isValid()) {
+      PacketCameraSender.sendSetCamera(cameraRig, activeViewers);
+    }
 
     final long startNanos = System.nanoTime();
     final int totalFrames = snapshotFrames.size();
 
     syncTask = new BukkitRunnable() {
+      private int tickCount = 0;
+
       @Override
       public void run() {
-        if(!playing || sessionCounter.get() != currentSession || arena.getArenaState() != IArenaState.IN_GAME) {
+        if(!playing || sessionCounter.get() != currentSession || !isCutsceneAllowedState(arena.getArenaState())) {
           cancel();
           return;
         }
@@ -192,6 +269,7 @@ public class CutsceneManager {
           cancel();
           return;
         }
+        tickCount++;
         CutsceneFrame currentFrame = snapshotFrames.get(Math.min(frameIdx, totalFrames - 1));
         Location eyeLoc = currentFrame.toEyeLocation(fallbackWorld);
         if(eyeLoc != null && eyeLoc.getWorld() != null) {
@@ -200,26 +278,42 @@ public class CutsceneManager {
           }
           updateFadeOverlayTick(fadeOverlay, currentFrame, fallbackWorld, frameIdx, totalFrames);
           int remainingSec = Math.max(1, (int) Math.ceil((double) (totalFrames - frameIdx) / FPS));
-          List<Player> currentLiving = arena.getPlayersLeft();
-          List<Player> updatedViewers = new ArrayList<>(currentLiving.size());
-          for(Player player : currentLiving) {
+          Collection<Player> currentArenaPlayers = arena.getPlayers();
+          List<Player> updatedViewers = new ArrayList<>(currentArenaPlayers.size());
+          boolean shouldReconfirmCamera = tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
+          for(Player player : currentArenaPlayers) {
             if(player == null || !player.isOnline()) {
               continue;
             }
             updatedViewers.add(player);
-            if(player.getGameMode() != GameMode.SPECTATOR) {
-              player.setGameMode(GameMode.SPECTATOR);
-            }
-            player.setFlySpeed(0.0f);
             if(cameraRig != null && cameraRig.isValid()) {
               if(!player.getWorld().equals(cameraRig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
-                player.teleport(eyeLoc);
-              }
-              if(player.getSpectatorTarget() != cameraRig) {
-                player.setSpectatorTarget(cameraRig);
+                teleportToCutsceneCamera(player, eyeLoc, cameraRig);
+              } else {
+                runWithInternalBypass(player, () -> {
+                  if(player.getGameMode() != GameMode.SPECTATOR) {
+                    player.setGameMode(GameMode.SPECTATOR);
+                  }
+                  player.setFlySpeed(0.0f);
+                  if(player.getSpectatorTarget() != cameraRig) {
+                    player.setSpectatorTarget(cameraRig);
+                  } else if(!PacketCameraSender.isSetCameraSupported() && (tickCount == 2 || tickCount == 6)) {
+                    player.setSpectatorTarget(null);
+                    player.setSpectatorTarget(cameraRig);
+                  }
+                });
               }
             } else {
-              player.teleport(currentFrame.toLocation(fallbackWorld));
+              Location fallbackLoc = currentFrame.toLocation(fallbackWorld);
+              if(fallbackLoc != null) {
+                runWithInternalBypass(player, () -> {
+                  if(player.getGameMode() != GameMode.SPECTATOR) {
+                    player.setGameMode(GameMode.SPECTATOR);
+                  }
+                  player.setFlySpeed(0.0f);
+                  player.teleport(fallbackLoc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                });
+              }
             }
             HalloweenChat.sendActionBar(
               player,
@@ -227,6 +321,9 @@ public class CutsceneManager {
             );
           }
           activeViewers = Collections.unmodifiableList(updatedViewers);
+          if(shouldReconfirmCamera && cameraRig != null && cameraRig.isValid()) {
+            PacketCameraSender.sendSetCamera(cameraRig, updatedViewers);
+          }
         }
       }
     }.runTaskTimer(plugin, 0L, 1L);
@@ -280,16 +377,22 @@ public class CutsceneManager {
 
     for(Player player : arena.getPlayers()) {
       if(player != null && player.isOnline()) {
-        restorePlayerFromCutscene(player);
-        if(!isArenaSpectator(player)) {
-          applyPostCutsceneFadeIn(player);
-        }
+        detachPlayerCameraOnly(player);
       }
     }
     removeCameraRig();
 
-    if(onComplete != null && arena.getArenaState() == IArenaState.IN_GAME) {
+    if(onComplete != null && isCutsceneAllowedState(arena.getArenaState())) {
       onComplete.run();
+    }
+
+    for(Player player : arena.getPlayers()) {
+      if(player != null && player.isOnline()) {
+        restorePlayerVisibilityAfterCutscene(player);
+        if(!isArenaSpectator(player)) {
+          applyPostCutsceneFadeIn(player);
+        }
+      }
     }
     restoreScoreboards();
   }
@@ -307,11 +410,13 @@ public class CutsceneManager {
     if(!playing) {
       return;
     }
-    if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
-      player.setSpectatorTarget(null);
-    }
-    player.setFlySpeed(0.1f);
-    player.setWalkSpeed(0.2f);
+    runWithInternalBypass(player, () -> {
+      if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
+        player.setSpectatorTarget(null);
+      }
+      player.setFlySpeed(0.1f);
+      player.setWalkSpeed(0.2f);
+    });
   }
 
   public void cleanup() {
@@ -473,15 +578,7 @@ public class CutsceneManager {
         VersionUtils.hidePlayer(plugin, player, other);
       }
     }
-    if(startEyeLoc != null && startEyeLoc.getWorld() != null) {
-      VersionUtils.teleport(player, startEyeLoc);
-    }
-    player.setGameMode(GameMode.SPECTATOR);
-    player.setFlySpeed(0.0f);
-    player.setWalkSpeed(0.0f);
-    if(rig != null && rig.isValid()) {
-      player.setSpectatorTarget(rig);
-    }
+    teleportToCutsceneCamera(player, startEyeLoc, rig);
   }
 
   private boolean isArenaSpectator(Player player) {
@@ -495,20 +592,28 @@ public class CutsceneManager {
     return user != null && (user.isSpectator() || user.isPermanentSpectator());
   }
 
-  private void restorePlayerFromCutscene(Player player) {
-    Main plugin = arena.getPlugin();
-    if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
-      player.setSpectatorTarget(null);
-    }
-    player.setFlySpeed(0.1f);
-    player.setWalkSpeed(0.2f);
+  private void detachPlayerCameraOnly(Player player) {
+    runWithInternalBypass(player, () -> {
+      if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
+        player.setSpectatorTarget(null);
+      }
+      player.setFlySpeed(0.1f);
+      player.setWalkSpeed(0.2f);
+      if(isArenaSpectator(player)) {
+        ArenaUtils.applySpectatorState(player, arena, true);
+        return;
+      }
+      player.setGameMode(GameMode.ADVENTURE);
+      player.setFlying(false);
+      player.setAllowFlight(false);
+    });
+  }
+
+  private void restorePlayerVisibilityAfterCutscene(Player player) {
     if(isArenaSpectator(player)) {
-      ArenaUtils.applySpectatorState(player, arena, true);
       return;
     }
-    player.setGameMode(GameMode.ADVENTURE);
-    player.setFlying(false);
-    player.setAllowFlight(false);
+    Main plugin = arena.getPlugin();
     for(Player other : arena.getPlayers()) {
       if(other != null && !other.equals(player)) {
         if(isArenaSpectator(other)) {
@@ -518,6 +623,11 @@ public class CutsceneManager {
         }
       }
     }
+  }
+
+  private void restorePlayerFromCutscene(Player player) {
+    detachPlayerCameraOnly(player);
+    restorePlayerVisibilityAfterCutscene(player);
   }
 
   private World getFallbackWorld() {
@@ -692,16 +802,8 @@ public class CutsceneManager {
     CutsceneFrame firstFrame = cutsceneFrames.get(0);
     Location startEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
     Location startOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
-    TextDisplay rig = spawnCameraRig(startEyeLoc);
-    TextDisplay overlay = spawnFadeOverlay(startOverlayLoc);
-
     if(startEyeLoc != null && startEyeLoc.getWorld() != null) {
-      player.teleport(startEyeLoc);
-    }
-    player.setGameMode(GameMode.SPECTATOR);
-    player.setFlySpeed(0.0f);
-    if(rig != null && rig.isValid()) {
-      player.setSpectatorTarget(rig);
+      startEyeLoc.getChunk().load(true);
     }
 
     final UUID previewToken = UUID.randomUUID();
@@ -709,7 +811,32 @@ public class CutsceneManager {
     final int totalFrames = cutsceneFrames.size();
     final List<Player> viewerList = Collections.singletonList(player);
 
+    PreviewSession previewSession = new PreviewSession(
+      previewToken,
+      plugin,
+      originalLoc,
+      originalGameMode,
+      originalFlySpeed,
+      originalAllowFlight,
+      originalFlying
+    );
+    activePreviews.put(player.getUniqueId(), previewSession);
+
+    teleportToCutsceneCamera(player, startEyeLoc, null);
+
+    TextDisplay rig = spawnCameraRig(startEyeLoc);
+    TextDisplay overlay = spawnFadeOverlay(startOverlayLoc);
+    previewSession.rig = rig;
+    previewSession.overlay = overlay;
+
+    if(rig != null && rig.isValid() && player.getWorld().equals(rig.getWorld())) {
+      runWithInternalBypass(player, () -> player.setSpectatorTarget(rig));
+      PacketCameraSender.sendSetCamera(rig, viewerList);
+    }
+
     BukkitTask syncTask = new BukkitRunnable() {
+      private int tickCount = 0;
+
       @Override
       public void run() {
         if(!player.isOnline()) {
@@ -723,22 +850,43 @@ public class CutsceneManager {
           cancel();
           return;
         }
+        tickCount++;
+        boolean shouldReconfirmCamera = tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
         CutsceneFrame frame = cutsceneFrames.get(Math.min(idx, totalFrames - 1));
         Location eyeLoc = frame.toEyeLocation(fallbackWorld);
         if(eyeLoc != null && eyeLoc.getWorld() != null) {
           if(rig != null && rig.isValid()) {
             rig.teleport(eyeLoc);
-            if(player.getGameMode() != GameMode.SPECTATOR) {
-              player.setGameMode(GameMode.SPECTATOR);
-            }
             if(!player.getWorld().equals(rig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
-              player.teleport(eyeLoc);
+              teleportToCutsceneCamera(player, eyeLoc, rig);
+            } else {
+              runWithInternalBypass(player, () -> {
+                if(player.getGameMode() != GameMode.SPECTATOR) {
+                  player.setGameMode(GameMode.SPECTATOR);
+                }
+                player.setFlySpeed(0.0f);
+                if(player.getSpectatorTarget() != rig) {
+                  player.setSpectatorTarget(rig);
+                } else if(!PacketCameraSender.isSetCameraSupported() && (tickCount == 2 || tickCount == 6)) {
+                  player.setSpectatorTarget(null);
+                  player.setSpectatorTarget(rig);
+                }
+              });
             }
-            if(player.getSpectatorTarget() != rig) {
-              player.setSpectatorTarget(rig);
+            if(shouldReconfirmCamera) {
+              PacketCameraSender.sendSetCamera(rig, viewerList);
             }
           } else {
-            player.teleport(frame.toLocation(fallbackWorld));
+            Location fallbackLoc = frame.toLocation(fallbackWorld);
+            if(fallbackLoc != null) {
+              runWithInternalBypass(player, () -> {
+                if(player.getGameMode() != GameMode.SPECTATOR) {
+                  player.setGameMode(GameMode.SPECTATOR);
+                }
+                player.setFlySpeed(0.0f);
+                player.teleport(fallbackLoc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+              });
+            }
           }
           updateFadeOverlayTick(overlay, frame, fallbackWorld, idx, totalFrames);
         }
@@ -775,10 +923,8 @@ public class CutsceneManager {
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
 
-    activePreviews.put(
-      player.getUniqueId(),
-      new PreviewSession(previewToken, plugin, originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
-    );
+    previewSession.syncTask = syncTask;
+    previewSession.highFreqFuture = highFreqFuture;
     if(plugin instanceof Main) {
       Arena playerArena = ((Main) plugin).getArenaRegistry().getArena(player);
       if(playerArena != null) {
@@ -881,18 +1027,22 @@ public class CutsceneManager {
       session.syncTask.cancel();
     }
     try {
-      if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
-        player.setSpectatorTarget(null);
-      }
-      player.setFlySpeed(session.originalFlySpeed);
-      player.setGameMode(session.originalGameMode);
-      player.setAllowFlight(session.originalAllowFlight);
-      if(session.originalAllowFlight) {
-        player.setFlying(session.originalFlying);
-      }
-      if(session.originalLoc != null && session.originalLoc.getWorld() != null) {
-        player.teleport(session.originalLoc);
-      }
+      runWithInternalBypass(player, () -> {
+        if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
+          player.setSpectatorTarget(null);
+        }
+        if(session.originalLoc != null && session.originalLoc.getWorld() != null) {
+          session.originalLoc.getChunk().load(true);
+          player.teleport(session.originalLoc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        }
+        player.setGameMode(session.originalGameMode);
+        player.setFlySpeed(session.originalFlySpeed);
+        player.setWalkSpeed(0.2f);
+        player.setAllowFlight(session.originalAllowFlight);
+        if(session.originalAllowFlight) {
+          player.setFlying(session.originalFlying);
+        }
+      });
     } catch(Throwable ignored) {
     }
     if(player.isOnline()) {
@@ -1127,12 +1277,12 @@ public class CutsceneManager {
     private final float originalFlySpeed;
     private final boolean originalAllowFlight;
     private final boolean originalFlying;
-    private final BukkitTask syncTask;
-    private final ScheduledFuture<?> highFreqFuture;
-    private final TextDisplay rig;
-    private final TextDisplay overlay;
+    private volatile BukkitTask syncTask;
+    private volatile ScheduledFuture<?> highFreqFuture;
+    private volatile TextDisplay rig;
+    private volatile TextDisplay overlay;
 
-    private PreviewSession(UUID sessionToken, PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
+    private PreviewSession(UUID sessionToken, PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying) {
       this.sessionToken = sessionToken;
       this.plugin = plugin;
       this.originalLoc = originalLoc;
@@ -1140,16 +1290,13 @@ public class CutsceneManager {
       this.originalFlySpeed = originalFlySpeed;
       this.originalAllowFlight = originalAllowFlight;
       this.originalFlying = originalFlying;
-      this.syncTask = syncTask;
-      this.highFreqFuture = highFreqFuture;
-      this.rig = rig;
-      this.overlay = overlay;
     }
   }
 
   private static final class PacketCameraSender {
     private static volatile boolean initialized = false;
     private static volatile boolean supported = false;
+    private static volatile boolean setCameraSupported = false;
     private static volatile Method craftPlayerGetHandle;
     private static Field serverPlayerConnectionField;
     private static Method packetSendMethod;
@@ -1158,6 +1305,7 @@ public class CutsceneManager {
     private static Constructor<?> posMoveRotConstructor;
     private static Constructor<?> syncPacketConstructor;
     private static Constructor<?> rotateHeadConstructor;
+    private static Constructor<?> setCameraConstructor;
     private static volatile Method craftEntityGetHandle;
 
     private static synchronized void init() {
@@ -1166,6 +1314,22 @@ public class CutsceneManager {
       }
       initialized = true;
       try {
+        Class<?> entityClass = Class.forName("net.minecraft.world.entity.Entity");
+        Class<?> packetClass = Class.forName("net.minecraft.network.protocol.Packet");
+        Class<?> commonListenerClass = Class.forName("net.minecraft.server.network.ServerCommonPacketListenerImpl");
+        packetSendMethod = commonListenerClass.getMethod("send", packetClass);
+
+        Class<?> serverPlayerClass = Class.forName("net.minecraft.server.level.ServerPlayer");
+        serverPlayerConnectionField = serverPlayerClass.getField("connection");
+
+        try {
+          Class<?> setCameraClass = Class.forName("net.minecraft.network.protocol.game.ClientboundSetCameraPacket");
+          setCameraConstructor = setCameraClass.getConstructor(entityClass);
+          setCameraSupported = true;
+        } catch(Throwable ignored) {
+          setCameraSupported = false;
+        }
+
         Class<?> vec3Class = Class.forName("net.minecraft.world.phys.Vec3");
         vec3Constructor = vec3Class.getConstructor(double.class, double.class, double.class);
         zeroVec3 = vec3Constructor.newInstance(0.0, 0.0, 0.0);
@@ -1176,20 +1340,45 @@ public class CutsceneManager {
         Class<?> syncPacketClass = Class.forName("net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket");
         syncPacketConstructor = syncPacketClass.getConstructor(int.class, posMoveRotClass, boolean.class);
 
-        Class<?> entityClass = Class.forName("net.minecraft.world.entity.Entity");
         Class<?> rotateHeadClass = Class.forName("net.minecraft.network.protocol.game.ClientboundRotateHeadPacket");
         rotateHeadConstructor = rotateHeadClass.getConstructor(entityClass, byte.class);
-
-        Class<?> packetClass = Class.forName("net.minecraft.network.protocol.Packet");
-        Class<?> commonListenerClass = Class.forName("net.minecraft.server.network.ServerCommonPacketListenerImpl");
-        packetSendMethod = commonListenerClass.getMethod("send", packetClass);
-
-        Class<?> serverPlayerClass = Class.forName("net.minecraft.server.level.ServerPlayer");
-        serverPlayerConnectionField = serverPlayerClass.getField("connection");
 
         supported = true;
       } catch(Throwable ignored) {
         supported = false;
+      }
+    }
+
+    static boolean isSetCameraSupported() {
+      init();
+      return setCameraSupported;
+    }
+
+    static void sendSetCamera(Entity entity, List<Player> viewers) {
+      init();
+      if(!setCameraSupported || entity == null || viewers == null || viewers.isEmpty()) {
+        return;
+      }
+      try {
+        if(craftEntityGetHandle == null) {
+          craftEntityGetHandle = entity.getClass().getMethod("getHandle");
+        }
+        Object nmsEntity = craftEntityGetHandle.invoke(entity);
+        Object cameraPacket = setCameraConstructor.newInstance(nmsEntity);
+        for(Player viewer : viewers) {
+          if(viewer == null || !viewer.isOnline()) {
+            continue;
+          }
+          if(craftPlayerGetHandle == null) {
+            craftPlayerGetHandle = viewer.getClass().getMethod("getHandle");
+          }
+          Object handle = craftPlayerGetHandle.invoke(viewer);
+          Object connection = serverPlayerConnectionField.get(handle);
+          if(connection != null) {
+            packetSendMethod.invoke(connection, cameraPacket);
+          }
+        }
+      } catch(Throwable ignored) {
       }
     }
 

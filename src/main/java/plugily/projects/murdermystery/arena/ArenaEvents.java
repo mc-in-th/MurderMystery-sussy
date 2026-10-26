@@ -48,6 +48,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -108,6 +109,9 @@ public class ArenaEvents extends PluginArenaEvents {
   public void handleIngameVoidDeath(Player victim, IPluginArena arena) {
     Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
     if(pluginArena == null) {
+      return;
+    }
+    if(pluginArena.getCutsceneManager().isPlaying() || CutsceneManager.isPreviewing(victim)) {
       return;
     }
     Location safeSpawn = !pluginArena.getPlayerSpawnPoints().isEmpty()
@@ -642,12 +646,19 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onSpectatorWorldChange(PlayerChangedWorldEvent event) {
     Player player = event.getPlayer();
+    if(CutsceneManager.isPreviewing(player)) {
+      return;
+    }
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null || !ArenaUtils.isSpectator(player, arena)) {
+    if(arena == null || arena.getCutsceneManager().isPlaying() || !ArenaUtils.isSpectator(player, arena)) {
       return;
     }
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+      if(player.isOnline()
+        && !CutsceneManager.isPreviewing(player)
+        && plugin.getArenaRegistry().getArena(player) == arena
+        && !arena.getCutsceneManager().isPlaying()
+        && ArenaUtils.isSpectator(player, arena)) {
         ArenaUtils.applySpectatorState(player, arena, true);
       }
     }, 1L);
@@ -656,12 +667,19 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onSpectatorTeleport(PlayerTeleportEvent event) {
     Player player = event.getPlayer();
+    if(CutsceneManager.isPreviewing(player)) {
+      return;
+    }
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null || !ArenaUtils.isSpectator(player, arena)) {
+    if(arena == null || arena.getCutsceneManager().isPlaying() || !ArenaUtils.isSpectator(player, arena)) {
       return;
     }
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+      if(player.isOnline()
+        && !CutsceneManager.isPreviewing(player)
+        && plugin.getArenaRegistry().getArena(player) == arena
+        && !arena.getCutsceneManager().isPlaying()
+        && ArenaUtils.isSpectator(player, arena)) {
         ArenaUtils.applySpectatorState(player, arena, !player.isFlying() && player.isOnGround());
       }
     }, 1L);
@@ -673,17 +691,28 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     Player player = event.getPlayer();
+    if(CutsceneManager.isPreviewing(player)) {
+      return;
+    }
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null || !ArenaUtils.isSpectator(player, arena)) {
+    if(arena == null || arena.getCutsceneManager().isPlaying() || !ArenaUtils.isSpectator(player, arena)) {
       return;
     }
     Bukkit.getScheduler().runTask(plugin, () -> {
-      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+      if(player.isOnline()
+        && !CutsceneManager.isPreviewing(player)
+        && plugin.getArenaRegistry().getArena(player) == arena
+        && !arena.getCutsceneManager().isPlaying()
+        && ArenaUtils.isSpectator(player, arena)) {
         ArenaUtils.applySpectatorState(player, arena, true);
       }
     });
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+      if(player.isOnline()
+        && !CutsceneManager.isPreviewing(player)
+        && plugin.getArenaRegistry().getArena(player) == arena
+        && !arena.getCutsceneManager().isPlaying()
+        && ArenaUtils.isSpectator(player, arena)) {
         ArenaUtils.applySpectatorState(player, arena, true);
       }
     }, 1L);
@@ -1154,18 +1183,36 @@ public class ArenaEvents extends PluginArenaEvents {
     }
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onSpectateTeleport(PlayerTeleportEvent event) {
-    if(event.getCause() != PlayerTeleportEvent.TeleportCause.SPECTATE) {
+    Player player = event.getPlayer();
+    if(CutsceneManager.isInternalBypass(player)) {
       return;
     }
-    Player player = event.getPlayer();
     if(CutsceneManager.isPreviewing(player)) {
       event.setCancelled(true);
       return;
     }
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena != null && arena.getCutsceneManager().isPlaying()) {
+      if(event.getCause() == PlayerTeleportEvent.TeleportCause.SPECTATE || arena.getCutsceneManager().isActiveViewer(player)) {
+        event.setCancelled(true);
+      }
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void onCutsceneGameModeChange(PlayerGameModeChangeEvent event) {
+    Player player = event.getPlayer();
+    if(CutsceneManager.isInternalBypass(player) || event.getNewGameMode() == GameMode.SPECTATOR) {
+      return;
+    }
+    if(CutsceneManager.isPreviewing(player)) {
+      event.setCancelled(true);
+      return;
+    }
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena != null && arena.getCutsceneManager().isActiveViewer(player)) {
       event.setCancelled(true);
     }
   }
@@ -1173,12 +1220,15 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler
   public void onStopSpectatingEntity(PlayerStopSpectatingEntityEvent event) {
     Player player = event.getPlayer();
+    if(CutsceneManager.isInternalBypass(player)) {
+      return;
+    }
     if(CutsceneManager.isPreviewing(player)) {
       event.setCancelled(true);
       return;
     }
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena != null && arena.getCutsceneManager().isPlaying()) {
+    if(arena != null && arena.getCutsceneManager().isActiveViewer(player)) {
       event.setCancelled(true);
     }
   }
