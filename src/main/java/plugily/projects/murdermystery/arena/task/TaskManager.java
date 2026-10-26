@@ -643,6 +643,7 @@ public class TaskManager {
       return;
     }
     taskWinTriggered = true;
+    arena.setTaskWin(true);
     String allDoneMsg = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_ALL_COMPLETED")
       .asKey().arena(arena).build();
     for(Player p : arena.getPlayers()) {

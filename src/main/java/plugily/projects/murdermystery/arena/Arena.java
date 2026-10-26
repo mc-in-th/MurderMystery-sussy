@@ -374,12 +374,22 @@ public class Arena extends PluginArena {
   private final List<BlockDisplay> ventBlockDisplays = new ArrayList<>();
   private final Set<String> glowEntries = new HashSet<>();
 
+  private boolean taskWin = false;
+
   public boolean isSabotageWin() {
     return sabotageWin;
   }
 
   public void setSabotageWin(boolean sabotageWin) {
     this.sabotageWin = sabotageWin;
+  }
+
+  public boolean isTaskWin() {
+    return taskWin;
+  }
+
+  public void setTaskWin(boolean taskWin) {
+    this.taskWin = taskWin;
   }
 
   public boolean isMurdererVictory() {

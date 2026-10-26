@@ -233,25 +233,21 @@ public class ArenaManager extends PluginArenaManager {
     }
     ((MapRestorerManager) pluginArena.getMapRestorerManager()).removeBowHolo();
     boolean murderWon = pluginArena.isMurdererVictory();
-    for(Player player : arena.getPlayersLeft()) {
-      if(!quickStop) {
+    if(!quickStop) {
+      for(Player player : pluginArena.getPlayers()) {
+        if(pluginArena.isSpectatorPlayer(player) && !pluginArena.isDeathPlayer(player)) {
+          continue;
+        }
         IUser user = plugin.getUserManager().getUser(player);
         if(Role.isAnyRole(user, arena)) {
-          boolean hasDeathRole = Role.isRole(Role.DEATH, user, arena);
-          int multiplicator = 1;
-          if(!hasDeathRole) {
-            multiplicator = arena.getMaximumPlayers();
-          }
+          boolean hasDeathRole = Role.isRole(Role.DEATH, user, arena) || pluginArena.isDeathPlayer(player);
+          int multiplicator = hasDeathRole ? 1 : arena.getMaximumPlayers();
           pluginArena.adjustContributorValue(Role.MURDERER, user, plugin.getRandom().nextInt(10 * multiplicator));
-          if(!hasDeathRole) {
-            boolean hasMurdererRole = Role.isRole(Role.MURDERER, user, arena);
-            if(murderWon || !hasMurdererRole) {
-              user.adjustStatistic("WINS", 1);
-              plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("WIN"));
-            } else {
-              user.adjustStatistic("LOSES", 1);
-              plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("LOSE"));
-            }
+
+          boolean hasMurdererRole = pluginArena.getMurdererList().contains(player) || Role.isRole(Role.MURDERER, user, arena);
+          if(murderWon == hasMurdererRole) {
+            user.adjustStatistic("WINS", 1);
+            plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("WIN"));
           } else {
             user.adjustStatistic("LOSES", 1);
             plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("LOSE"));

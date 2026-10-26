@@ -80,7 +80,7 @@ Scoreboard:
     Detective: "<#72EFDD>นักสืบ"
     Murderer: "<#FF3B47>ฆาตกร"
     Innocent: "<#FFB703>ผู้โดยสาร"
-    Dead: "<shadow:#000000FF><#5A4E7C>เสียชีวิต</shadow>"
+    Dead: "<#B8B0C8>วิญญาณผู้ชม"
   Detective:
     Alive: "<#6EEB83>ยังมีชีวิต"
     Bow:

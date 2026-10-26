@@ -56,6 +56,7 @@ public class MapRestorerManager extends PluginMapRestorerManager {
     arena.getSpectators().clear();
     arena.setDetectiveDead(false);
     arena.setSabotageWin(false);
+    arena.setTaskWin(false);
     arena.getTaskManager().cleanup();
     arena.getVotingManager().cleanup();
     arena.getVentManager().cleanup();
