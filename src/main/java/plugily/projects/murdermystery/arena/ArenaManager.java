@@ -25,8 +25,10 @@ import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaManager;
+import plugily.projects.minigamesbox.classic.arena.states.ArenaState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.murdermystery.Main;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
@@ -52,16 +54,39 @@ public class ArenaManager extends PluginArenaManager {
 
   @Override
   public void joinAttempt(@NotNull Player player, @NotNull IPluginArena arena) {
+    if(CutsceneManager.isRecording(player) || CutsceneManager.isPreviewing(player)) {
+      HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>ไม่สามารถเข้าร่วมห้องเล่นเกมขณะบันทึกหรือดูตัวอย่าง Cutscene ได้");
+      return;
+    }
     Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
     if(pluginArena == null) {
       return;
     }
+    IArenaState stateBeforeJoin = pluginArena.getArenaState();
+    int timerBeforeJoin = pluginArena.getTimer();
+    boolean joiningAsSpectator = stateBeforeJoin == IArenaState.IN_GAME
+      || stateBeforeJoin == IArenaState.ENDING
+      || (ArenaState.isStartingStage(pluginArena) && timerBeforeJoin <= 3);
+
     super.joinAttempt(player, arena);
+
+    if(!pluginArena.getPlayers().contains(player)) {
+      return;
+    }
+
+    IUser user = plugin.getUserManager().getUser(player);
+    if(joiningAsSpectator || (user != null && user.isPermanentSpectator())) {
+      if(user != null) {
+        user.setSpectator(true);
+      }
+      pluginArena.addSpectatorPlayer(player);
+    }
+
     ArenaUtils.updateNameTagsVisibility(player);
-    if(pluginArena.getArenaState() == IArenaState.IN_GAME && pluginArena.getPlayers().contains(player)) {
+    if(pluginArena.getArenaState() == IArenaState.IN_GAME) {
       pluginArena.getTaskManager().addPlayerToBossBar(player);
       pluginArena.getSabotageManager().addPlayerToBossBar(player);
-    } else if(pluginArena.getPlayers().contains(player)) {
+    } else if(!ArenaUtils.isSpectator(player, pluginArena)) {
       Bukkit.getScheduler().runTaskLater(plugin, () -> {
         if(player.isOnline()
           && pluginArena.getPlayers().contains(player)
@@ -77,11 +102,15 @@ public class ArenaManager extends PluginArenaManager {
 
   @Override
   public void additionalSpectatorSettings(Player player, IPluginArena arena) {
-    super.additionalSpectatorSettings(player, arena);
     Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
-    if(pluginArena == null || player == null || !player.isOnline()) {
+    if(pluginArena == null || player == null || !player.isOnline() || !pluginArena.getPlayers().contains(player)) {
+      if(pluginArena != null && player != null) {
+        pluginArena.removeSpectatorPlayer(player);
+        pluginArena.cleanUpBossBars(player);
+      }
       return;
     }
+    super.additionalSpectatorSettings(player, arena);
     pluginArena.addSpectatorPlayer(player);
     ArenaUtils.applySpectatorState(player, pluginArena, true);
     ArenaUtils.updateNameTagsVisibility(player);
@@ -113,11 +142,12 @@ public class ArenaManager extends PluginArenaManager {
     IUser user = plugin.getUserManager().getUser(player);
     boolean wasSpectator = user.isSpectator() || pluginArena.isDeathPlayer(player) || pluginArena.isSpectatorPlayer(player);
     boolean wasPlayingCutscene = pluginArena.getCutsceneManager().isPlaying();
+    boolean wasVotingActive = pluginArena.getVotingManager().isVotingActive();
     boolean wasPendingEjected = pluginArena.getVotingManager().isPendingEjected(player);
     boolean playerHasMurdererRole = Role.isRole(Role.MURDERER, user, arena);
 
     if(pluginArena.getVentManager() != null && pluginArena.getVentManager().isInsideVent(player)) {
-      pluginArena.getVentManager().exitVent(player);
+      pluginArena.getVentManager().forceExitForMeeting(player);
     }
     pluginArena.getCutsceneManager().handlePlayerLeave(player);
     player.setInvisible(false);
@@ -148,7 +178,7 @@ public class ArenaManager extends PluginArenaManager {
       if(playersLeft.size() > 1) {
         if(playerHasMurdererRole) {
           if(pluginArena.getMurdererList().isEmpty()) {
-            if(wasPendingEjected) {
+            if(wasPendingEjected || wasVotingActive) {
               ArenaUtils.onMurdererDeath(pluginArena);
               return;
             }
@@ -164,6 +194,7 @@ public class ArenaManager extends PluginArenaManager {
             Player newMurderer = players.isEmpty() ? null : players.get(players.size() == 1 ? 0 : ThreadLocalRandom.current().nextInt(players.size()));
             if(newMurderer != null) {
               plugin.getDebugger().debug("A murderer left the game. New murderer: {0}", newMurderer.getName());
+              newMurderer.closeInventory();
               pluginArena.setCharacter(Role.MURDERER, newMurderer);
               pluginArena.addToMurdererList(newMurderer);
               pluginArena.getTaskManager().removePlayer(newMurderer);
@@ -197,7 +228,19 @@ public class ArenaManager extends PluginArenaManager {
             plugin.getDebugger().debug("No new murderer added as there are some");
           }
         }
-        if(!wasPlayingCutscene) {
+
+        int aliveMurds = pluginArena.aliveMurderer();
+        if(aliveMurds > 0 && arena.getPlayersLeft().size() <= aliveMurds) {
+          String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+          String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
+          for(Player p : pluginArena.getPlayers()) {
+            HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+          }
+          stopGame(false, arena);
+          return;
+        }
+
+        if(!wasPlayingCutscene && !wasVotingActive) {
           plugin.getCorpseHandler().spawnCorpse(player, pluginArena);
         }
       } else {

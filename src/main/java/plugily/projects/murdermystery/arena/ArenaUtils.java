@@ -26,16 +26,19 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaUtils;
+import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
+import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
@@ -112,7 +115,11 @@ public class ArenaUtils extends PluginArenaUtils {
       innocentLocator.setItemMeta(innocentMeta);
       for(Player p : list) {
         if(arena.isMurderAlive(p)) {
-          ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+          if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(p)) {
+            arena.getVentManager().updateSavedItem(p, ItemPosition.INNOCENTS_LOCATOR.getMurdererItemPosition(), innocentLocator);
+          } else {
+            ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+          }
         }
       }
       arena.setMurdererLocatorReceived(true);
@@ -161,6 +168,26 @@ public class ArenaUtils extends PluginArenaUtils {
     if(hologram.getEntityItem() != null) {
       hologram.getEntityItem().setPersistent(false);
     }
+    hologram.setPickupHandler(picker -> {
+      if(arena.getArenaState() != IArenaState.IN_GAME || isSpectator(picker, arena) || arena.getVotingManager().isVotingActive()) {
+        return;
+      }
+      IUser pickerUser = arena.getPlugin().getUserManager().getUser(picker);
+      if(pickerUser == null || Role.isRole(Role.MURDERER, pickerUser, arena)) {
+        return;
+      }
+      ((MapRestorerManager) arena.getMapRestorerManager()).removeBowHolo();
+      arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, picker);
+      ItemPosition.setItem(pickerUser, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
+      ItemPosition.setItem(pickerUser, ItemPosition.INFINITE_ARROWS, new ItemStack(Material.ARROW, arena.getPlugin().getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
+      for(Player p : arena.getPlayersLeft()) {
+        IUser u = getPlugin().getUserManager().getUser(p);
+        if(Role.isRole(Role.INNOCENT, u, arena)) {
+          ItemPosition.setItem(u, ItemPosition.BOW_LOCATOR, null);
+        }
+      }
+    });
+    getPlugin().getHologramManager().getHolograms().add(hologram);
 
     arena.setBowHologram(hologram);
     addBowLocator(arena, hologram.getLocation());
@@ -182,6 +209,52 @@ public class ArenaUtils extends PluginArenaUtils {
     }
   }
 
+  public static void giveSpectatorLoadout(Player player, Arena arena) {
+    if(player == null || !player.isOnline() || arena == null) {
+      return;
+    }
+    arena.getPlugin().getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
+    if(arena.getTaskManager().hasAssignedTasks(player) && arena.getPlayersLeft().size() > arena.aliveMurderer()) {
+      arena.getTaskManager().giveTaskPointer(player);
+      if(arena.getMinimap() != null) {
+        player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
+      }
+      arena.getTaskManager().updatePlayerStationVisibility(player);
+    }
+    player.updateInventory();
+  }
+
+  public static void forceEliminatePlayer(Player player, Arena arena) {
+    if(player == null || arena == null || arena.isDeathPlayer(player)) {
+      return;
+    }
+    if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
+      arena.getVentManager().forceExitForMeeting(player);
+    }
+    for(PotionEffect effect : player.getActivePotionEffects()) {
+      player.removePotionEffect(effect.getType());
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    if(user != null) {
+      user.adjustStatistic("DEATHS", 1);
+      user.setSpectator(true);
+    }
+    arena.addDeathPlayer(player);
+    arena.addSpectatorPlayer(player);
+
+    player.closeInventory();
+    player.getInventory().clear();
+    player.getInventory().setArmorContents(null);
+    player.getInventory().setItemInOffHand(null);
+    arena.getTaskManager().handlePlayerDeath(player);
+
+    hidePlayer(player, arena);
+    applySpectatorState(player, arena, true);
+    arena.getPlugin().getRewardsHandler().performReward(player, arena.getPlugin().getRewardsHandler().getRewardType("PLAYER_DEATH"));
+    giveSpectatorLoadout(player, arena);
+    arena.getScoreboardManager().updateScoreboards();
+  }
+
   public static boolean isSpectator(Player player, Arena arena) {
     if(player == null || arena == null) {
       return false;
@@ -198,7 +271,7 @@ public class ArenaUtils extends PluginArenaUtils {
       return;
     }
     IArenaState state = arena.getArenaState();
-    if(state == IArenaState.WAITING_FOR_PLAYERS || state == IArenaState.RESTARTING) {
+    if(state == IArenaState.WAITING_FOR_PLAYERS || state == IArenaState.ENDING || state == IArenaState.RESTARTING) {
       return;
     }
     IUser user = getPlugin().getUserManager().getUser(player);
@@ -220,6 +293,17 @@ public class ArenaUtils extends PluginArenaUtils {
     List<Player> firstPersonList = getPlugin().getSpectatorItemsManager().getSpectatorSettingsMenu().firstPersonMode;
     boolean inFirstPerson = (player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null)
       || (firstPersonList != null && firstPersonList.contains(player));
+
+    if(inFirstPerson && player.getSpectatorTarget() instanceof Player) {
+      Player specTarget = (Player) player.getSpectatorTarget();
+      if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(specTarget)) {
+        player.setSpectatorTarget(null);
+        if(firstPersonList != null) {
+          firstPersonList.remove(player);
+        }
+        inFirstPerson = false;
+      }
+    }
 
     if(inFirstPerson) {
       if(player.getGameMode() != GameMode.SPECTATOR) {
@@ -265,6 +349,8 @@ public class ArenaUtils extends PluginArenaUtils {
         VersionUtils.hidePlayer(getPlugin(), other, player);
         if(arena.getVentManager() == null || !arena.getVentManager().isInsideVent(other)) {
           VersionUtils.showPlayer(getPlugin(), player, other);
+        } else {
+          VersionUtils.hidePlayer(getPlugin(), player, other);
         }
       } else {
         if(invisibleSpecs != null && invisibleSpecs.contains(other)) {

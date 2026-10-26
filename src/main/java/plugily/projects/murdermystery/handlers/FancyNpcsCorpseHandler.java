@@ -236,7 +236,9 @@ public class FancyNpcsCorpseHandler implements Listener, CorpseHandler.ExternalC
     if(ArenaUtils.isSpectator(clicker, arena)) {
       return;
     }
-    if(arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+    if(arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(clicker))) {
       return;
     }
     if(arena.getVotingManager().isOnKillReportCooldown(clicker)) {

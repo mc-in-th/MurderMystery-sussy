@@ -18,10 +18,8 @@
 
 package plugily.projects.murdermystery.arena.special;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,21 +38,17 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
-import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.utils.helper.ItemBuilder;
 import plugily.projects.minigamesbox.classic.utils.helper.ItemUtils;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
+import plugily.projects.minigamesbox.classic.utils.version.xseries.inventory.XInventoryView;
 import plugily.projects.murdermystery.Main;
-import plugily.projects.murdermystery.api.events.game.MurderGameBuyEvent;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.arena.special.mysterypotion.MysteryPotion;
 import plugily.projects.murdermystery.arena.special.mysterypotion.MysteryPotionRegistry;
-import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
@@ -241,6 +235,13 @@ public class SpecialBlockEvents implements Listener {
     }
     if(arena.getVentManager().isInsideVent(player)) {
       event.setCancelled(true);
+      String openTitle = XInventoryView.of(event.getView()).getTitle();
+      if(arena.getSabotageManager() != null && arena.getSabotageManager().isSabotageGUI(openTitle)) {
+        return;
+      }
+      if(event.getClickedInventory() == null || !event.getClickedInventory().equals(player.getInventory())) {
+        return;
+      }
       int slot = event.getSlot();
       if(slot == SabotageManager.SABOTAGE_REMOTE_SLOT || (event.getCurrentItem() != null && arena.getSabotageManager() != null && arena.getSabotageManager().isSabotageRemote(event.getCurrentItem()))) {
         arena.getSabotageManager().openSabotageGUI(player);
@@ -318,12 +319,12 @@ public class SpecialBlockEvents implements Listener {
     Player player = event.getPlayer();
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena != null && arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
-      arena.getVentManager().exitVent(player);
+      arena.getVentManager().forceExitForMeeting(player);
       return;
     }
     for(Arena candidate : plugin.getArenaRegistry().getPluginArenas()) {
       if(candidate.getVentManager() != null && candidate.getVentManager().isInsideVent(player)) {
-        candidate.getVentManager().exitVent(player);
+        candidate.getVentManager().forceExitForMeeting(player);
       }
     }
   }

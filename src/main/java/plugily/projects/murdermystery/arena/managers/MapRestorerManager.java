@@ -70,8 +70,11 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   }
 
   public void removeBowHolo() {
-    if(arena.getBowHologram() != null && !arena.getBowHologram().isDeleted()) {
-      arena.getBowHologram().delete();
+    if(arena.getBowHologram() != null) {
+      arena.getPlugin().getHologramManager().getHolograms().remove(arena.getBowHologram());
+      if(!arena.getBowHologram().isDeleted()) {
+        arena.getBowHologram().delete();
+      }
     }
     arena.setBowHologram(null);
   }
@@ -90,10 +93,14 @@ public class MapRestorerManager extends PluginMapRestorerManager {
         if(stand == null) {
           continue;
         }
-        if(stand.getHologram() != null && !stand.getHologram().isDeleted()) {
-          stand.getHologram().delete();
+        if(stand.getHologram() != null) {
+          arena.getPlugin().getHologramManager().getHolograms().remove(stand.getHologram());
+          if(!stand.getHologram().isDeleted()) {
+            stand.getHologram().delete();
+          }
         }
         if(stand.getStand() != null) {
+          arena.getPlugin().getHologramManager().getArmorStands().remove(stand.getStand());
           stand.getStand().remove();
         }
       }
@@ -104,8 +111,11 @@ public class MapRestorerManager extends PluginMapRestorerManager {
       if(corpse == null) {
         continue;
       }
-      if(corpse.getHologram() != null && !corpse.getHologram().isDeleted()) {
-        corpse.getHologram().delete();
+      if(corpse.getHologram() != null) {
+        arena.getPlugin().getHologramManager().getHolograms().remove(corpse.getHologram());
+        if(!corpse.getHologram().isDeleted()) {
+          corpse.getHologram().delete();
+        }
       }
       if(corpse.getCorpseData() != null) {
         corpse.getCorpseData().destroyCorpseFromEveryone();

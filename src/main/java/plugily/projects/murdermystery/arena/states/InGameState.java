@@ -75,7 +75,7 @@ public class InGameState extends PluginInGameState {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }
-    if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
+    if(pluginArena.getPlayersLeft().size() <= pluginArena.aliveMurderer()) {
       if(pluginArena.aliveMurderer() > 0) {
         String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
         String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";

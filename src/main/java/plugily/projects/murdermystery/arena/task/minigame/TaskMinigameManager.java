@@ -20,7 +20,10 @@ package plugily.projects.murdermystery.arena.task.minigame;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.TaskType;
 
 import java.util.EnumMap;
@@ -33,6 +36,7 @@ public class TaskMinigameManager {
   private final Arena arena;
   private final Map<TaskType, TaskMinigame> minigames = new EnumMap<>(TaskType.class);
   private final Map<UUID, TaskType> activeMinigames = new HashMap<>();
+  private final Map<UUID, Integer> openedRoundIds = new HashMap<>();
 
   public TaskMinigameManager(Arena arena) {
     this.arena = arena;
@@ -61,10 +65,29 @@ public class TaskMinigameManager {
     return minigames.get(taskType);
   }
 
+  public boolean hasActiveMinigame(Player player) {
+    return player != null && activeMinigames.containsKey(player.getUniqueId());
+  }
+
+  public boolean isValidCompletionRound(Player player) {
+    if(player == null) {
+      return false;
+    }
+    Integer roundId = openedRoundIds.get(player.getUniqueId());
+    return roundId != null && roundId == arena.getTaskManager().getTaskRoundId();
+  }
+
+  public void invalidatePlayerRound(Player player) {
+    if(player != null) {
+      openedRoundIds.remove(player.getUniqueId());
+    }
+  }
+
   public boolean openMinigame(Player player, TaskType taskType) {
     TaskMinigame minigame = minigames.get(taskType);
     if(minigame != null) {
       activeMinigames.put(player.getUniqueId(), taskType);
+      openedRoundIds.put(player.getUniqueId(), arena.getTaskManager().getTaskRoundId());
       minigame.open(player);
       return true;
     }
@@ -91,8 +114,25 @@ public class TaskMinigameManager {
   }
 
   public boolean handleClick(Player player, String title, int rawSlot, ClickType clickType) {
+    if(arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()) {
+      player.closeInventory();
+      return true;
+    }
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    if(Role.isRole(Role.MURDERER, user, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(player))) {
+      player.closeInventory();
+      return true;
+    }
+
     TaskType activeType = activeMinigames.get(player.getUniqueId());
     if(activeType != null) {
+      if(!arena.getTaskManager().isNearAssignedTask(player, activeType, 49.0)) {
+        player.closeInventory();
+        return true;
+      }
       TaskMinigame m = minigames.get(activeType);
       if(m != null) {
         return m.handleClick(player, rawSlot, clickType);
@@ -101,6 +141,10 @@ public class TaskMinigameManager {
 
     for(TaskMinigame m : minigames.values()) {
       if(m.isGui(title)) {
+        if(!arena.getTaskManager().isNearAssignedTask(player, m.getTaskType(), 49.0)) {
+          player.closeInventory();
+          return true;
+        }
         return m.handleClick(player, rawSlot, clickType);
       }
     }
@@ -128,6 +172,7 @@ public class TaskMinigameManager {
 
   public void cleanup() {
     activeMinigames.clear();
+    openedRoundIds.clear();
     for(TaskMinigame m : minigames.values()) {
       m.cleanup();
     }

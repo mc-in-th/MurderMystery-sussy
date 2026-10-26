@@ -81,6 +81,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -129,6 +130,7 @@ public class Arena extends PluginArena {
   public Arena(String id) {
     super(id);
     setPluginValues();
+    initThreadSafePlayersSet();
     initCustomBossbarManager();
     setScoreboardManager(new ScoreboardManager(this));
     mapRestorerManager = new MapRestorerManager(this);
@@ -158,6 +160,21 @@ public class Arena extends PluginArena {
   @Override
   public PluginMapRestorerManager getMapRestorerManager() {
     return mapRestorerManager;
+  }
+
+  @SuppressWarnings("unchecked")
+  private void initThreadSafePlayersSet() {
+    try {
+      Field playersField = PluginArena.class.getDeclaredField("players");
+      playersField.setAccessible(true);
+      Set<Player> existing = (Set<Player>) playersField.get(this);
+      Set<Player> threadSafeSet = ConcurrentHashMap.newKeySet();
+      if(existing != null) {
+        threadSafeSet.addAll(existing);
+      }
+      playersField.set(this, threadSafeSet);
+    } catch(Exception ignored) {
+    }
   }
 
   private void initCustomBossbarManager() {
@@ -393,11 +410,14 @@ public class Arena extends PluginArena {
   }
 
   public boolean isMurdererVictory() {
+    if(taskWin) {
+      return false;
+    }
     if(sabotageWin) {
       return true;
     }
     int aliveMurds = aliveMurderer();
-    return aliveMurds > 0 && getPlayersLeft().size() == aliveMurds;
+    return aliveMurds > 0 && getPlayersLeft().size() <= aliveMurds;
   }
 
   public void removeNearbyDisplays(Location loc, double rx, double ry, double rz, boolean textOnly) {

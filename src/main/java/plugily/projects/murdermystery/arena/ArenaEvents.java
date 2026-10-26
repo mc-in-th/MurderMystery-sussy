@@ -18,26 +18,33 @@
 
 package plugily.projects.murdermystery.arena;
 
+import com.destroystokyo.paper.event.entity.ProjectileCollideEvent;
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -45,10 +52,16 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
+import org.bukkit.event.world.GenericGameEvent;
+import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -57,7 +70,6 @@ import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaEvents;
-import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
@@ -67,13 +79,13 @@ import plugily.projects.minigamesbox.classic.utils.version.events.api.PlugilyPla
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XPotion;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.inventory.XInventoryView;
+import plugily.projects.minigamesbox.inventory.normal.NormalFastInv;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.corpse.Stand;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
-import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
@@ -104,14 +116,126 @@ public class ArenaEvents extends PluginArenaEvents {
     if(ArenaUtils.isSpectator(victim, pluginArena)) {
       if(safeSpawn != null) {
         VersionUtils.teleport(victim, safeSpawn).thenAccept(ignored ->
-          Bukkit.getScheduler().runTaskLater(plugin, () -> ArenaUtils.applySpectatorState(victim, pluginArena, true), 1L));
+          Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if(victim.isOnline()
+              && plugin.getArenaRegistry().getArena(victim) == pluginArena
+              && pluginArena.getArenaState() == IArenaState.IN_GAME) {
+              ArenaUtils.applySpectatorState(victim, pluginArena, true);
+            }
+          }, 1L));
       }
       return;
     }
     victim.damage(1000.0);
-    if(arena.getArenaState() == IArenaState.IN_GAME && safeSpawn != null) {
+    if(pluginArena.getArenaState() == IArenaState.IN_GAME && safeSpawn != null) {
       VersionUtils.teleport(victim, safeSpawn).thenAccept(ignored ->
-        Bukkit.getScheduler().runTaskLater(plugin, () -> ArenaUtils.applySpectatorState(victim, pluginArena, true), 1L));
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+          if(victim.isOnline()
+            && plugin.getArenaRegistry().getArena(victim) == pluginArena
+            && pluginArena.getArenaState() == IArenaState.IN_GAME) {
+            ArenaUtils.applySpectatorState(victim, pluginArena, true);
+          }
+        }, 1L));
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onProjectileCollide(ProjectileCollideEvent event) {
+    if(!(event.getCollidedWith() instanceof Player)) {
+      return;
+    }
+    Player target = (Player) event.getCollidedWith();
+    Arena arena = plugin.getArenaRegistry().getArena(target);
+    if(arena == null) {
+      return;
+    }
+    if(ArenaUtils.isSpectator(target, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(target))
+      || arena.getCutsceneManager().isPlaying()
+      || arena.getVotingManager().isVotingActive()) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onArenaEnvironmentalDamage(EntityDamageEvent event) {
+    if(!(event.getEntity() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getEntity();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null) {
+      return;
+    }
+    if(event instanceof EntityDamageByEntityEvent) {
+      Entity damager = ((EntityDamageByEntityEvent) event).getDamager();
+      if(damager instanceof Player) {
+        return;
+      }
+      if(damager instanceof Arrow && ((Arrow) damager).getShooter() instanceof Player) {
+        return;
+      }
+      event.setCancelled(true);
+      return;
+    }
+    if(event.getCause() == EntityDamageEvent.DamageCause.CUSTOM) {
+      return;
+    }
+    if(ArenaUtils.isSpectator(player, arena)
+      || arena.getCutsceneManager().isPlaying()
+      || arena.getVotingManager().isVotingActive()
+      || arena.getArenaState() != IArenaState.IN_GAME) {
+      event.setCancelled(true);
+      player.setFireTicks(0);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onVibration(GenericGameEvent event) {
+    if(!(event.getEntity() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getEntity();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null) {
+      return;
+    }
+    if(ArenaUtils.isSpectator(player, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(player))
+      || arena.getCutsceneManager().isPlaying()) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+    if(event.getEntity() instanceof Player && plugin.getArenaRegistry().isInArena((Player) event.getEntity())) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onVehicleEnter(VehicleEnterEvent event) {
+    if(!(event.getEntered() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getEntered();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena != null) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+  public void onVehicleEntityCollision(VehicleEntityCollisionEvent event) {
+    if(!(event.getEntity() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getEntity();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena != null && (ArenaUtils.isSpectator(player, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)))) {
+      event.setCancelled(true);
     }
   }
 
@@ -167,8 +291,9 @@ public class ArenaEvents extends PluginArenaEvents {
       Arena arena = plugin.getArenaRegistry().getArena(clicker);
       if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
         e.setCancelled(true);
-        IUser clickerUser = plugin.getUserManager().getUser(clicker);
-        if(!clickerUser.isSpectator()) {
+        if(!ArenaUtils.isSpectator(clicker, arena)
+          && !arena.getCutsceneManager().isPlaying()
+          && (arena.getVentManager() == null || !arena.getVentManager().isInsideVent(clicker))) {
           arena.getVotingManager().tryReportNearbyBody(clicker, e.getEntity().getLocation());
         }
         return;
@@ -190,11 +315,11 @@ public class ArenaEvents extends PluginArenaEvents {
     Arena checkArena = plugin.getArenaRegistry().getArena(attacker);
     if(checkArena == null || checkArena.getArenaState() != IArenaState.IN_GAME
       || checkArena.getVotingManager().isVotingActive() || checkArena.getCutsceneManager().isPlaying()
-      || (checkArena.getVentManager() != null && checkArena.getVentManager().isInsideVent(attacker))) {
+      || (checkArena.getVentManager() != null && (checkArena.getVentManager().isInsideVent(attacker) || checkArena.getVentManager().isInsideVent(victim)))) {
       return;
     }
 
-    if(userAttacker.isSpectator() || userVictim.isSpectator() || checkArena.isDeathPlayer(attacker) || checkArena.isDeathPlayer(victim)) {
+    if(ArenaUtils.isSpectator(attacker, checkArena) || ArenaUtils.isSpectator(victim, checkArena)) {
       return;
     }
 
@@ -228,9 +353,7 @@ public class ArenaEvents extends PluginArenaEvents {
       plugin.getRewardsHandler().performReward(attacker, plugin.getRewardsHandler().getRewardType("KILL_MURDERER"));
     }
 
-    if(checkArena != null) {
-      checkArena.getVotingManager().recordKill(attacker);
-    }
+    checkArena.getVotingManager().recordKill(attacker);
 
     XSound.ENTITY_PLAYER_DEATH.play(victim.getLocation());
     victim.damage(100.0);
@@ -284,10 +407,12 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     Arena arena = plugin.getArenaRegistry().getArena(attacker);
-    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME || arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()
+      || (arena.getVentManager() != null && (arena.getVentManager().isInsideVent(attacker) || arena.getVentManager().isInsideVent(victim)))) {
       return;
     }
-    if(userAttacker.isSpectator() || userVictim.isSpectator() || arena.isDeathPlayer(attacker) || arena.isDeathPlayer(victim)) {
+    if(ArenaUtils.isSpectator(attacker, arena) || ArenaUtils.isSpectator(victim, arena)) {
       return;
     }
     //we need to set it before the victim die, because of hero character
@@ -325,15 +450,7 @@ public class ArenaEvents extends PluginArenaEvents {
   }
 
   private void giveSpectatorLoadout(Player player, Arena arena) {
-    plugin.getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
-    if(arena.getTaskManager().hasAssignedTasks(player) && arena.getPlayersLeft().size() > arena.aliveMurderer()) {
-      arena.getTaskManager().giveTaskPointer(player);
-      if(arena.getMinimap() != null) {
-        player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
-      }
-      arena.getTaskManager().updatePlayerStationVisibility(player);
-    }
-    player.updateInventory();
+    ArenaUtils.giveSpectatorLoadout(player, arena);
   }
 
   @EventHandler(priority = EventPriority.HIGH)
@@ -374,7 +491,7 @@ public class ArenaEvents extends PluginArenaEvents {
     }
 
     if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
-      arena.getVentManager().exitVent(player);
+      arena.getVentManager().forceExitForMeeting(player);
     }
 
     Player killer = player.getKiller();
@@ -560,6 +677,11 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena == null || !ArenaUtils.isSpectator(player, arena)) {
       return;
     }
+    Bukkit.getScheduler().runTask(plugin, () -> {
+      if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+        ArenaUtils.applySpectatorState(player, arena, true);
+      }
+    });
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
         ArenaUtils.applySpectatorState(player, arena, true);
@@ -602,9 +724,12 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     if(arena.getArenaState() == IArenaState.IN_GAME) {
-      VotingManager.DeadBody nearbyBody = arena.getVotingManager().findNearbyBody(player.getLocation(), 3.8);
-      if(nearbyBody != null) {
-        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ร่างของ <#FFB703>" + nearbyBody.getVictimName() + " <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<shadow:#000000FF><#5A4E7C>)</shadow>");
+      boolean inVent = arena.getVentManager() != null && arena.getVentManager().isInsideVent(player);
+      if(!inVent) {
+        VotingManager.DeadBody nearbyBody = arena.getVotingManager().findNearbyBody(player.getLocation(), 3.8);
+        if(nearbyBody != null) {
+          HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Dead Body<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>ร่างของ <#FFB703>" + nearbyBody.getVictimName() + " <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อรายงานศพ<shadow:#000000FF><#5A4E7C>)</shadow>");
+        }
       }
 
       if(arena.isMurdererLocatorReceived() && Role.isRole(Role.MURDERER, user, arena) && arena.isMurderAlive(player)) {
@@ -617,7 +742,12 @@ public class ArenaEvents extends PluginArenaEvents {
           if(Role.isRole(Role.INNOCENT, playerUser, playerArena)) {
             ComplementAccessor.getComplement().setDisplayName(innocentMeta, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT").asKey().player(player).arena(arena).build() + " §7| §a" + (int) Math.round(player.getLocation().distance(p.getLocation())));
             innocentLocator.setItemMeta(innocentMeta);
-            ItemPosition.setItem(user, ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+            if(inVent) {
+              arena.getVentManager().updateSavedItem(player, ItemPosition.INNOCENTS_LOCATOR.getMurdererItemPosition(), innocentLocator);
+            } else {
+              ItemPosition.setItem(user, ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+            }
+            break;
           }
         }
       }
@@ -627,7 +757,78 @@ public class ArenaEvents extends PluginArenaEvents {
   @EventHandler
   public void onDrop(PlayerDropItemEvent event) {
     Arena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
-    if(arena != null && (arena.getArenaState() == IArenaState.IN_GAME || arena.getVotingManager().isVotingActive())) {
+    if(arena != null) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onSwapHandItems(PlayerSwapHandItemsEvent event) {
+    if(plugin.getArenaRegistry().isInArena(event.getPlayer())) {
+      event.setCancelled(true);
+    }
+  }
+
+  private boolean isBlockedWorldContainer(InventoryHolder holder, InventoryType type) {
+    if(holder instanceof BlockInventoryHolder || holder instanceof DoubleChest) {
+      return true;
+    }
+    if(holder instanceof Entity && !(holder instanceof Player)) {
+      return true;
+    }
+    if(type == null) {
+      return false;
+    }
+    switch(type) {
+      case ENDER_CHEST:
+      case WORKBENCH:
+      case FURNACE:
+      case DISPENSER:
+      case DROPPER:
+      case ENCHANTING:
+      case BREWING:
+      case ANVIL:
+      case BEACON:
+      case HOPPER:
+      case SHULKER_BOX:
+      case BARREL:
+      case BLAST_FURNACE:
+      case LECTERN:
+      case SMOKER:
+      case LOOM:
+      case CARTOGRAPHY:
+      case GRINDSTONE:
+      case STONECUTTER:
+      case SMITHING:
+      case MERCHANT:
+        return true;
+      default:
+        return "CRAFTER".equals(type.name()) || "CHISELED_BOOKSHELF".equals(type.name());
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onInventoryOpen(InventoryOpenEvent event) {
+    if(!(event.getPlayer() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getPlayer();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null) {
+      return;
+    }
+    if(arena.getCutsceneManager().isPlaying()) {
+      event.setCancelled(true);
+      return;
+    }
+    if(isBlockedWorldContainer(event.getInventory().getHolder(), event.getInventory().getType())) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+  public void onInventoryDrag(InventoryDragEvent event) {
+    if(event.getWhoClicked() instanceof Player && plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
       event.setCancelled(true);
     }
   }
@@ -638,6 +839,11 @@ public class ArenaEvents extends PluginArenaEvents {
       Player player = (Player) event.getWhoClicked();
       Arena arena = plugin.getArenaRegistry().getArena(player);
       if(arena != null) {
+        if(arena.getCutsceneManager().isPlaying()) {
+          event.setCancelled(true);
+          player.closeInventory();
+          return;
+        }
         String title = XInventoryView.of(event.getView()).getTitle();
         if(arena.getVotingManager().isVotingGUI(title)) {
           event.setCancelled(true);
@@ -664,10 +870,19 @@ public class ArenaEvents extends PluginArenaEvents {
           arena.getTaskManager().getMinigameManager().handleClick(player, title, event.getRawSlot(), event.getClick());
           return;
         }
+        if(event.getInventory().getHolder() instanceof NormalFastInv) {
+          if(ArenaUtils.isSpectator(player, arena)) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+              if(player.isOnline() && plugin.getArenaRegistry().getArena(player) == arena && ArenaUtils.isSpectator(player, arena)) {
+                ArenaUtils.applySpectatorState(player, arena, false);
+              }
+            });
+          }
+          return;
+        }
       }
-      if(XInventoryView.of(event.getView()).getType() == InventoryType.CRAFTING || XInventoryView.of(event.getView()).getType() == InventoryType.PLAYER) {
-        event.setResult(Event.Result.DENY);
-      }
+      event.setCancelled(true);
+      event.setResult(Event.Result.DENY);
     }
   }
 
@@ -708,6 +923,15 @@ public class ArenaEvents extends PluginArenaEvents {
         if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
           event.setCancelled(true);
         }
+      }
+      return;
+    }
+    if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
+      event.setCancelled(true);
+      if(event.getRightClicked() instanceof Display
+        && (arena.getVentDisplays().contains(event.getRightClicked()) || arena.getVentBlockDisplays().contains(event.getRightClicked()))
+        && !arena.getVentManager().hasJustEntered(player)) {
+        arena.getVentManager().exitVent(player);
       }
       return;
     }
@@ -828,6 +1052,11 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
 
+    if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
+      event.setCancelled(true);
+      return;
+    }
+
     if(arena.getVotingManager().isVotingActive()) {
       event.setCancelled(true);
       if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
@@ -880,20 +1109,22 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
 
-    Location campfireLoc = arena.getCampfireLocation();
-    if(campfireLoc != null && targetLoc != null && targetLoc.getWorld() != null && targetLoc.getWorld().equals(campfireLoc.getWorld())) {
-      if((targetLoc.getBlockX() == campfireLoc.getBlockX() && targetLoc.getBlockY() == campfireLoc.getBlockY() && targetLoc.getBlockZ() == campfireLoc.getBlockZ())
-        || targetLoc.distanceSquared(campfireLoc) <= 2.25) {
-        event.setCancelled(true);
-        arena.getVotingManager().startVoting(player, null);
-        return;
-      }
-    }
-
     if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, targetLoc)) {
       event.setCancelled(true);
       arena.getSabotageManager().openFixGUI(player);
       return;
+    }
+
+    Location campfireLoc = arena.getCampfireLocation();
+    if(campfireLoc != null && targetLoc != null && targetLoc.getWorld() != null && targetLoc.getWorld().equals(campfireLoc.getWorld())) {
+      boolean exactCampfireBlock = targetLoc.getBlockX() == campfireLoc.getBlockX()
+        && targetLoc.getBlockY() == campfireLoc.getBlockY()
+        && targetLoc.getBlockZ() == campfireLoc.getBlockZ();
+      if(exactCampfireBlock || (!arena.getSabotageManager().hasActiveSabotage() && targetLoc.distanceSquared(campfireLoc) <= 2.25)) {
+        event.setCancelled(true);
+        arena.getVotingManager().startVoting(player, null);
+        return;
+      }
     }
 
     SabotageType stationType = arena.getSabotageManager().getSabotageStationAt(targetLoc);

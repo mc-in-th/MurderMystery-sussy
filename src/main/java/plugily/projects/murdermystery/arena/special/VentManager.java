@@ -19,6 +19,7 @@
 package plugily.projects.murdermystery.arena.special;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -27,10 +28,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import plugily.projects.minigamesbox.api.user.IUser;
+import plugily.projects.minigamesbox.classic.events.spectator.settings.SpectatorSettingsMenu;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class VentManager {
 
@@ -55,14 +59,16 @@ public class VentManager {
     final ItemStack[] savedInventory;
     final ItemStack[] savedArmor;
     final ItemStack savedOffHand;
+    final Location entryLocation;
     int currentVentIndex;
     final List<SpecialBlock> sewerBlocks;
     final long enteredAtMs;
 
-    VentSession(ItemStack[] savedInventory, ItemStack[] savedArmor, ItemStack savedOffHand, int currentVentIndex, List<SpecialBlock> sewerBlocks) {
+    VentSession(ItemStack[] savedInventory, ItemStack[] savedArmor, ItemStack savedOffHand, Location entryLocation, int currentVentIndex, List<SpecialBlock> sewerBlocks) {
       this.savedInventory = savedInventory;
       this.savedArmor = savedArmor;
       this.savedOffHand = savedOffHand;
+      this.entryLocation = entryLocation;
       this.currentVentIndex = currentVentIndex;
       this.sewerBlocks = sewerBlocks;
       this.enteredAtMs = System.currentTimeMillis();
@@ -75,10 +81,13 @@ public class VentManager {
   }
 
   public boolean isInsideVent(Player player) {
-    return activeSessions.containsKey(player.getUniqueId());
+    return player != null && activeSessions.containsKey(player.getUniqueId());
   }
 
   public boolean hasJustEntered(Player player) {
+    if(player == null) {
+      return false;
+    }
     VentSession session = activeSessions.get(player.getUniqueId());
     return session != null && (System.currentTimeMillis() - session.enteredAtMs) < 300L;
   }
@@ -106,6 +115,34 @@ public class VentManager {
     VentSession session = activeSessions.get(player.getUniqueId());
     if(session != null && session.savedInventory != null && slot >= 0 && slot < session.savedInventory.length) {
       session.savedInventory[slot] = item;
+    }
+  }
+
+  private void detachSpectatorsFromVentingPlayer(Player ventingPlayer) {
+    SpectatorSettingsMenu menu = plugin.getSpectatorItemsManager() != null
+      ? plugin.getSpectatorItemsManager().getSpectatorSettingsMenu()
+      : null;
+    for(Player spec : arena.getPlayers()) {
+      if(spec == null || !spec.isOnline() || spec.equals(ventingPlayer) || !ArenaUtils.isSpectator(spec, arena)) {
+        continue;
+      }
+      boolean detached = false;
+      if(spec.getGameMode() == GameMode.SPECTATOR && ventingPlayer.equals(spec.getSpectatorTarget())) {
+        spec.setSpectatorTarget(null);
+        detached = true;
+      }
+      if(menu != null) {
+        if(menu.targetPlayer != null && ventingPlayer.equals(menu.targetPlayer.get(spec))) {
+          menu.targetPlayer.remove(spec);
+        }
+        if(detached && menu.firstPersonMode != null) {
+          menu.firstPersonMode.remove(spec);
+        }
+      }
+      if(detached) {
+        ArenaUtils.applySpectatorState(spec, arena, true);
+      }
+      VersionUtils.hidePlayer(plugin, spec, ventingPlayer);
     }
   }
 
@@ -148,6 +185,8 @@ public class VentManager {
       startIndex = 0;
     }
 
+    player.closeInventory();
+    Location entryLocation = player.getLocation().clone();
     ItemStack[] saved = player.getInventory().getContents().clone();
     ItemStack[] savedArmor = player.getInventory().getArmorContents().clone();
     ItemStack savedOffHand = player.getInventory().getItemInOffHand() != null ? player.getInventory().getItemInOffHand().clone() : null;
@@ -202,7 +241,7 @@ public class VentManager {
       player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
     }
 
-    activeSessions.put(player.getUniqueId(), new VentSession(saved, savedArmor, savedOffHand, startIndex, sewerBlocks));
+    activeSessions.put(player.getUniqueId(), new VentSession(saved, savedArmor, savedOffHand, entryLocation, startIndex, sewerBlocks));
 
     try {
       PotionEffectType darkness = PotionEffectType.DARKNESS;
@@ -225,9 +264,10 @@ public class VentManager {
     player.setInvisible(true);
     player.setAllowFlight(true);
     player.setFlying(true);
+    detachSpectatorsFromVentingPlayer(player);
     for(Player p : arena.getPlayers()) {
       if(!p.equals(player)) {
-        p.hidePlayer(plugin, player);
+        VersionUtils.hidePlayer(plugin, p, player);
       }
     }
 
@@ -278,6 +318,7 @@ public class VentManager {
   }
 
   private void moveToCurrentVent(Player player, VentSession session) {
+    detachSpectatorsFromVentingPlayer(player);
     SpecialBlock vent = session.sewerBlocks.get(session.currentVentIndex);
     Location loc = vent.getLocation().clone().add(0.5, 1.0, 0.5);
     loc.setYaw(player.getLocation().getYaw());
@@ -291,13 +332,8 @@ public class VentManager {
       + " <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คลิกขวาเพื่อเปลี่ยนห้อง หรือกด <#FFB703>SHIFT <#B8B0C8>เพื่อออก<shadow:#000000FF><#5A4E7C>)</shadow>");
   }
 
-  public void exitVent(Player player) {
-    VentSession session = activeSessions.remove(player.getUniqueId());
-    if(session == null) {
-      return;
-    }
-    lastSwitchTime.remove(player.getUniqueId());
-
+  private void restoreVentPlayerStateAndInventory(Player player, VentSession session) {
+    player.closeInventory();
     player.removePotionEffect(PotionEffectType.BLINDNESS);
     try {
       player.removePotionEffect(PotionEffectType.DARKNESS);
@@ -314,19 +350,17 @@ public class VentManager {
     player.setInvisible(false);
     player.setFlying(false);
     player.setAllowFlight(false);
-    for(Player p : arena.getPlayers()) {
-      p.showPlayer(plugin, player);
+    if(!ArenaUtils.isSpectator(player, arena)) {
+      for(Player p : arena.getPlayers()) {
+        if(p != null && !p.equals(player)) {
+          VersionUtils.showPlayer(plugin, p, player);
+        }
+      }
     }
 
     if(plugin.getArenaRegistry().getArena(player) != arena) {
       return;
     }
-
-    SpecialBlock currentVent = session.sewerBlocks.get(session.currentVentIndex);
-    Location exitLoc = currentVent.getLocation().clone().add(0.5, 1.0, 0.5);
-    exitLoc.setYaw(player.getLocation().getYaw());
-    exitLoc.setPitch(player.getLocation().getPitch());
-    VersionUtils.teleport(player, exitLoc);
 
     player.getInventory().clear();
     if(session.savedInventory != null) {
@@ -356,12 +390,47 @@ public class VentManager {
     }
     player.updateInventory();
 
+    int cooldownSeconds = plugin.getConfig().getInt("Vent.Cooldown", 10);
+    ventCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldownSeconds * 1000L));
+  }
+
+  public Location forceExitForMeeting(Player player) {
+    VentSession session = activeSessions.remove(player.getUniqueId());
+    if(session == null) {
+      return player != null ? player.getLocation().clone() : null;
+    }
+    lastSwitchTime.remove(player.getUniqueId());
+    restoreVentPlayerStateAndInventory(player, session);
+
+    List<Location> spawns = arena.getPlayerSpawnPoints();
+    if(spawns != null && !spawns.isEmpty()) {
+      return spawns.get(ThreadLocalRandom.current().nextInt(spawns.size())).clone();
+    }
+    return session.entryLocation != null ? session.entryLocation.clone() : player.getLocation().clone();
+  }
+
+  public void exitVent(Player player) {
+    VentSession session = activeSessions.remove(player.getUniqueId());
+    if(session == null) {
+      return;
+    }
+    lastSwitchTime.remove(player.getUniqueId());
+    restoreVentPlayerStateAndInventory(player, session);
+
+    if(plugin.getArenaRegistry().getArena(player) != arena) {
+      return;
+    }
+
+    SpecialBlock currentVent = session.sewerBlocks.get(session.currentVentIndex);
+    Location exitLoc = currentVent.getLocation().clone().add(0.5, 1.0, 0.5);
+    exitLoc.setYaw(player.getLocation().getYaw());
+    exitLoc.setPitch(player.getLocation().getPitch());
+    VersionUtils.teleport(player, exitLoc);
+
     XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(exitLoc, 1F, 1F);
     VersionUtils.sendParticles("PORTAL", player, exitLoc, 25);
 
     int cooldownSeconds = plugin.getConfig().getInt("Vent.Cooldown", 10);
-    ventCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldownSeconds * 1000L));
-
     HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sewer Vent<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ออกจากท่อแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>คูลดาวน์ " + cooldownSeconds + " วิ<shadow:#000000FF><#5A4E7C>)</shadow>");
   }
 
@@ -369,7 +438,7 @@ public class VentManager {
     for(UUID uuid : new ArrayList<>(activeSessions.keySet())) {
       Player player = Bukkit.getPlayer(uuid);
       if(player != null && player.isOnline()) {
-        exitVent(player);
+        forceExitForMeeting(player);
       }
     }
     activeSessions.clear();

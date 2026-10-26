@@ -30,6 +30,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -45,6 +46,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
@@ -59,6 +61,11 @@ public class PluginEvents implements Listener {
   public PluginEvents(Main plugin) {
     this.plugin = plugin;
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST)
+  public void onPlayerQuit(PlayerQuitEvent event) {
+    CutsceneManager.handlePlayerQuit(plugin, event.getPlayer());
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)

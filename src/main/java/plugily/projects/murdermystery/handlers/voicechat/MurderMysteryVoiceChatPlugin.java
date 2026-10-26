@@ -31,7 +31,6 @@ import de.maxhenkel.voicechat.api.events.StaticSoundPacketEvent;
 import de.maxhenkel.voicechat.api.packets.StaticSoundPacket;
 import org.bukkit.entity.Player;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
-import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 
@@ -162,10 +161,6 @@ public class MurderMysteryVoiceChatPlugin implements VoicechatPlugin {
   }
 
   private boolean isDeadOrSpectator(Player player, Arena arena) {
-    if(arena.isDeathPlayer(player) || arena.isSpectatorPlayer(player)) {
-      return true;
-    }
-    IUser user = plugin.getUserManager().getUser(player);
-    return user != null && user.isSpectator();
+    return arena.isDeathPlayer(player) || arena.isSpectatorPlayer(player);
   }
 }

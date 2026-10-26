@@ -38,13 +38,13 @@ import org.golde.bukkit.corpsereborn.CorpseAPI.events.CorpseSpawnEvent;
 import org.golde.bukkit.corpsereborn.nms.Corpses;
 
 import plugily.projects.minigamesbox.api.arena.IArenaState;
-import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.api.events.game.MurderGameCorpseSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
 import plugily.projects.murdermystery.arena.corpse.Stand;
@@ -188,9 +188,19 @@ public class CorpseHandler implements Listener {
 
     Corpses.CorpseData corpse = CorpseAPI.spawnCorpse(player, groundLoc);
     lastSpawnedCorpse = corpse;
-    arena.addCorpse(new Corpse(null, corpse));
+    Corpse corpseEntry = new Corpse(null, corpse);
+    arena.addCorpse(corpseEntry);
     TextDisplay td = arena.spawnTextDisplay(groundLoc.clone().add(0.0D, 0.95D, 0.0D), displayText);
-    arena.getVotingManager().registerDeadBody(player.getName(), groundLoc, new ArrayList<>(), td, null);
+    arena.getVotingManager().registerDeadBody(player.getName(), groundLoc, new ArrayList<>(), td, null, () -> {
+      arena.getCorpses().remove(corpseEntry);
+      if(corpse != null) {
+        try {
+          corpse.destroyCorpseFromEveryone();
+          CorpseAPI.removeCorpse(corpse);
+        } catch(Throwable ignored) {
+        }
+      }
+    });
   }
 
   private Location snapToGround(Location loc) {
@@ -243,16 +253,21 @@ public class CorpseHandler implements Listener {
 
   @EventHandler
   public void onCorpseClick(CorpseClickEvent e) {
-    if(plugin.getArenaRegistry().isInArena(e.getClicker())) {
+    Player clicker = e.getClicker();
+    if(plugin.getArenaRegistry().isInArena(clicker)) {
       e.setCancelled(true);
-      e.getClicker().closeInventory();
+      clicker.closeInventory();
 
-      Arena arena = plugin.getArenaRegistry().getArena(e.getClicker());
+      Arena arena = plugin.getArenaRegistry().getArena(clicker);
       if(arena != null && arena.getArenaState() == IArenaState.IN_GAME) {
-        IUser user = plugin.getUserManager().getUser(e.getClicker());
-        if(!user.isSpectator() && !arena.getVotingManager().isOnKillReportCooldown(e.getClicker())) {
-          arena.getVotingManager().startVoting(e.getClicker(), e.getCorpse().getCorpseName());
+        if(ArenaUtils.isSpectator(clicker, arena)
+          || arena.getVotingManager().isVotingActive()
+          || arena.getCutsceneManager().isPlaying()
+          || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(clicker))) {
+          return;
         }
+        Location corpseLoc = e.getCorpse() != null ? e.getCorpse().getOrigLocation() : clicker.getLocation();
+        arena.getVotingManager().tryReportNearbyBody(clicker, corpseLoc);
       }
     }
   }

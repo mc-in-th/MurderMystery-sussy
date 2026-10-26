@@ -57,11 +57,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CutsceneManager {
 
@@ -91,7 +91,8 @@ public class CutsceneManager {
 
   private final Arena arena;
   private final List<CutsceneFrame> frames = new ArrayList<>();
-  private final List<Player> activeViewers = new CopyOnWriteArrayList<>();
+  private volatile List<Player> activeViewers = Collections.emptyList();
+  private final AtomicLong sessionCounter = new AtomicLong(0);
   private ScheduledFuture<?> playbackFuture;
   private BukkitTask syncTask;
   private TextDisplay cameraRig;
@@ -138,6 +139,7 @@ public class CutsceneManager {
       return;
     }
 
+    final long currentSession = sessionCounter.incrementAndGet();
     playing = true;
     arena.getScoreboardManager().stopAllScoreboards();
     Main plugin = arena.getPlugin();
@@ -145,12 +147,13 @@ public class CutsceneManager {
     List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
 
     List<Player> participants = new ArrayList<>(arena.getPlayersLeft());
-    activeViewers.clear();
+    List<Player> initialViewers = new ArrayList<>(participants.size());
     for(Player participant : participants) {
       if(participant != null && participant.isOnline()) {
-        activeViewers.add(participant);
+        initialViewers.add(participant);
       }
     }
+    activeViewers = Collections.unmodifiableList(initialViewers);
     CutsceneFrame firstFrame = snapshotFrames.get(0);
     Location initialEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
     Location initialOverlayLoc = firstFrame.toOverlayLocation(fallbackWorld);
@@ -179,13 +182,13 @@ public class CutsceneManager {
     syncTask = new BukkitRunnable() {
       @Override
       public void run() {
-        if(!playing || arena.getArenaState() != IArenaState.IN_GAME) {
+        if(!playing || sessionCounter.get() != currentSession || arena.getArenaState() != IArenaState.IN_GAME) {
           cancel();
           return;
         }
         int frameIdx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
         if(frameIdx >= totalFrames) {
-          finishCutscene(onComplete);
+          finishCutscene(currentSession, onComplete);
           cancel();
           return;
         }
@@ -209,6 +212,9 @@ public class CutsceneManager {
             }
             player.setFlySpeed(0.0f);
             if(cameraRig != null && cameraRig.isValid()) {
+              if(!player.getWorld().equals(cameraRig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
+                player.teleport(eyeLoc);
+              }
               if(player.getSpectatorTarget() != cameraRig) {
                 player.setSpectatorTarget(cameraRig);
               }
@@ -220,34 +226,42 @@ public class CutsceneManager {
               HalloweenChat.color("<#B8B0C8>เกมกำลังจะเริ่มใน <#FFB703>" + remainingSec + "s")
             );
           }
-          activeViewers.clear();
-          activeViewers.addAll(updatedViewers);
+          activeViewers = Collections.unmodifiableList(updatedViewers);
         }
       }
     }.runTaskTimer(plugin, 0L, 1L);
 
     playbackFuture = getExecutor().scheduleAtFixedRate(() -> {
-      if(!playing) {
+      if(!playing || sessionCounter.get() != currentSession) {
         return;
       }
       int frameIdx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
       if(frameIdx >= totalFrames) {
-        Bukkit.getScheduler().runTask(plugin, () -> finishCutscene(onComplete));
+        ScheduledFuture<?> currentFuture = playbackFuture;
+        if(currentFuture != null) {
+          currentFuture.cancel(false);
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> finishCutscene(currentSession, onComplete));
         return;
       }
       CutsceneFrame frame = snapshotFrames.get(frameIdx);
+      List<Player> viewersSnapshot = activeViewers;
       TextDisplay rig = cameraRig;
       if(rig != null) {
-        PacketCameraSender.sendEntityPosition60Fps(rig, frame, activeViewers);
+        PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewersSnapshot);
       }
       TextDisplay overlay = fadeOverlay;
       if(overlay != null && computeFadeAlpha(frameIdx, totalFrames) > 0) {
-        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, activeViewers);
+        PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewersSnapshot);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
   }
 
-  private void finishCutscene(Runnable onComplete) {
+  private void finishCutscene(long expectedSession, Runnable onComplete) {
+    if(sessionCounter.get() != expectedSession) {
+      return;
+    }
+    sessionCounter.incrementAndGet();
     if(playbackFuture != null) {
       playbackFuture.cancel(false);
       playbackFuture = null;
@@ -258,7 +272,7 @@ public class CutsceneManager {
     }
     boolean wasPlaying = playing;
     playing = false;
-    activeViewers.clear();
+    activeViewers = Collections.emptyList();
     if(!wasPlaying) {
       removeCameraRig();
       return;
@@ -284,7 +298,12 @@ public class CutsceneManager {
     if(player == null) {
       return;
     }
-    activeViewers.remove(player);
+    List<Player> current = activeViewers;
+    if(current.contains(player)) {
+      List<Player> copy = new ArrayList<>(current);
+      copy.remove(player);
+      activeViewers = Collections.unmodifiableList(copy);
+    }
     if(!playing) {
       return;
     }
@@ -296,6 +315,7 @@ public class CutsceneManager {
   }
 
   public void cleanup() {
+    sessionCounter.incrementAndGet();
     if(playbackFuture != null) {
       playbackFuture.cancel(false);
       playbackFuture = null;
@@ -304,7 +324,7 @@ public class CutsceneManager {
       syncTask.cancel();
       syncTask = null;
     }
-    activeViewers.clear();
+    activeViewers = Collections.emptyList();
     if(playing) {
       playing = false;
       for(Player player : arena.getPlayers()) {
@@ -684,6 +704,7 @@ public class CutsceneManager {
       player.setSpectatorTarget(rig);
     }
 
+    final UUID previewToken = UUID.randomUUID();
     final long startNanos = System.nanoTime();
     final int totalFrames = cutsceneFrames.size();
     final List<Player> viewerList = Collections.singletonList(player);
@@ -692,13 +713,13 @@ public class CutsceneManager {
       @Override
       public void run() {
         if(!player.isOnline()) {
-          stopPreview(player);
+          stopPreview(player, previewToken);
           cancel();
           return;
         }
         int idx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
         if(idx >= totalFrames) {
-          stopPreview(player);
+          stopPreview(player, previewToken);
           cancel();
           return;
         }
@@ -709,6 +730,9 @@ public class CutsceneManager {
             rig.teleport(eyeLoc);
             if(player.getGameMode() != GameMode.SPECTATOR) {
               player.setGameMode(GameMode.SPECTATOR);
+            }
+            if(!player.getWorld().equals(rig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
+              player.teleport(eyeLoc);
             }
             if(player.getSpectatorTarget() != rig) {
               player.setSpectatorTarget(rig);
@@ -735,7 +759,11 @@ public class CutsceneManager {
       }
       int idx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
       if(idx >= totalFrames) {
-        Bukkit.getScheduler().runTask(plugin, () -> stopPreview(player));
+        PreviewSession active = activePreviews.get(player.getUniqueId());
+        if(active != null && active.sessionToken.equals(previewToken) && active.highFreqFuture != null) {
+          active.highFreqFuture.cancel(false);
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> stopPreview(player, previewToken));
         return;
       }
       CutsceneFrame frame = cutsceneFrames.get(idx);
@@ -749,7 +777,7 @@ public class CutsceneManager {
 
     activePreviews.put(
       player.getUniqueId(),
-      new PreviewSession(plugin, originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
+      new PreviewSession(previewToken, plugin, originalLoc, originalGameMode, originalFlySpeed, originalAllowFlight, originalFlying, syncTask, highFreqFuture, rig, overlay)
     );
     if(plugin instanceof Main) {
       Arena playerArena = ((Main) plugin).getArenaRegistry().getArena(player);
@@ -820,9 +848,27 @@ public class CutsceneManager {
     }
   }
 
+  public static void handlePlayerQuit(PluginMain plugin, Player player) {
+    if(player == null) {
+      return;
+    }
+    stopRecording(plugin, player, false);
+    stopPreview(player, null);
+  }
+
   public static boolean stopPreview(Player player) {
+    return stopPreview(player, null);
+  }
+
+  private static boolean stopPreview(Player player, UUID expectedToken) {
     if(player == null) {
       return false;
+    }
+    if(expectedToken != null) {
+      PreviewSession current = activePreviews.get(player.getUniqueId());
+      if(current == null || !current.sessionToken.equals(expectedToken)) {
+        return false;
+      }
     }
     PreviewSession session = activePreviews.remove(player.getUniqueId());
     if(session == null) {
@@ -834,7 +880,7 @@ public class CutsceneManager {
     if(session.syncTask != null) {
       session.syncTask.cancel();
     }
-    if(player.isOnline()) {
+    try {
       if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
         player.setSpectatorTarget(null);
       }
@@ -847,6 +893,9 @@ public class CutsceneManager {
       if(session.originalLoc != null && session.originalLoc.getWorld() != null) {
         player.teleport(session.originalLoc);
       }
+    } catch(Throwable ignored) {
+    }
+    if(player.isOnline()) {
       applyPostCutsceneFadeIn(player);
       HalloweenChat.sendActionBar(player, HalloweenChat.color("<#6EEB83>จบการเล่นตัวอย่าง Cutscene แล้ว"));
       if(session.plugin instanceof Main) {
@@ -1071,6 +1120,7 @@ public class CutsceneManager {
   }
 
   private static class PreviewSession {
+    private final UUID sessionToken;
     private final PluginMain plugin;
     private final Location originalLoc;
     private final GameMode originalGameMode;
@@ -1082,7 +1132,8 @@ public class CutsceneManager {
     private final TextDisplay rig;
     private final TextDisplay overlay;
 
-    private PreviewSession(PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
+    private PreviewSession(UUID sessionToken, PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying, BukkitTask syncTask, ScheduledFuture<?> highFreqFuture, TextDisplay rig, TextDisplay overlay) {
+      this.sessionToken = sessionToken;
       this.plugin = plugin;
       this.originalLoc = originalLoc;
       this.originalGameMode = originalGameMode;
@@ -1097,9 +1148,9 @@ public class CutsceneManager {
   }
 
   private static final class PacketCameraSender {
-    private static boolean initialized = false;
-    private static boolean supported = false;
-    private static Method craftPlayerGetHandle;
+    private static volatile boolean initialized = false;
+    private static volatile boolean supported = false;
+    private static volatile Method craftPlayerGetHandle;
     private static Field serverPlayerConnectionField;
     private static Method packetSendMethod;
     private static Constructor<?> vec3Constructor;
@@ -1107,7 +1158,7 @@ public class CutsceneManager {
     private static Constructor<?> posMoveRotConstructor;
     private static Constructor<?> syncPacketConstructor;
     private static Constructor<?> rotateHeadConstructor;
-    private static Method craftEntityGetHandle;
+    private static volatile Method craftEntityGetHandle;
 
     private static synchronized void init() {
       if(initialized) {

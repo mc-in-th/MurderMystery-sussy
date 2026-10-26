@@ -37,6 +37,7 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.task.minigame.TaskGuiHelper;
 import plugily.projects.murdermystery.utils.HalloweenChat;
@@ -252,7 +253,11 @@ public class SabotageManager {
   }
 
   public void openSabotageGUI(Player player) {
-    if(arena.getArenaState() != IArenaState.IN_GAME) {
+    if(arena.getArenaState() != IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying() || ArenaUtils.isSpectator(player, arena)) {
+      return;
+    }
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    if(!Role.isRole(Role.MURDERER, user, arena)) {
       return;
     }
     if(arena.getVotingManager().isVotingActive()) {
@@ -350,7 +355,13 @@ public class SabotageManager {
   }
 
   public void handleSabotageClick(Player player, int rawSlot) {
-    if(arena.getVotingManager().isVotingActive()) {
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    if(arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || ArenaUtils.isSpectator(player, arena)
+      || !Role.isRole(Role.MURDERER, user, arena)) {
+      player.closeInventory();
       return;
     }
 
@@ -511,7 +522,13 @@ public class SabotageManager {
   }
 
   public boolean isAtFixStation(Player player, Location clickedLoc) {
-    if(activeSabotage == null || activeFixLocation == null) {
+    if(activeSabotage == null || activeFixLocation == null || activeFixLocation.getWorld() == null) {
+      return false;
+    }
+    if(player == null || !player.getWorld().equals(activeFixLocation.getWorld())) {
+      return false;
+    }
+    if(player.getLocation().distanceSquared(activeFixLocation.clone().add(0.5, 0.5, 0.5)) > 36.0) {
       return false;
     }
     if(clickedLoc != null && clickedLoc.getWorld() != null && clickedLoc.getWorld().equals(activeFixLocation.getWorld())) {
@@ -522,20 +539,23 @@ public class SabotageManager {
         return true;
       }
     }
-    if(player != null && player.getWorld().equals(activeFixLocation.getWorld())) {
-      try {
-        Block target = player.getTargetBlockExact(5);
-        if(target != null && target.getLocation().distanceSquared(activeFixLocation) <= 4.0) {
-          return true;
-        }
-      } catch(Throwable ignored) {
+    try {
+      Block target = player.getTargetBlockExact(5);
+      if(target != null && target.getLocation().distanceSquared(activeFixLocation) <= 4.0) {
+        return true;
       }
+    } catch(Throwable ignored) {
     }
     return false;
   }
 
   public void openFixGUI(Player player) {
-    if(activeSabotage == null) {
+    if(activeSabotage == null
+      || arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || ArenaUtils.isSpectator(player, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(player))) {
       return;
     }
 
@@ -691,7 +711,17 @@ public class SabotageManager {
   }
 
   public void handleFixClick(Player player, int rawSlot) {
-    if(activeSabotage == null) {
+    if(activeSabotage == null
+      || arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || ArenaUtils.isSpectator(player, arena)
+      || (arena.getVentManager() != null && arena.getVentManager().isInsideVent(player))
+      || activeFixLocation == null
+      || activeFixLocation.getWorld() == null
+      || !player.getWorld().equals(activeFixLocation.getWorld())
+      || player.getLocation().distanceSquared(activeFixLocation.clone().add(0.5, 0.5, 0.5)) > 49.0) {
+      player.closeInventory();
       return;
     }
 
@@ -762,7 +792,9 @@ public class SabotageManager {
     meltdownBossBar = null;
 
     for(Player p : arena.getPlayersLeft()) {
-      p.removePotionEffect(PotionEffectType.DARKNESS);
+      if(arena.getVentManager() == null || !arena.getVentManager().isInsideVent(p)) {
+        p.removePotionEffect(PotionEffectType.DARKNESS);
+      }
       p.removePotionEffect(PotionEffectType.NIGHT_VISION);
     }
 
@@ -794,7 +826,9 @@ public class SabotageManager {
     meltdownBossBar = null;
 
     for(Player p : arena.getPlayersLeft()) {
-      p.removePotionEffect(PotionEffectType.DARKNESS);
+      if(arena.getVentManager() == null || !arena.getVentManager().isInsideVent(p)) {
+        p.removePotionEffect(PotionEffectType.DARKNESS);
+      }
       p.removePotionEffect(PotionEffectType.NIGHT_VISION);
     }
 

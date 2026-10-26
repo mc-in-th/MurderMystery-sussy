@@ -74,6 +74,7 @@ public class StartingState extends PluginStartingState {
       Set<Player> playersToSet = new HashSet<>(arena.getPlayersLeft());
 
       pluginArena.setSabotageWin(false);
+      pluginArena.setTaskWin(false);
       getMaxRolesToSet(pluginArena);
 
       addRole(pluginArena, Role.MURDERER, playersToSet);

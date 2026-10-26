@@ -31,6 +31,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
@@ -99,10 +100,13 @@ public class VotingManager {
         } catch(Throwable ignored) {
         }
       }
-      if(hologram != null && !hologram.isDeleted()) {
-        try {
-          hologram.delete();
-        } catch(Throwable ignored) {
+      if(hologram != null) {
+        arena.getPlugin().getHologramManager().getHolograms().remove(hologram);
+        if(!hologram.isDeleted()) {
+          try {
+            hologram.delete();
+          } catch(Throwable ignored) {
+          }
         }
       }
       if(textDisplay != null && textDisplay.isValid()) {
@@ -352,7 +356,18 @@ public class VotingManager {
   }
 
   public boolean startVoting(Player reportingPlayer, String victimName) {
-    if(voteState != VoteState.NONE) {
+    if(voteState != VoteState.NONE || arena.getArenaState() != IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying()) {
+      return false;
+    }
+
+    Location center = arena.getCampfireLocation();
+    if(center == null && !arena.getPlayerSpawnPoints().isEmpty()) {
+      center = arena.getPlayerSpawnPoints().get(0);
+    }
+    if(center == null) {
+      center = arena.getStartLocation();
+    }
+    if(center == null || center.getWorld() == null) {
       return false;
     }
 
@@ -419,11 +434,6 @@ public class VotingManager {
         + " <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน");
     }
 
-    Location center = arena.getCampfireLocation();
-    if(center == null && !arena.getPlayerSpawnPoints().isEmpty()) {
-      center = arena.getPlayerSpawnPoints().get(0);
-    }
-
     List<Player> alivePlayers = arena.getPlayersLeft();
     int count = Math.max(1, alivePlayers.size());
     double radius = 2.8;
@@ -433,10 +443,14 @@ public class VotingManager {
 
     for(int i = 0; i < alivePlayers.size(); i++) {
       Player player = alivePlayers.get(i);
-      if(arena.getVentManager().isInsideVent(player)) {
-        arena.getVentManager().exitVent(player);
+      Location preLoc;
+      if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
+        Location safeExit = arena.getVentManager().forceExitForMeeting(player);
+        preLoc = safeExit != null ? safeExit.clone() : center.clone();
+      } else {
+        preLoc = player.getLocation().clone();
       }
-      preVoteLocations.put(player, player.getLocation().clone());
+      preVoteLocations.put(player, preLoc);
 
       double angle = (2.0 * Math.PI * i) / count;
       double px = cx + radius * Math.cos(angle);
@@ -531,9 +545,31 @@ public class VotingManager {
     return meetingCircleLocations.get(player.getUniqueId());
   }
 
+  private void triggerMurdererMeetingWin() {
+    if(arena.aliveMurderer() > 0) {
+      String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
+      for(Player p : arena.getPlayers()) {
+        HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+      }
+    }
+    Bukkit.getScheduler().runTask(arena.getPlugin(), () -> arena.getPlugin().getArenaManager().stopGame(false, arena));
+  }
+
   public boolean tick() {
-    if(voteState == VoteState.NONE) {
+    if(voteState == VoteState.NONE || arena.getArenaState() != IArenaState.IN_GAME) {
       return false;
+    }
+
+    if(voteState == VoteState.DISCUSSION || voteState == VoteState.VOTING) {
+      if(arena.aliveMurderer() <= 0) {
+        ArenaUtils.onMurdererDeath(arena);
+        return true;
+      }
+      if(arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
+        triggerMurdererMeetingWin();
+        return true;
+      }
     }
 
     voteTimer--;
@@ -589,6 +625,14 @@ public class VotingManager {
         } else if(voteTimer == 3 && !verdictExecuted) {
           executeVerdict();
         } else if(voteTimer <= 0) {
+          if(arena.aliveMurderer() <= 0) {
+            ArenaUtils.onMurdererDeath(arena);
+            return true;
+          }
+          if(arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
+            triggerMurdererMeetingWin();
+            return true;
+          }
           endVoting();
         }
         break;
@@ -624,6 +668,9 @@ public class VotingManager {
 
   public void openVotingGUI(Player viewer) {
     if(voteState != VoteState.DISCUSSION && voteState != VoteState.VOTING && voteState != VoteState.RESULT) {
+      return;
+    }
+    if(ArenaUtils.isSpectator(viewer, arena) || !arena.getPlayersLeft().contains(viewer)) {
       return;
     }
     Inventory gui;
@@ -685,9 +732,16 @@ public class VotingManager {
   }
 
   private static int[] computePlayerSlots(int totalPlayers) {
-    int count = Math.max(0, Math.min(21, totalPlayers));
+    int count = Math.max(0, Math.min(27, totalPlayers));
     if(count == 0) {
       return new int[0];
+    }
+    if(count > 21) {
+      int[] fullGrid = new int[count];
+      for(int i = 0; i < count; i++) {
+        fullGrid[i] = 9 + i;
+      }
+      return fullGrid;
     }
     int[] result = new int[count];
     int idx = 0;
@@ -951,6 +1005,10 @@ public class VotingManager {
   }
 
   public boolean handleVoteClick(Player voter, int rawSlot) {
+    if(ArenaUtils.isSpectator(voter, arena) || !arena.getPlayersLeft().contains(voter)) {
+      voter.closeInventory();
+      return true;
+    }
     if(rawSlot == CHAT_CLOSE_SLOT) {
       voter.closeInventory();
       XSound.UI_BUTTON_CLICK.play(voter.getLocation(), 0.7F, 1.2F);
@@ -1221,6 +1279,9 @@ public class VotingManager {
     if(ejectedOnline) {
       restoreVoteMenuItem(ejectedPlayer);
       ejectedPlayer.damage(1000.0);
+      if(!arena.isDeathPlayer(ejectedPlayer)) {
+        ArenaUtils.forceEliminatePlayer(ejectedPlayer, arena);
+      }
     }
 
     if(wasMurderer && arena.aliveMurderer() <= 0) {

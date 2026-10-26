@@ -44,8 +44,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ArenaMinimap {
 
@@ -164,6 +166,9 @@ public class ArenaMinimap {
 
   public void distributeMaps() {
     initMap();
+    if(renderer != null) {
+      renderer.clearCache();
+    }
     cachedBounds = calculateBounds();
     for(Player player : arena.getPlayersLeft()) {
       giveMap(player);
@@ -182,6 +187,9 @@ public class ArenaMinimap {
 
   public void cleanup() {
     cachedBounds = null;
+    if(renderer != null) {
+      renderer.clearCache();
+    }
   }
 
   public Bounds getBounds() {
@@ -236,11 +244,29 @@ public class ArenaMinimap {
 
   public static class MinimapRenderer extends MapRenderer {
 
+    private static final long CANVAS_INTERVAL_MS = 400L;
+    private static final long CURSOR_INTERVAL_MS = 100L;
+
+    private static final Font FONT_BOLD_10 = new Font("SansSerif", Font.BOLD, 10);
+    private static final Font FONT_BOLD_9 = new Font("SansSerif", Font.BOLD, 9);
+    private static final Font FONT_BOLD_8 = new Font("SansSerif", Font.BOLD, 8);
+    private static final Font FONT_BOLD_7 = new Font("SansSerif", Font.BOLD, 7);
+    private static final Font FONT_BOLD_6 = new Font("SansSerif", Font.BOLD, 6);
+    private static final Font FONT_PLAIN_8 = new Font("SansSerif", Font.PLAIN, 8);
+    private static final Font FONT_PLAIN_7 = new Font("SansSerif", Font.PLAIN, 7);
+
     private final Arena arena;
+    private final Map<UUID, Long> lastCanvasRenderMs = new HashMap<>();
+    private final Map<UUID, Long> lastCursorRenderMs = new HashMap<>();
 
     public MinimapRenderer(Arena arena) {
       super(true);
       this.arena = arena;
+    }
+
+    public void clearCache() {
+      lastCanvasRenderMs.clear();
+      lastCursorRenderMs.clear();
     }
 
     @Override
@@ -249,9 +275,37 @@ public class ArenaMinimap {
         return;
       }
 
+      long now = System.currentTimeMillis();
+      UUID uuid = player.getUniqueId();
+      Bounds bounds = arena.getMinimap().getBounds();
       IUser user = arena.getPlugin().getUserManager().getUser(player);
       boolean isMurderer = Role.isRole(Role.MURDERER, user, arena) || arena.getMurdererList().contains(player);
-      Bounds bounds = arena.getMinimap().getBounds();
+      boolean jammed = !isMurderer && arena.getSabotageManager().isCommsJammed();
+
+      Long prevCursor = lastCursorRenderMs.get(uuid);
+      if(prevCursor == null || (now - prevCursor) >= CURSOR_INTERVAL_MS) {
+        lastCursorRenderMs.put(uuid, now);
+        if(jammed) {
+          canvas.setCursors(new MapCursorCollection());
+        } else {
+          MapCursorCollection cursors = new MapCursorCollection();
+          int curX = bounds.toCursorX(player.getLocation().getX());
+          int curY = bounds.toCursorY(player.getLocation().getZ());
+          float yaw = (player.getLocation().getYaw() % 360.0f + 360.0f) % 360.0f;
+          byte dir = (byte) Math.round(yaw * 16.0f / 360.0f);
+          if(dir >= 16) {
+            dir = 0;
+          }
+          cursors.addCursor(new MapCursor((byte) curX, (byte) curY, dir, MapCursor.Type.PLAYER, true));
+          canvas.setCursors(cursors);
+        }
+      }
+
+      Long prevCanvas = lastCanvasRenderMs.get(uuid);
+      if(prevCanvas != null && (now - prevCanvas) < CANVAS_INTERVAL_MS) {
+        return;
+      }
+      lastCanvasRenderMs.put(uuid, now);
 
       BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
       Graphics2D g = img.createGraphics();
@@ -261,29 +315,29 @@ public class ArenaMinimap {
       g.setColor(new Color(16, 22, 32));
       g.fillRect(0, 0, 128, 128);
 
-      if(!isMurderer && arena.getSabotageManager().isCommsJammed()) {
+      if(jammed) {
         g.setColor(new Color(15, 15, 22));
         g.fillRect(0, 0, 128, 128);
 
         g.setColor(new Color(12, 18, 28));
         g.fillRect(0, 0, 128, 14);
         g.setColor(new Color(255, 60, 60));
-        g.setFont(new Font("SansSerif", Font.BOLD, 9));
+        g.setFont(FONT_BOLD_9);
         g.drawString("[!] RADAR OFFLINE", 18, 10);
 
         g.setColor(new Color(50, 55, 65));
         for(int y = 20; y < 110; y += 6) {
-          int startX = 6 + (int) ((Math.sin(y + System.currentTimeMillis() / 200.0) + 1.0) * 10);
-          int endX = 122 - (int) ((Math.cos(y + System.currentTimeMillis() / 200.0) + 1.0) * 10);
+          int startX = 6 + (int) ((Math.sin(y + now / 200.0) + 1.0) * 10);
+          int endX = 122 - (int) ((Math.cos(y + now / 200.0) + 1.0) * 10);
           g.drawLine(startX, y, endX, y);
         }
 
         g.setColor(new Color(255, 70, 70));
-        g.setFont(new Font("SansSerif", Font.BOLD, 10));
+        g.setFont(FONT_BOLD_10);
         g.drawString("COMMS JAMMED!", 16, 48);
 
         g.setColor(new Color(230, 230, 230));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 8));
+        g.setFont(FONT_PLAIN_8);
         g.drawString("Restore radio at Comms", 16, 66);
         g.drawString("to re-enable your map!", 18, 78);
 
@@ -291,14 +345,13 @@ public class ArenaMinimap {
         if(fixLoc != null) {
           int fx = bounds.toPixelX(fixLoc.getX());
           int fy = bounds.toPixelY(fixLoc.getZ());
-          boolean flash = (System.currentTimeMillis() / 400) % 2 == 0;
+          boolean flash = (now / 400) % 2 == 0;
           g.setColor(flash ? new Color(255, 40, 40) : new Color(220, 160, 0));
           g.fillOval(fx - 4, fy - 4, 8, 8);
           g.setColor(Color.WHITE);
           g.drawOval(fx - 4, fy - 4, 8, 8);
-          g.setFont(new Font("SansSerif", Font.BOLD, 7));
+          g.setFont(FONT_BOLD_7);
           g.drawString("!", fx - 1, fy + 3);
-          g.setFont(new Font("SansSerif", Font.BOLD, 7));
           g.setColor(flash ? new Color(255, 100, 100) : new Color(255, 230, 100));
           g.drawString("RADIO", fx + 6, fy + 3);
         }
@@ -306,7 +359,7 @@ public class ArenaMinimap {
         g.setColor(new Color(12, 18, 28));
         g.fillRect(0, 114, 128, 14);
         g.setColor(new Color(255, 80, 80));
-        g.setFont(new Font("SansSerif", Font.BOLD, 8));
+        g.setFont(FONT_BOLD_8);
         g.drawString("[!] NO SIGNAL", 34, 124);
 
         g.dispose();
@@ -342,8 +395,7 @@ public class ArenaMinimap {
       g.setColor(new Color(45, 65, 95));
       g.drawLine(0, 13, 128, 13);
 
-      Font fontHeader = new Font("SansSerif", Font.BOLD, 9);
-      g.setFont(fontHeader);
+      g.setFont(FONT_BOLD_9);
       if(arena.getSabotageManager().hasActiveSabotage()) {
         g.setColor(new Color(255, 50, 50));
         g.drawString(" " + arena.getSabotageManager().getActiveSabotage().getDisplayName(), 8, 10);
@@ -389,7 +441,7 @@ public class ArenaMinimap {
           g.setColor(new Color(140, 100, 10));
           g.drawRect(tx - 3, ty - 3, 6, 6);
           g.setColor(new Color(30, 25, 0));
-          g.setFont(new Font("SansSerif", Font.BOLD, 6));
+          g.setFont(FONT_BOLD_6);
           g.drawString("!", tx - 1, ty + 3);
         }
 
@@ -403,11 +455,11 @@ public class ArenaMinimap {
           g.setColor(new Color(255, 255, 255));
           g.drawOval(vx - 4, vy - 4, 8, 8);
 
-          g.setFont(new Font("SansSerif", Font.BOLD, 6));
+          g.setFont(FONT_BOLD_6);
           g.setColor(Color.WHITE);
           g.drawString("V", vx - 2, vy + 3);
 
-          g.setFont(new Font("SansSerif", Font.PLAIN, 7));
+          g.setFont(FONT_PLAIN_7);
           g.setColor(new Color(255, 120, 120));
           g.drawString("V" + (i + 1), vx + 5, vy + 3);
         }
@@ -428,10 +480,10 @@ public class ArenaMinimap {
               g.setColor(new Color(255, 255, 255));
               g.drawOval(tx - 4, ty - 4, 8, 8);
               g.setColor(Color.WHITE);
-              g.setFont(new Font("SansSerif", Font.BOLD, 6));
+              g.setFont(FONT_BOLD_6);
               g.drawString("[/]", tx - 2, ty + 3);
 
-              g.setFont(new Font("SansSerif", Font.PLAIN, 7));
+              g.setFont(FONT_PLAIN_7);
               g.setColor(new Color(120, 255, 140));
               g.drawString("Done", tx + 5, ty + 3);
             } else {
@@ -440,10 +492,10 @@ public class ArenaMinimap {
               g.setColor(new Color(255, 255, 255));
               g.drawOval(tx - 4, ty - 4, 8, 8);
               g.setColor(new Color(40, 30, 0));
-              g.setFont(new Font("SansSerif", Font.BOLD, 7));
+              g.setFont(FONT_BOLD_7);
               g.drawString("!", tx - 1, ty + 3);
 
-              g.setFont(new Font("SansSerif", Font.PLAIN, 7));
+              g.setFont(FONT_PLAIN_7);
               g.setColor(new Color(255, 230, 140));
               String name = gt.getTaskType().getDisplayName();
               if(name.length() > 6) {
@@ -463,7 +515,7 @@ public class ArenaMinimap {
         g.fillOval(cx - 4, cy - 4, 8, 8);
         g.setColor(new Color(255, 220, 120));
         g.drawOval(cx - 4, cy - 4, 8, 8);
-        g.setFont(new Font("SansSerif", Font.BOLD, 6));
+        g.setFont(FONT_BOLD_6);
         g.setColor(Color.WHITE);
         g.drawString("H", cx - 2, cy + 3);
       }
@@ -473,15 +525,14 @@ public class ArenaMinimap {
         if(fixLoc != null) {
           int fx = bounds.toPixelX(fixLoc.getX());
           int fy = bounds.toPixelY(fixLoc.getZ());
-          boolean flash = (System.currentTimeMillis() / 400) % 2 == 0;
+          boolean flash = (now / 400) % 2 == 0;
           g.setColor(flash ? new Color(255, 30, 30) : new Color(230, 180, 0));
           g.fillOval(fx - 5, fy - 5, 10, 10);
           g.setColor(Color.WHITE);
           g.drawOval(fx - 5, fy - 5, 10, 10);
-          g.setFont(new Font("SansSerif", Font.BOLD, 7));
+          g.setFont(FONT_BOLD_7);
           g.drawString("!", fx - 1, fy + 3);
 
-          g.setFont(new Font("SansSerif", Font.BOLD, 7));
           g.setColor(flash ? new Color(255, 80, 80) : new Color(255, 220, 80));
           g.drawString("FIX", fx + 7, fy + 3);
         }
@@ -497,8 +548,7 @@ public class ArenaMinimap {
       g.setColor(new Color(45, 65, 95));
       g.drawLine(0, 114, 128, 114);
 
-      Font fontSmall = new Font("SansSerif", Font.PLAIN, 8);
-      g.setFont(fontSmall);
+      g.setFont(FONT_PLAIN_8);
 
       if(isMurderer) {
         g.setColor(new Color(255, 50, 50));
@@ -534,17 +584,6 @@ public class ArenaMinimap {
 
       g.dispose();
       canvas.drawImage(0, 0, img);
-
-      MapCursorCollection cursors = new MapCursorCollection();
-      int curX = bounds.toCursorX(player.getLocation().getX());
-      int curY = bounds.toCursorY(player.getLocation().getZ());
-      float yaw = (player.getLocation().getYaw() % 360.0f + 360.0f) % 360.0f;
-      byte dir = (byte) Math.round(yaw * 16.0f / 360.0f);
-      if(dir >= 16) {
-        dir = 0;
-      }
-      cursors.addCursor(new MapCursor((byte) curX, (byte) curY, dir, MapCursor.Type.PLAYER, true));
-      canvas.setCursors(cursors);
     }
   }
 }

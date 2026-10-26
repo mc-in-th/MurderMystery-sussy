@@ -26,6 +26,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -130,11 +131,37 @@ public class TaskManager {
   private int completedTasks = 0;
   private boolean allTasksCompleted = false;
   private boolean taskWinTriggered = false;
+  private int taskRoundId = 0;
 
   public TaskManager(Arena arena) {
     this.arena = arena;
     this.minigameManager = new TaskMinigameManager(arena);
     this.visualEffectManager = new VisualTaskEffectManager(arena);
+  }
+
+  public int getTaskRoundId() {
+    return taskRoundId;
+  }
+
+  public boolean isNearAssignedTask(Player player, TaskType taskType, double maxDistSq) {
+    if(player == null || taskType == null) {
+      return false;
+    }
+    List<GameTask> tasks = playerTasks.get(player);
+    if(tasks == null || tasks.isEmpty()) {
+      return false;
+    }
+    for(GameTask task : tasks) {
+      if(!task.isCompleted() && task.getTaskType() == taskType) {
+        Location loc = task.getLocation();
+        if(loc != null && loc.getWorld() != null && loc.getWorld().equals(player.getWorld())) {
+          if(player.getLocation().distanceSquared(loc.clone().add(0.5, 0.5, 0.5)) <= maxDistSq) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   public VisualTaskEffectManager getVisualEffectManager() {
@@ -159,6 +186,7 @@ public class TaskManager {
   }
 
   public void assignTasks(List<Player> innocents, List<Location> taskLocations, int tasksPerPlayer) {
+    taskRoundId++;
     playerTasks.clear();
     visualEffectManager.cleanup();
     for(TaskStationDisplay station : stationDisplays) {
@@ -579,7 +607,7 @@ public class TaskManager {
   private boolean openOrCompleteTask(Player player, GameTask task) {
     if(minigameManager.hasMinigame(task.getTaskType())) {
       boolean opened = minigameManager.openMinigame(player, task.getTaskType());
-      if(opened && task.getTaskType().isVisual()) {
+      if(opened && task.getTaskType().isVisual() && !ArenaUtils.isSpectator(player, arena)) {
         visualEffectManager.startVisualSession(player, task.getTaskType(), task.getLocation());
       }
       return opened;
@@ -588,7 +616,16 @@ public class TaskManager {
   }
 
   public boolean completeTaskFromMinigame(Player player, TaskType taskType) {
-    if(arena.getArenaState() != IArenaState.IN_GAME || arena.getVotingManager().isVotingActive()) {
+    if(arena.getArenaState() != IArenaState.IN_GAME
+      || arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()) {
+      return false;
+    }
+    IUser user = arena.getPlugin().getUserManager().getUser(player);
+    if(Role.isRole(Role.MURDERER, user, arena)) {
+      return false;
+    }
+    if(minigameManager.hasMinigame(taskType) && !minigameManager.isValidCompletionRound(player)) {
       return false;
     }
     List<GameTask> tasks = playerTasks.get(player);
@@ -601,7 +638,11 @@ public class TaskManager {
         task.setCompleted(true);
         completedTasks++;
         updateBossBar();
-        visualEffectManager.completeVisualSession(player, task.getTaskType());
+        if(!ArenaUtils.isSpectator(player, arena)) {
+          visualEffectManager.completeVisualSession(player, task.getTaskType());
+        } else {
+          visualEffectManager.stopVisualSession(player);
+        }
 
         String taskName = task.getTaskType().getDisplayName();
         HalloweenChat.send(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_COMPLETED")
@@ -609,8 +650,12 @@ public class TaskManager {
           .value(taskName)
           .build());
 
-        XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player.getLocation(), 1F, 1F);
-        VersionUtils.sendParticles("VILLAGER_HAPPY", player, player.getLocation().add(0, 1, 0), 15);
+        if(ArenaUtils.isSpectator(player, arena)) {
+          player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+        } else {
+          XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player.getLocation(), 1F, 1F);
+          VersionUtils.sendParticles("VILLAGER_HAPPY", player, player.getLocation().add(0, 1, 0), 15);
+        }
 
         int remaining = getPlayerTotalTasks(player) - getPlayerCompletedTasks(player);
         if(remaining > 0) {
@@ -782,6 +827,7 @@ public class TaskManager {
   }
 
   public void cleanup() {
+    taskRoundId++;
     stopArrowTracker();
     visualEffectManager.cleanup();
     hideTaskBossBarAll();
@@ -901,7 +947,19 @@ public class TaskManager {
 
   public void removePlayer(Player player) {
     visualEffectManager.stopVisualSession(player);
+    boolean hadActiveMinigame = minigameManager.hasActiveMinigame(player);
+    minigameManager.invalidatePlayerRound(player);
     minigameManager.handleClose(player, null);
+    if(hadActiveMinigame && player != null && player.isOnline()) {
+      player.closeInventory();
+    }
+    if(player != null && player.isOnline()) {
+      for(int i = 0; i < player.getInventory().getSize(); i++) {
+        if(isTaskCompass(player.getInventory().getItem(i))) {
+          player.getInventory().setItem(i, null);
+        }
+      }
+    }
     List<GameTask> tasks = playerTasks.remove(player);
     if(tasks != null) {
       for(GameTask task : tasks) {
