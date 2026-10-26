@@ -126,7 +126,7 @@ public class VotingManager {
     }
   }
 
-  public static final String VOTE_GUI_RAW_TITLE = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>";
+  public static final String VOTE_GUI_RAW_TITLE = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow>";
   public static final String VOTE_GUI_TITLE = HalloweenChat.color(VOTE_GUI_RAW_TITLE);
   public static final int VOTE_MENU_ITEM_SLOT = 4;
 
@@ -305,7 +305,7 @@ public class VotingManager {
     ItemStack item = XMaterial.NETHER_STAR.parseItem();
     ItemMeta meta = item.getItemMeta();
     if(meta != null) {
-      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow>");
+      HalloweenChat.setItemName(meta, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Voting<shadow:#000000FF><#5A4E7C>]</shadow>");
       HalloweenChat.setItemLore(meta, Arrays.asList(
         "",
         "<#F4F1DE>เมนูโหวตหาคนร้าย",
@@ -322,17 +322,19 @@ public class VotingManager {
       return false;
     }
     String stripped = HalloweenChat.strip(item.getItemMeta().getDisplayName());
-    return stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("เปิดเมนูโหวตหาคนร้าย");
+    return stripped.contains("Voting") || stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("เปิดเมนูโหวตหาคนร้าย");
   }
 
   private void playBusHornSound() {
+    musicManager.stopAll();
     for(Player player : arena.getPlayers()) {
       if(player != null && player.isOnline()) {
         try {
-          player.playSound(player.getLocation(), "item.goat_horn.sound.0", 0.85F, 1.45F);
-          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.189F);
-          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.498F);
-          player.playSound(player.getLocation(), "block.note_block.flute", 0.75F, 0.794F);
+          player.playSound(player.getLocation(), "block.bell.use", 1.0F, 1.45F);
+          player.playSound(player.getLocation(), "block.note_block.bell", 0.9F, 1.335F);
+          player.playSound(player.getLocation(), "item.goat_horn.sound.0", 0.8F, 1.65F);
+          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.335F);
+          player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.587F);
         } catch(Throwable ignored) {
         }
       }
@@ -341,14 +343,47 @@ public class VotingManager {
       for(Player player : arena.getPlayers()) {
         if(player != null && player.isOnline()) {
           try {
-            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.189F);
-            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.498F);
-            player.playSound(player.getLocation(), "block.note_block.flute", 0.75F, 0.794F);
+            player.stopSound("item.goat_horn.sound.0");
           } catch(Throwable ignored) {
           }
         }
       }
-    }, 7L);
+    }, 4L);
+    Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
+      for(Player player : arena.getPlayers()) {
+        if(player != null && player.isOnline()) {
+          try {
+            player.playSound(player.getLocation(), "block.bell.use", 1.0F, 1.55F);
+            player.playSound(player.getLocation(), "block.note_block.bell", 0.9F, 1.498F);
+            player.playSound(player.getLocation(), "item.goat_horn.sound.0", 0.85F, 1.65F);
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.335F);
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 1.0F, 1.587F);
+          } catch(Throwable ignored) {
+          }
+        }
+      }
+    }, 6L);
+    Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
+      for(Player player : arena.getPlayers()) {
+        if(player != null && player.isOnline()) {
+          try {
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 0.85F, 1.335F);
+            player.playSound(player.getLocation(), "block.note_block.didgeridoo", 0.85F, 1.587F);
+          } catch(Throwable ignored) {
+          }
+        }
+      }
+    }, 10L);
+    Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
+      for(Player player : arena.getPlayers()) {
+        if(player != null && player.isOnline()) {
+          try {
+            player.stopSound("item.goat_horn.sound.0");
+          } catch(Throwable ignored) {
+          }
+        }
+      }
+    }, 13L);
   }
 
   public boolean startVoting(Player reportingPlayer) {
@@ -429,7 +464,6 @@ public class VotingManager {
         + " <#F4F1DE>พบศพของ <#FF3B47>" + victimName + " <#F4F1DE>และเรียกประชุมด่วน");
     } else {
       playBusHornSound();
-      musicManager.playEmergencyMeetingSound();
       broadcastArenaMessage("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>" + reportingPlayer.getName()
         + " <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน");
     }
@@ -1359,7 +1393,7 @@ public class VotingManager {
       return false;
     }
     String stripped = HalloweenChat.strip(title);
-    return VOTE_GUI_TITLE.equals(title) || stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("โหวตหาคนร้าย");
+    return VOTE_GUI_TITLE.equals(title) || stripped.contains("Voting") || stripped.contains("Bus Horn") || stripped.contains("Emergency Campfire") || stripped.contains("โหวตหาคนร้าย");
   }
 
   public void handlePlayerLeave(Player player) {
