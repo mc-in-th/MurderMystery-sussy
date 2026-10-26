@@ -22,6 +22,25 @@ Bossbar:
   # Interval in seconds between messages
   Interval: 10
 
+# Should we display a scoreboard with arena information?
+Scoreboard:
+  Display: true
+
+Tasks:
+  Per-Player: 5
+  Complete-Range: 3.0
+  Visual-Effects: true
+
+Voting:
+  Cooldown: 20
+  Max-Emergency-Meetings: 2
+  Discussion-Time: 15
+  Voting-Time: 30
+
+Vent:
+  Cooldown: 10
+
+
 
 # Should we hook into bungeecord? (If you wanna use arena per server option)
 # This option will let you access bungee.yml and its options.

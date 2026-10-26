@@ -18,24 +18,17 @@
 
 package plugily.projects.murdermystery.arena.states;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.states.PluginInGameState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
-import plugily.projects.murdermystery.api.events.game.MurderGameGoldSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
-import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.sabotage.SabotageManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
@@ -51,23 +44,62 @@ public class InGameState extends PluginInGameState {
     if(pluginArena == null) {
       return;
     }
+    pluginArena.clearPluginBossBars();
+
+    if(pluginArena.getCutsceneManager().isPlaying()) {
+      arena.setTimer(arena.getTimer() + 1);
+      return;
+    }
+
+    maintainSpectators(pluginArena);
+
+    if(pluginArena.getVotingManager().isVotingActive()) {
+      pluginArena.getVotingManager().tick();
+      arena.setTimer(arena.getTimer() + 1);
+      return;
+    }
+
+    pluginArena.updateCampfireHologram();
 
     // winner checks
-    if(pluginArena.getTimer() <= 0) {
-      getPlugin().getArenaManager().stopGame(false, pluginArena);
+    if(pluginArena.getTaskManager().areAllTasksCompleted()) {
+      pluginArena.getTaskManager().triggerTaskVictory();
+      return;
     }
-    if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer()) {
+    if(pluginArena.getTimer() <= 0) {
+      String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ผู้โดยสารเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+      String winSub = "<#F4F1DE>เอาชีวิตรอดจนหมดเวลาได้สำเร็จ";
+      for(Player p : pluginArena.getPlayers()) {
+        HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+      }
       getPlugin().getArenaManager().stopGame(false, pluginArena);
+      return;
+    }
+    if(pluginArena.getPlayersLeft().size() <= pluginArena.aliveMurderer()) {
+      if(pluginArena.aliveMurderer() > 0) {
+        String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+        String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
+        for(Player p : pluginArena.getPlayers()) {
+          HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
+        }
+      }
+      getPlugin().getArenaManager().stopGame(false, pluginArena);
+      return;
     }
 
     distributeMurdererSword(pluginArena);
-    //every 30 secs survive reward
-    givePlayerSurviveReward(pluginArena);
     addInnocentLocator(pluginArena);
     if(pluginArena.getPlayersLeft().size() == pluginArena.aliveMurderer() + 1) {
       addMurdererSpeed(pluginArena);
     }
-    spawnGold(pluginArena);
+  }
+
+  private void maintainSpectators(Arena pluginArena) {
+    for(Player player : pluginArena.getPlayers()) {
+      if(player != null && player.isOnline() && ArenaUtils.isSpectator(player, pluginArena)) {
+        ArenaUtils.applySpectatorState(player, pluginArena, false);
+      }
+    }
   }
 
   private void addMurdererSpeed(Arena pluginArena) {
@@ -85,7 +117,7 @@ public class InGameState extends PluginInGameState {
   private void distributeMurdererSword(Arena pluginArena) {
     int inGameLength = getPlugin().getConfig().getInt("Time-Manager.In-Game", 270);
     if(pluginArena.getTimer() <= (inGameLength - 10) && pluginArena.getTimer() > (inGameLength - 15)) {
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SWORD_SOON").asKey().integer(pluginArena.getTimer() - (inGameLength - 15)).arena(pluginArena).sendArena();
+      String swordSoonMsg = new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SWORD_SOON").asKey().integer(pluginArena.getTimer() - (inGameLength - 15)).arena(pluginArena).build(); for(Player p : pluginArena.getPlayers()) { HalloweenChat.send(p, swordSoonMsg); }
       for(Player p : pluginArena.getPlayers()) {
         XSound.UI_BUTTON_CLICK.play(p.getLocation(), 1, 1);
       }
@@ -99,30 +131,15 @@ public class InGameState extends PluginInGameState {
           if(murderer.isSpectator() || !p.isOnline())
             continue;
 
-          p.getInventory().setHeldItemSlot(0);
-          ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, pluginArena.getPlugin().getSwordSkinManager().getRandomSwordSkin(p));
-        }
-      }
-    }
-  }
-
-  private void spawnGold(Arena pluginArena) {
-    //don't spawn it every time
-    if(pluginArena.getSpawnGoldTimer() == pluginArena.getSpawnGoldTime()) {
-      spawnSomeGold(pluginArena);
-      pluginArena.setSpawnGoldTimer(0);
-    } else {
-      pluginArena.setSpawnGoldTimer(pluginArena.getSpawnGoldTimer() + 1);
-    }
-  }
-
-  private void givePlayerSurviveReward(Arena pluginArena) {
-    if(pluginArena.getTimer() % 30 == 0) {
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_TIME_LEFT").arena(pluginArena).sendArena();
-      for(Player p : pluginArena.getPlayersLeft()) {
-        IUser user = getPlugin().getUserManager().getUser(p);
-        if(Role.isRole(Role.INNOCENT, user, pluginArena)) {
-          ArenaUtils.addScore(user, ArenaUtils.ScoreAction.SURVIVE_TIME, 0);
+          ItemStack sword = pluginArena.getPlugin().getSwordSkinManager().getRandomSwordSkin(p);
+          if(pluginArena.getVentManager() != null && pluginArena.getVentManager().isInsideVent(p)) {
+            pluginArena.getVentManager().updateSavedItem(p, ItemPosition.MURDERER_SWORD.getMurdererItemPosition(), sword);
+            pluginArena.getVentManager().updateSavedItem(p, SabotageManager.SABOTAGE_REMOTE_SLOT, pluginArena.getSabotageManager().createSabotageRemoteItem());
+          } else {
+            p.getInventory().setHeldItemSlot(0);
+            ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, sword);
+            pluginArena.getSabotageManager().giveSabotageRemote(p);
+          }
         }
       }
     }
@@ -134,48 +151,5 @@ public class InGameState extends PluginInGameState {
         ArenaUtils.updateInnocentLocator(pluginArena);
       }
     }
-  }
-
-  private void spawnSomeGold(Arena arena) {
-    int spawnPointsSize = arena.getGoldSpawnPoints().size();
-
-    if(spawnPointsSize == 0) {
-      return;
-    }
-    //may users want to disable it and want much gold on their map xD
-    if(!getPlugin().getConfigPreferences().getOption("GOLD_LIMITER")) {
-      //do not exceed amount of gold per spawn
-      if(arena.getGoldSpawned().size() >= spawnPointsSize) {
-        return;
-      }
-    }
-    if(getPlugin().getConfigPreferences().getOption("GOLD_SPAWNER_MODE_ALL")) {
-      for(Location location : arena.getGoldSpawnPoints()) {
-        dropGold(arena, location);
-      }
-    } else {
-      Location loc = arena.getGoldSpawnPoints().get(getPlugin().getRandom().nextInt(spawnPointsSize));
-      dropGold(arena, loc);
-    }
-  }
-
-  private void dropGold(Arena arena, Location location) {
-    //spawn maximum 1 gold per spawner
-    if(!getPlugin().getConfigPreferences().getOption("GOLD_MULTIPLE")) {
-      for(Entity entity : location.getWorld().getNearbyEntities(location, 2, 2, 2)) {
-        if(entity instanceof Item && XMaterial.GOLD_INGOT.isSimilar(((Item) entity).getItemStack())) {
-          return;
-        }
-      }
-    }
-    MurderGameGoldSpawnEvent murderGameGoldSpawnEvent = new MurderGameGoldSpawnEvent(arena, location.clone());
-    Bukkit.getPluginManager().callEvent(murderGameGoldSpawnEvent);
-    if(murderGameGoldSpawnEvent.isCancelled()) {
-      return;
-    }
-
-    Location dropLocation = murderGameGoldSpawnEvent.getLocation();
-    arena.getGoldSpawned().add(dropLocation.getWorld().dropItem(dropLocation, new ItemStack(Material.GOLD_INGOT, 1)));
-    getPlugin().getPowerupRegistry().spawnPowerup(dropLocation, arena);
   }
 }

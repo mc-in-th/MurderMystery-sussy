@@ -56,6 +56,14 @@
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>maxhenkel</id>
+            <url>https://maven.maxhenkel.de/repository/public</url>
+        </repository>
+        <repository>
+            <id>fancyinnovations</id>
+            <url>https://repo.fancyinnovations.com/releases</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -63,6 +71,18 @@
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.21.4-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.maxhenkel.voicechat</groupId>
+            <artifactId>voicechat-api</artifactId>
+            <version>2.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.oliver</groupId>
+            <artifactId>FancyNpcs</artifactId>
+            <version>2.9.2</version>
             <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jetbrains/annotations -->
@@ -80,6 +100,12 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>net.raphimc</groupId>
+            <artifactId>NoteBlockLib</artifactId>
+            <version>3.3.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.golde</groupId>
             <artifactId>corpsereborn</artifactId>
             <version>2.14.0</version>
@@ -94,6 +120,16 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>sounds/**</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>sounds/**</include>
+                </includes>
             </resource>
         </resources>
         <plugins>
@@ -159,6 +195,10 @@
                                 <relocation>
                                     <pattern>plugily.projects.minigamesbox</pattern>
                                     <shadedPattern>plugily.projects.murdermystery.minigamesbox</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.raphimc.noteblocklib</pattern>
+                                    <shadedPattern>plugily.projects.murdermystery.noteblocklib</shadedPattern>
                                 </relocation>
                             </relocations>
                             <createDependencyReducedPom>false</createDependencyReducedPom>

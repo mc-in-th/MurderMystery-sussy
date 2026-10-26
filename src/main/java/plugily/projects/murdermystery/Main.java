@@ -18,10 +18,14 @@
 
 package plugily.projects.murdermystery;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.TestOnly;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.setup.SetupInventory;
 import plugily.projects.minigamesbox.classic.handlers.setup.categories.PluginSetupCategoryManager;
+import plugily.projects.minigamesbox.classic.utils.services.ServiceRegistry;
 import plugily.projects.minigamesbox.classic.utils.services.metrics.Metrics;
 import plugily.projects.murdermystery.arena.*;
 import plugily.projects.murdermystery.arena.special.SpecialBlockEvents;
@@ -38,6 +42,8 @@ import plugily.projects.murdermystery.handlers.setup.SetupCategoryManager;
 import plugily.projects.murdermystery.handlers.skins.sword.SwordSkinManager;
 import plugily.projects.murdermystery.handlers.trails.BowTrailsHandler;
 import plugily.projects.murdermystery.handlers.trails.TrailsManager;
+import plugily.projects.murdermystery.handlers.voicechat.VoiceChatManager;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 
 /**
  * Created by Tigerpanzer_02 on 13.03.2022
@@ -51,6 +57,7 @@ public class Main extends PluginMain {
   private SwordSkinManager swordSkinManager;
   private HookManager hookManager;
   private CorpseHandler corpseHandler;
+  private VoiceChatManager voiceChatManager;
 
   @TestOnly
   public Main() {
@@ -60,12 +67,17 @@ public class Main extends PluginMain {
   @Override
   public void onEnable() {
     long start = System.currentTimeMillis();
+    disableExternalServiceRegistry();
     MessageInitializer messageInitializer = new MessageInitializer(this);
     super.onEnable();
+    if(!isEnabled()) {
+      return;
+    }
     getDebugger().debug("[System] [Plugin] Initialization start");
     arenaRegistry = new ArenaRegistry(this);
     new PlaceholderInitializer(this);
     messageInitializer.registerMessages();
+    HalloweenChat.applyToLanguageConfig(this);
     new AdditionalValueInitializer(this);
     initializePluginClasses();
 
@@ -79,6 +91,72 @@ public class Main extends PluginMain {
       .debug(
         "[System] [Plugin] Initialization finished took {0}ms",
         System.currentTimeMillis() - start);
+  }
+
+  private void disableExternalServiceRegistry() {
+    try {
+      File corruptLocaleData = new File(getDataFolder(), "locales/locale_data.yml");
+      if(corruptLocaleData.exists()) {
+        corruptLocaleData.delete();
+      }
+      File specialItemsFile = new File(getDataFolder(), "special_items.yml");
+      if(specialItemsFile.exists()) {
+        YamlConfiguration specialItemsConfig = YamlConfiguration.loadConfiguration(specialItemsFile);
+        boolean modified = false;
+        if(specialItemsConfig.contains("Role-Pass")) {
+          specialItemsConfig.set("Role-Pass", null);
+          modified = true;
+        }
+        String lobbyLeaveName = specialItemsConfig.getString("Lobby-Leave.displayname", "");
+        if(lobbyLeaveName.contains("ออกจากห้องเกม")) {
+          specialItemsConfig.set("Lobby-Leave.displayname", "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)");
+          specialItemsConfig.set("Lobby-Leave.lore", java.util.Collections.singletonList("&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"));
+          modified = true;
+        }
+        String spectatorLeaveName = specialItemsConfig.getString("Spectator-Leave.displayname", "");
+        if(spectatorLeaveName.contains("ออกจากห้องเกม")) {
+          specialItemsConfig.set("Spectator-Leave.displayname", "&#FF3B47&lลงจากรถบัส &#5A4E7C(&#B8B0C8คลิกขวา&#5A4E7C)");
+          specialItemsConfig.set("Spectator-Leave.lore", java.util.Collections.singletonList("&#B8B0C8คลิกขวาเพื่อลงจากรถบัสกลับไปยังล็อบบี้"));
+          modified = true;
+        }
+        if(modified) {
+          specialItemsConfig.save(specialItemsFile);
+        }
+      }
+      Field registeredServiceField = ServiceRegistry.class.getDeclaredField("registeredService");
+      registeredServiceField.setAccessible(true);
+      registeredServiceField.set(null, this);
+
+      Field serviceEnabledField = ServiceRegistry.class.getDeclaredField("serviceEnabled");
+      serviceEnabledField.setAccessible(true);
+      serviceEnabledField.setBoolean(null, false);
+    } catch(Exception ignored) {
+    }
+  }
+
+  @Override
+  public void onDisable() {
+    plugily.projects.murdermystery.arena.cutscene.CutsceneManager.shutdownAll(this);
+    if(arenaRegistry != null) {
+      for(Arena arena : arenaRegistry.getPluginArenas()) {
+        if(arena.getVentManager() != null) {
+          arena.getVentManager().cleanup();
+        }
+        arena.getCutsceneManager().cleanup();
+        arena.getVotingManager().cleanup();
+        arena.getSabotageManager().cleanup();
+        arena.getTaskManager().cleanup();
+        arena.clearTextDisplays();
+        arena.clearGlowEntries();
+      }
+    }
+    if(corpseHandler != null) {
+      corpseHandler.shutdown();
+    }
+    if(voiceChatManager != null) {
+      voiceChatManager.unregister();
+    }
+    super.onDisable();
   }
 
   public void initializePluginClasses() {
@@ -104,6 +182,7 @@ public class Main extends PluginMain {
     trailsManager = new TrailsManager(this);
     hookManager = new HookManager(this);
     corpseHandler = new CorpseHandler(this);
+    voiceChatManager = new VoiceChatManager(this);
     swordSkinManager = new SwordSkinManager(this);
     new PluginEvents(this);
     addPluginMetrics();
@@ -155,6 +234,10 @@ public class Main extends PluginMain {
 
   public CorpseHandler getCorpseHandler() {
     return corpseHandler;
+  }
+
+  public VoiceChatManager getVoiceChatManager() {
+    return voiceChatManager;
   }
 
   @Override

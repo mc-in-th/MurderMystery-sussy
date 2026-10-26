@@ -32,14 +32,5 @@ public class RestartingState extends PluginRestartingState {
   @Override
   public void handleCall(PluginArena arena) {
     super.handleCall(arena);
-    Arena pluginArena = (Arena) getPlugin().getArenaRegistry().getArena(arena.getId());
-    if(pluginArena == null) {
-      return;
-    }
-    if(arena.getTimer() <= 0) {
-      if(pluginArena.isGoldVisuals()) {
-        pluginArena.startGoldVisuals();
-      }
-    }
   }
 }

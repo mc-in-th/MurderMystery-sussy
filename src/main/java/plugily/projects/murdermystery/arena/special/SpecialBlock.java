@@ -19,6 +19,7 @@
 package plugily.projects.murdermystery.arena.special;
 
 import org.bukkit.Location;
+import org.bukkit.entity.TextDisplay;
 
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 
@@ -32,6 +33,7 @@ public class SpecialBlock {
   private final Location location;
   private final SpecialBlockType specialBlockType;
   private ArmorStandHologram armorStandHologram;
+  private TextDisplay textDisplay;
 
   public SpecialBlock(Location location, SpecialBlockType specialBlockType) {
     this.location = location;
@@ -52,6 +54,17 @@ public class SpecialBlock {
 
   public void setArmorStandHologram(ArmorStandHologram armorStandHologram) {
     this.armorStandHologram = armorStandHologram;
+  }
+
+  public TextDisplay getTextDisplay() {
+    return textDisplay;
+  }
+
+  public void setTextDisplay(TextDisplay textDisplay) {
+    if(this.textDisplay != null && this.textDisplay.isValid()) {
+      this.textDisplay.remove();
+    }
+    this.textDisplay = textDisplay;
   }
 
   public enum SpecialBlockType {

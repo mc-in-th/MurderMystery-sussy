@@ -29,7 +29,10 @@ import plugily.projects.minigamesbox.classic.arena.PluginArenaRegistry;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.Main;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
+import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
+import plugily.projects.murdermystery.arena.task.TaskType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +49,15 @@ public class ArenaRegistry extends PluginArenaRegistry {
     this.plugin = plugin;
   }
 
+
+  @Override
+  public void registerArenas() {
+    for(Arena arena : getPluginArenas()) {
+      arena.clearTextDisplays();
+    }
+    plugily.projects.murdermystery.utils.HalloweenChat.applyToLanguageConfig(plugin);
+    super.registerArenas();
+  }
 
   @Override
   public PluginArena getNewArena(String id) {
@@ -74,18 +86,90 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
-    ((Arena) arena).setSpawnGoldTime(section.getInt(id + ".spawngoldtime", 5));
     ((Arena) arena).setHideChances(section.getBoolean(id + ".hidechances"));
     arena.setArenaOption("MURDERER_DIVIDER",section.getInt(id + ".playerpermurderer", 5));
-    arena.setArenaOption("DETECTIVE_DIVIDER",section.getInt(id + ".playerperdetective", 7));
-    ((Arena) arena).setGoldVisuals(section.getBoolean(id + ".goldvisuals"));
     ((Arena) arena).setPlayerSpawnPoints(playerSpawnPoints);
-
-    List<Location> goldSpawnPoints = new ArrayList<>();
-    for(String loc : section.getStringList(id + ".goldspawnpoints")) {
-      goldSpawnPoints.add(LocationSerializer.getLocation(loc));
+    if(!playerSpawnPoints.isEmpty()) {
+      arena.setStartLocation(playerSpawnPoints.get(0));
     }
-    ((Arena) arena).setGoldSpawnPoints(goldSpawnPoints);
+
+    ((Arena) arena).clearSpecificTaskLocations(null);
+    ConfigurationSection tasksSec = section.getConfigurationSection(id + ".tasks");
+    if(tasksSec != null) {
+      for(String key : tasksSec.getKeys(false)) {
+        TaskType type = TaskType.fromInput(key);
+        if(type != null) {
+          for(String locStr : tasksSec.getStringList(key)) {
+            Location l = LocationSerializer.getLocation(locStr);
+            if(l != null && l.getWorld() != null) {
+              ((Arena) arena).removeTaskLocationAtBlock(l);
+              ((Arena) arena).addSpecificTaskLocation(type, l);
+            }
+          }
+        }
+      }
+    }
+
+    List<Location> specificLoaded = ((Arena) arena).getAllTaskLocations();
+    List<Location> taskLocations = new ArrayList<>();
+    for(String loc : section.getStringList(id + ".tasklocations")) {
+      Location l = LocationSerializer.getLocation(loc);
+      if(l != null && l.getWorld() != null) {
+        boolean alreadySpecific = specificLoaded.stream().anyMatch(s ->
+          s.getWorld() != null && s.getWorld().equals(l.getWorld())
+            && s.getBlockX() == l.getBlockX()
+            && s.getBlockY() == l.getBlockY()
+            && s.getBlockZ() == l.getBlockZ());
+        if(!alreadySpecific) {
+          taskLocations.add(l);
+        }
+      }
+    }
+    ((Arena) arena).setTaskLocations(taskLocations);
+
+    ConfigurationSection sabotageSec = section.getConfigurationSection(id + ".sabotages");
+    if(sabotageSec != null) {
+      for(String key : sabotageSec.getKeys(false)) {
+        SabotageType type = SabotageType.fromInput(key);
+        if(type != null) {
+          String locStr = sabotageSec.getString(key);
+          if(locStr == null || locStr.isEmpty()) {
+            List<String> legacyList = sabotageSec.getStringList(key);
+            if(!legacyList.isEmpty()) {
+              locStr = legacyList.get(0);
+            }
+          }
+          if(locStr != null && !locStr.isEmpty()) {
+            Location l = LocationSerializer.getLocation(locStr);
+            if(l != null) {
+              ((Arena) arena).setSabotageLocation(type, l);
+            }
+          }
+        }
+      }
+    }
+
+    String busHornStr = section.getString(id + ".bushorn");
+    if(busHornStr == null || busHornStr.isEmpty()) {
+      busHornStr = section.getString(id + ".campfire");
+    }
+    if(busHornStr != null && !busHornStr.isEmpty()) {
+      Location busHornLoc = LocationSerializer.getLocation(busHornStr);
+      if(busHornLoc != null) {
+        ((Arena) arena).setCampfireLocation(busHornLoc);
+      }
+    }
+
+    int customTasksPerPlayer = section.getInt(id + ".tasksperplayer", -1);
+    if(customTasksPerPlayer > 0) {
+      ((Arena) arena).setTasksPerPlayer(customTasksPerPlayer);
+    }
+    ((Arena) arena).setVisualTasksEnabled(
+      section.getBoolean(id + ".visualtasks", plugin.getConfig().getBoolean("Tasks.Visual-Effects", true))
+    );
+    ((Arena) arena).getCutsceneManager().setFrames(
+      CutsceneManager.deserializeFrames(section.getStringList(id + ".cutscene"))
+    );
 
     List<SpecialBlock> specialBlocks = new ArrayList<>();
     for(String loc : section.getStringList(id + ".mystery-cauldrons")) {
@@ -93,6 +177,12 @@ public class ArenaRegistry extends PluginArenaRegistry {
     }
     for(String loc : section.getStringList(id + ".confessionals")) {
       specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.PRAISE_DEVELOPER));
+    }
+    for(String loc : section.getStringList(id + ".sewers")) {
+      specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION));
+    }
+    for(String loc : section.getStringList(id + ".rapid-teleportation")) {
+      specialBlocks.add(new SpecialBlock(LocationSerializer.getLocation(loc), SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION));
     }
 
     specialBlocks.forEach(((Arena) arena)::loadSpecialBlock);

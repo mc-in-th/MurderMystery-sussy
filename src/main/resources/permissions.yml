@@ -40,11 +40,11 @@ Exp-Boost:
 
 # Basic permissions for game, permissions explained here: https://wiki.plugily.xyz/
 Basic:
-  Full-Games: "plugilyprojects.fullgames"
-  # <arena> represents arena name (NOT MAP NAME!), for example: 'plugilyprojects.join.ARENAnice'
-  # use 'plugilyprojects.join.*' to enable access to all arenas
-  Join: "plugilyprojects.join.<arena>"
-  Forcestart: "plugilyprojects.admin.forcestart"
+  Full-Games: "murdermystery.fullgames"
+  # <arena> represents arena name (NOT MAP NAME!), for example: 'murdermystery.join.ARENAnice'
+  # use 'murdermystery.join.*' to enable access to all arenas
+  Join: "murdermystery.join.<arena>"
+  Forcestart: "murdermystery.admin.forcestart"
 
 # Don't edit it. But who's stopping you? It's your server!
 # Really, don't edit ;p

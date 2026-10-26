@@ -1,18 +1,18 @@
 Last-Words:
   Hologram:
-    Title: "%player%'s last words:"
+    Title: "&#5A4E7C[&#FF3B47คำสั่งเสียของ &#FFB703%player%&#5A4E7C]"
     Content:
       'default':
-        Message: "&fPlease respawn :("
+        Message: "&#B8B0C8ฝากซ่อมรถบัสหนีออกไปจากป่านี้ที..."
       'meme':
-        Message: "&fDespacito 2 is confirmed by God"
+        Message: "&#F4F1DEฉันแค่เดินมาเช็คลมยางเองนะ..."
         Permission: "murdermystery.lastwords.meme"
       'rage':
-        Message: "&fWHY YOU KILLED ME?!!?"
+        Message: "&#FF3B47ระวังข้างหลังไว้ คนร้ายอยู่ในกลุ่มเรา!"
         Permission: "murdermystery.lastwords.rage"
       'pro':
-        Message: "&fIt was lagging..."
+        Message: "&#FFB703มืดขนาดนี้มองไม่เห็นตัวคนร้ายเลย..."
         Permission: "murdermystery.lastwords.pro"
       'hacker':
-        Message: "Turn off your hacks..."
+        Message: "&#C77DFFเสียงฝีเท้าในพุ่มไม้นั่น... หนีไป!"
         Permission: "murdermystery.lastwords.hacker"

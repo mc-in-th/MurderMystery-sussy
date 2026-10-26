@@ -2,3 +2,5 @@
 /generated/
 /minecraft/
 /target/
+/build/
+.gradle/

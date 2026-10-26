@@ -21,9 +21,6 @@ public class SwitchCategory extends PluginSwitchCategory {
   @Override
   public void addItems(NormalFastInv gui) {
     super.addItems(gui);
-    BooleanItem goldVisuals = new BooleanItem(getSetupInventory(), new ItemBuilder(XMaterial.REDSTONE.parseMaterial()), "Gold Visuals", "Enables gold visuals to spawn\nsome particle effects above gold locations", "goldvisuals");
-    gui.setItem((getInventoryLine() * 9) + 1, goldVisuals);
-    getItemList().add(goldVisuals);
   }
 
 }

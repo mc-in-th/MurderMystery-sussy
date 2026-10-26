@@ -48,14 +48,17 @@ public class SwordSkinManager {
   public void registerSwordSkins(Main plugin) {
     FileConfiguration config = ConfigUtils.getConfig(plugin, "skins");
     ConfigurationSection section = config.getConfigurationSection("Skins.Sword");
+    if(section == null) {
+      return;
+    }
     String path = "Skins.Sword.";
-    for (String id : section.getKeys(false)) {
+    for(String id : section.getKeys(false)) {
       addSwordSkin(
-          new SwordSkin(
-              XMaterial.matchXMaterial(config.getString(path + id + ".Material", "BEDROCK"))
-                  .orElse(XMaterial.BEDROCK)
-                  .parseItem(),
-              config.getString(path + id + ".Permission", "")));
+        new SwordSkin(
+          XMaterial.matchXMaterial(config.getString(path + id + ".Material", "BEDROCK"))
+            .orElse(XMaterial.BEDROCK)
+            .parseItem(),
+          config.getString(path + id + ".Permission", "")));
     }
   }
 
@@ -68,30 +71,29 @@ public class SwordSkinManager {
   }
 
   public ItemStack getRandomSwordSkin(Player player) {
-    // check perms
     List<SwordSkin> perms =
-        registeredSwordSkins.stream()
-            .filter(swordSkin -> player.hasPermission(swordSkin.getPermission()))
-            .collect(Collectors.toList());
-    if (!perms.isEmpty()) {
+      registeredSwordSkins.stream()
+        .filter(swordSkin -> player.hasPermission(swordSkin.getPermission()))
+        .collect(Collectors.toList());
+    if(!perms.isEmpty()) {
       ItemStack itemStack =
-          perms.get(ThreadLocalRandom.current().nextInt(perms.size())).getItemStack();
+        perms.get(ThreadLocalRandom.current().nextInt(perms.size())).getItemStack();
       murdererSwords.put(player, itemStack);
       return itemStack;
     }
-    // check default
     List<SwordSkin> noPerms =
-        registeredSwordSkins.stream()
-            .filter(swordSkin -> !swordSkin.hasPermission())
-            .collect(Collectors.toList());
-    if (!noPerms.isEmpty()) {
+      registeredSwordSkins.stream()
+        .filter(swordSkin -> !swordSkin.hasPermission())
+        .collect(Collectors.toList());
+    if(!noPerms.isEmpty()) {
       ItemStack itemStack =
-          noPerms.get(ThreadLocalRandom.current().nextInt(noPerms.size())).getItemStack();
+        noPerms.get(ThreadLocalRandom.current().nextInt(noPerms.size())).getItemStack();
       murdererSwords.put(player, itemStack);
       return itemStack;
     }
-    // fallback
-    ItemStack itemStack = registeredSwordSkins.get(0).getItemStack();
+    ItemStack itemStack = registeredSwordSkins.isEmpty()
+      ? XMaterial.IRON_SWORD.parseItem()
+      : registeredSwordSkins.get(0).getItemStack();
     murdererSwords.put(player, itemStack);
     return itemStack;
   }

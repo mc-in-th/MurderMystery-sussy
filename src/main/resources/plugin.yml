@@ -1,8 +1,10 @@
-name: MurderMystery
+name: MurderMystery-MCTH
 main: plugily.projects.murdermystery.Main
-authors: [ PlugilyProjects, Tigerpanzer_02 ]
+authors: [ PlugilyProjects, Tigerpanzer_02, mrrpmeowfurry.dev ]
+description: meow
+website: https://github.com/mc-in-th/MurderMystery-sussy
 version: ${project.version}
-softdepend: [CorpseReborn, PlaceholderAPI, Parties, Spigot-Party-API-PAF, PartyAndFriends, ViaVersion, ProtocolSupport]
+softdepend: [FancyNpcs, CorpseReborn, voicechat, PlaceholderAPI, Parties, Spigot-Party-API-PAF, PartyAndFriends, ViaVersion, ProtocolSupport]
 api-version: 1.13
 
 commands:
@@ -32,4 +34,9 @@ permissions:
       murdermystery.admin.sign.create: true
       murdermystery.admin.sign.break: true
       murdermystery.admin.reload: true
+      murdermystery.admin.addtask: true
+      murdermystery.admin.cleartasks: true
+      murdermystery.admin.addvent: true
+      murdermystery.admin.clearvents: true
+      murdermystery.admin.removeblock: true
       murdermystery.command.override: true

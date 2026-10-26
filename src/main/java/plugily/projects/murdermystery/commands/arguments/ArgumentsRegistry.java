@@ -20,9 +20,8 @@ package plugily.projects.murdermystery.commands.arguments;
 
 import plugily.projects.minigamesbox.classic.commands.arguments.PluginArgumentsRegistry;
 import plugily.projects.murdermystery.Main;
-import plugily.projects.murdermystery.commands.arguments.admin.RolePassArgument;
 import plugily.projects.murdermystery.commands.arguments.admin.arena.SpecialBlockRemoverArgument;
-import plugily.projects.murdermystery.commands.arguments.game.RoleSelectorArgument;
+import plugily.projects.murdermystery.commands.arguments.admin.arena.TaskAndVentArgument;
 
 /**
  * @author Plajer
@@ -33,12 +32,9 @@ public class ArgumentsRegistry extends PluginArgumentsRegistry {
 
   public ArgumentsRegistry(Main plugin) {
     super(plugin);
-    //register basic arugments
-    new RoleSelectorArgument(this);
-
     //register admin related arguments
     new SpecialBlockRemoverArgument(this);
-    new RolePassArgument(this);
+    new TaskAndVentArgument(this);
   }
 
 }

@@ -51,7 +51,7 @@ public class BowTrailsHandler implements Listener {
 
     Entity projectile = event.getProjectile();
 
-    if(projectile.isDead() || projectile.isOnGround()) {
+    if(!projectile.isValid() || projectile.isDead() || projectile.isOnGround()) {
       return;
     }
 
@@ -66,14 +66,17 @@ public class BowTrailsHandler implements Listener {
     new BukkitRunnable() {
       @Override
       public void run() {
-        if(projectile.isDead() || projectile.isOnGround()) {
+        if(!projectile.isValid() || projectile.isDead() || projectile.isOnGround()
+          || !player.isOnline() || !plugin.getArenaRegistry().isInArena(player)) {
           plugin.getDebugger().debug("Stopped spawning particle with perm {0} for player {1}", trail.getPermission(), player.getName());
           cancel();
+          return;
         }
         try {
           VersionUtils.sendParticles(trail.getName(), player, projectile.getLocation(), 3);
-        }catch(Exception ignored) {}
+        } catch(Exception ignored) {
+        }
       }
-    }.runTaskTimer(plugin, 0, 0);
+    }.runTaskTimer(plugin, 1L, 1L);
   }
 }

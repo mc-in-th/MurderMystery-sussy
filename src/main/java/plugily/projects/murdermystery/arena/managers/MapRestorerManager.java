@@ -18,7 +18,6 @@
 
 package plugily.projects.murdermystery.arena.managers;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.golde.bukkit.corpsereborn.CorpseAPI.CorpseAPI;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginMapRestorerManager;
@@ -54,14 +53,28 @@ public class MapRestorerManager extends PluginMapRestorerManager {
     arena.getMurdererList().clear();
     arena.getDetectiveList().clear();
     arena.getDeaths().clear();
+    arena.getSpectators().clear();
     arena.setDetectiveDead(false);
+    arena.setSabotageWin(false);
+    arena.setTaskWin(false);
+    arena.getTaskManager().cleanup();
+    arena.getVotingManager().cleanup();
+    arena.getVentManager().cleanup();
+    arena.getMinimap().cleanup();
+    arena.getSabotageManager().cleanup();
+    arena.clearTextDisplays();
+    arena.clearGlowEntries();
+    arena.spawnCampfireHologram();
     clearCorpses();
     clearGold();
   }
 
   public void removeBowHolo() {
-    if(arena.getBowHologram() != null && !arena.getBowHologram().isDeleted()) {
-      arena.getBowHologram().delete();
+    if(arena.getBowHologram() != null) {
+      arena.getPlugin().getHologramManager().getHolograms().remove(arena.getBowHologram());
+      if(!arena.getBowHologram().isDeleted()) {
+        arena.getBowHologram().delete();
+      }
     }
     arena.setBowHologram(null);
   }
@@ -72,12 +85,22 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   }
 
   public void clearCorpses() {
+    if(arena.getPlugin().getCorpseHandler() != null) {
+      arena.getPlugin().getCorpseHandler().clearArenaCorpses(arena);
+    }
     if(!arena.getPlugin().getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
       for(Stand stand : arena.getStands()) {
-        if(!stand.getHologram().isDeleted()) {
-          stand.getHologram().delete();
+        if(stand == null) {
+          continue;
+        }
+        if(stand.getHologram() != null) {
+          arena.getPlugin().getHologramManager().getHolograms().remove(stand.getHologram());
+          if(!stand.getHologram().isDeleted()) {
+            stand.getHologram().delete();
+          }
         }
         if(stand.getStand() != null) {
+          arena.getPlugin().getHologramManager().getArmorStands().remove(stand.getStand());
           stand.getStand().remove();
         }
       }
@@ -85,8 +108,14 @@ public class MapRestorerManager extends PluginMapRestorerManager {
       return;
     }
     for(Corpse corpse : arena.getCorpses()) {
-      if(!corpse.getHologram().isDeleted()) {
-        corpse.getHologram().delete();
+      if(corpse == null) {
+        continue;
+      }
+      if(corpse.getHologram() != null) {
+        arena.getPlugin().getHologramManager().getHolograms().remove(corpse.getHologram());
+        if(!corpse.getHologram().isDeleted()) {
+          corpse.getHologram().delete();
+        }
       }
       if(corpse.getCorpseData() != null) {
         corpse.getCorpseData().destroyCorpseFromEveryone();

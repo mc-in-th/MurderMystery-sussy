@@ -5,7 +5,6 @@ import plugily.projects.minigamesbox.classic.api.StatisticType;
 import plugily.projects.minigamesbox.classic.api.StatsStorage;
 import plugily.projects.minigamesbox.classic.arena.options.ArenaOption;
 import plugily.projects.minigamesbox.classic.arena.options.ArenaOptionManager;
-import plugily.projects.minigamesbox.classic.handlers.items.SpecialItemManager;
 import plugily.projects.minigamesbox.classic.handlers.permissions.PermissionCategory;
 import plugily.projects.minigamesbox.classic.handlers.permissions.PermissionsManager;
 import plugily.projects.minigamesbox.classic.handlers.reward.RewardType;
@@ -28,7 +27,6 @@ public class AdditionalValueInitializer {
     registerStatistics();
     registerPermission();
     registerRewards();
-    registerSpecialItems();
     registerArenaOptions();
   }
 
@@ -46,13 +44,9 @@ public class AdditionalValueInitializer {
   private void registerStatistics() {
     getStatsStorage().registerStatistic("KILLS", new StatisticType("kills", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("DEATHS", new StatisticType("deaths", true, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("HIGHEST_SCORE", new StatisticType("highest_score", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("CONTRIBUTION_DETECTIVE", new StatisticType("contribution_detective", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("CONTRIBUTION_MURDERER", new StatisticType("contribution_murderer", true, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("PASS_MURDERER", new StatisticType("pass_murderer", true, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("PASS_DETECTIVE", new StatisticType("pass_detective", true, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_PRAISES", new StatisticType("local_praises", false, "int(11) NOT NULL DEFAULT '0'"));
-    getStatsStorage().registerStatistic("LOCAL_SCORE", new StatisticType("local_score", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_PRAY", new StatisticType("local_pray", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_GOLD", new StatisticType("local_gold", false, "int(11) NOT NULL DEFAULT '0'"));
     getStatsStorage().registerStatistic("LOCAL_KILLS", new StatisticType("local_kills", false, "int(11) NOT NULL DEFAULT '0'"));
@@ -74,10 +68,6 @@ public class AdditionalValueInitializer {
     getRewardsHandler().registerRewardType("GOLD_PICKUP", new RewardType("gold-pickup"));
   }
 
-  private void registerSpecialItems() {
-    getSpecialItemManager().registerSpecialItem("ROLE_PASS", "Role-Pass");
-  }
-
   private void registerArenaOptions() {
     getArenaOptionManager().registerArenaOption("DETECTIVE_DIVIDER", new ArenaOption("playerperdetective", 1));
     getArenaOptionManager().registerArenaOption("MURDERER_DIVIDER", new ArenaOption("playerpermurderer", 1));
@@ -97,10 +87,6 @@ public class AdditionalValueInitializer {
 
   private RewardsFactory getRewardsHandler() {
     return plugin.getRewardsHandler();
-  }
-
-  private SpecialItemManager getSpecialItemManager() {
-    return plugin.getSpecialItemManager();
   }
 
   private ArenaOptionManager getArenaOptionManager() {

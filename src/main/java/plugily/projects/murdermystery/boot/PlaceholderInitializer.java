@@ -1,4 +1,3 @@
-
 package plugily.projects.murdermystery.boot;
 
 import org.bukkit.ChatColor;
@@ -14,6 +13,7 @@ import plugily.projects.minigamesbox.number.NumberUtils;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaRegistry;
+import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
 
 /**
@@ -71,11 +71,11 @@ public class PlaceholderInitializer {
             murders.append(" (").append(localKills).append("), ");
           }
         }
-        if(pluginArena.getMurdererList().size() > 1) {
+        if(pluginArena.getMurdererList().size() > 1 && murders.length() >= 2) {
           murders.deleteCharAt(murders.length() - 2);
         }
 
-        return (pluginArena.aliveMurderer() == 1 ? "" : ChatColor.STRIKETHROUGH)
+        return (pluginArena.aliveMurderer() > 0 ? "" : ChatColor.STRIKETHROUGH)
             + murders.toString();
       }
     });
@@ -118,7 +118,8 @@ public class PlaceholderInitializer {
         }
 
         IUser user = getUserManager().getUser(player);
-        return NumberUtils.round(((double) pluginArena.getContributorValue(Role.MURDERER, user) / (double) pluginArena.getTotalRoleChances(Role.MURDERER)) * 100.0, 0) + "%";
+        int total = Math.max(1, pluginArena.getTotalRoleChances(Role.MURDERER));
+        return NumberUtils.round(((double) pluginArena.getContributorValue(Role.MURDERER, user) / (double) total) * 100.0, 0) + "%";
       }
     });
 
@@ -131,7 +132,8 @@ public class PlaceholderInitializer {
         }
 
         IUser user = getUserManager().getUser(player);
-        return NumberUtils.round(((double) pluginArena.getContributorValue(Role.DETECTIVE, user) / (double) pluginArena.getTotalRoleChances(Role.DETECTIVE)) * 100.0, 0) + "%";
+        int total = Math.max(1, pluginArena.getTotalRoleChances(Role.DETECTIVE));
+        return NumberUtils.round(((double) pluginArena.getContributorValue(Role.DETECTIVE, user) / (double) total) * 100.0, 0) + "%";
       }
     });
 
@@ -181,12 +183,10 @@ public class PlaceholderInitializer {
         }
         IUser user = getUserManager().getUser(player);
         String role;
-        if(pluginArena.isDeathPlayer(player)) {
+        if(ArenaUtils.isSpectator(player, pluginArena)) {
           role = new MessageBuilder("SCOREBOARD_ROLES_DEAD").asKey().build();
         } else if(Role.isRole(Role.MURDERER, user, arena)) {
           role = new MessageBuilder("SCOREBOARD_ROLES_MURDERER").asKey().build();
-        } else if(Role.isRole(Role.ANY_DETECTIVE, user, arena)) {
-          role = new MessageBuilder("SCOREBOARD_ROLES_DETECTIVE").asKey().build();
         } else {
           role = new MessageBuilder("SCOREBOARD_ROLES_INNOCENT").asKey().build();
         }
@@ -208,11 +208,11 @@ public class PlaceholderInitializer {
         }
         String summaryEnding;
 
-        if(pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())
-            && pluginArena.getMurdererList().contains(player)) {
+        boolean murderWon = pluginArena.isMurdererVictory();
+        boolean isMurderer = pluginArena.getMurdererList().contains(player);
+        if(murderWon && isMurderer) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_WIN").asKey().arena(pluginArena).build();
-        } else if(!pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())
-            && !pluginArena.getMurdererList().contains(player)) {
+        } else if(!murderWon && !isMurderer) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_WIN").asKey().arena(pluginArena).build();
         } else {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_LOSE").asKey().arena(pluginArena).build();
@@ -239,8 +239,12 @@ public class PlaceholderInitializer {
         }
         String summaryEnding;
 
-        if(pluginArena.getMurdererList().containsAll(pluginArena.getPlayersLeft())) {
+        if(pluginArena.isSabotageWin()) {
+          summaryEnding = "<#FF3B47>เครื่องยนต์รถบัสระเบิด ฆาตกรเป็นฝ่ายชนะ";
+        } else if(pluginArena.isMurdererVictory()) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL").asKey().arena(pluginArena).build();
+        } else if(pluginArena.isTaskWin()) {
+          summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().arena(pluginArena).build();
         } else {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().arena(pluginArena).build();
         }

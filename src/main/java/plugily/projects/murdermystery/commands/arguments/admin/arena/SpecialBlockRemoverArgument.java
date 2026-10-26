@@ -18,19 +18,19 @@
 
 package plugily.projects.murdermystery.commands.arguments.admin.arena;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.classic.commands.arguments.data.CommandArgument;
 import plugily.projects.minigamesbox.classic.commands.arguments.data.LabelData;
 import plugily.projects.minigamesbox.classic.commands.arguments.data.LabeledCommandArgument;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
+import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.commands.arguments.ArgumentsRegistry;
@@ -56,59 +56,61 @@ public class SpecialBlockRemoverArgument {
           "&7Removes the special block you are looking at \n&6Permission: &7murdermystery.admin.removeblock")) {
         @Override
         public void execute(CommandSender sender, String[] args) {
-          // no need for check as argument is only for players
           Player player = (Player) sender;
           Block targetBlock = player.getTargetBlock(null, 7);
-          if (targetBlock.getType() == Material.CAULDRON
-            || targetBlock.getType() == XMaterial.ENCHANTING_TABLE.parseMaterial()) {
-            for (IPluginArena arena : registry.getPlugin().getArenaRegistry().getArenas()) {
+          if(targetBlock == null || targetBlock.getType() == Material.AIR) {
+            new MessageBuilder("&cPlease target a special block to continue!").player(player).sendPlayer();
+            return;
+          }
 
-              Arena pluginArena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arena.getId());
-
-              // do not check arenas that could not be the case
-              if (pluginArena.getSpecialBlocks().isEmpty()) {
+          for(Arena pluginArena : ((Main) registry.getPlugin()).getArenaRegistry().getPluginArenas()) {
+            if(pluginArena == null || pluginArena.getSpecialBlocks().isEmpty()) {
+              continue;
+            }
+            for(SpecialBlock specialBlock : new ArrayList<>(pluginArena.getSpecialBlocks())) {
+              Location sbLoc = specialBlock.getLocation();
+              if(sbLoc == null || sbLoc.getWorld() == null || !sbLoc.getWorld().equals(player.getWorld())) {
                 continue;
               }
-              if (pluginArena.getPlayerSpawnPoints().get(0).getWorld() != player.getWorld()) {
-                continue;
-              }
-              // get all special blocks
-              for (SpecialBlock specialBlock : new ArrayList<>(pluginArena.getSpecialBlocks())) {
-                // check if targetBlock is specialblock
-                if (specialBlock.getLocation().getBlock().equals(targetBlock)) {
-                  // get special blocks from config
-                  FileConfiguration config =
-                    ConfigUtils.getConfig(registry.getPlugin(), "arenas");
-                  // remove special block from arena
-                  pluginArena.getSpecialBlocks().remove(specialBlock);
-                  // remove hologram
-                  if (specialBlock.getArmorStandHologram() != null) {
-                    specialBlock.getArmorStandHologram().delete();
-                  }
-                  // remove special block from arena file
-                  String path =
-                    targetBlock.getType() == Material.CAULDRON
-                      ? ".mystery-cauldrons"
-                      : ".confessionals";
-                  String serializedLoc =
-                    LocationSerializer.locationToString(specialBlock.getLocation());
-                  List<String> specialBlocksType =
-                    config.getStringList("instances." + arena.getId() + path);
-                  specialBlocksType.remove(serializedLoc);
-                  config.set("instances." + arena.getId() + path, specialBlocksType);
-                  // save arena config after removing special block
-                  ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
-                  new MessageBuilder("&cRemoved special block at loc "
-                    + serializedLoc
-                    + " from arena "
-                    + arena.getId()).player(player).sendPlayer();
-                  return;
+              if(sbLoc.getBlock().equals(targetBlock)) {
+                FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+                pluginArena.getSpecialBlocks().remove(specialBlock);
+                if(specialBlock.getArmorStandHologram() != null) {
+                  specialBlock.getArmorStandHologram().delete();
                 }
+                if(specialBlock.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
+                  specialBlock.setTextDisplay(null);
+                  pluginArena.removeNearbyDisplays(sbLoc.clone().add(0.5, 1.2, 0.5), 1.2, 1.8, 1.2, false);
+                }
+
+                String serializedLoc = LocationSerializer.locationToString(sbLoc);
+                if(specialBlock.getSpecialBlockType() == SpecialBlock.SpecialBlockType.MYSTERY_CAULDRON) {
+                  removeFromConfigList(config, "instances." + pluginArena.getId() + ".mystery-cauldrons", serializedLoc);
+                } else if(specialBlock.getSpecialBlockType() == SpecialBlock.SpecialBlockType.PRAISE_DEVELOPER) {
+                  removeFromConfigList(config, "instances." + pluginArena.getId() + ".confessionals", serializedLoc);
+                } else if(specialBlock.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {
+                  removeFromConfigList(config, "instances." + pluginArena.getId() + ".sewers", serializedLoc);
+                  removeFromConfigList(config, "instances." + pluginArena.getId() + ".rapid-teleportation", serializedLoc);
+                }
+
+                ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+                new MessageBuilder("&cRemoved special block at loc "
+                  + serializedLoc
+                  + " from arena "
+                  + pluginArena.getId()).player(player).sendPlayer();
+                return;
               }
             }
           }
-          new MessageBuilder("&cPlease target an special block to continue!").player(player).sendPlayer();
+          new MessageBuilder("&cPlease target a special block to continue!").player(player).sendPlayer();
         }
       });
+  }
+
+  private static void removeFromConfigList(FileConfiguration config, String path, String serializedLoc) {
+    List<String> list = config.getStringList(path);
+    if(list.remove(serializedLoc)) {
+      config.set(path, list);
+    }
   }
 }

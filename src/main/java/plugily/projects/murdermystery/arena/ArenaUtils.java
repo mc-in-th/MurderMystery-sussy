@@ -19,23 +19,31 @@
 package plugily.projects.murdermystery.arena;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.util.Vector;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaUtils;
+import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
+import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
+import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
+
+import java.util.List;
 
 /**
  * @author Plajer
@@ -47,16 +55,48 @@ public class ArenaUtils extends PluginArenaUtils {
     super();
   }
 
+  public static void playRoleRevealSound(Player player, boolean murderer) {
+    if(player == null || !player.isOnline()) {
+      return;
+    }
+    if(murderer) {
+      player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.45f, 0.75f);
+      player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_DEPLETE, 0.85f, 0.6f);
+      player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1.0f, 0.6f);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.8f, 0.55f);
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, 0.9f, 0.55f);
+        }
+      }, 4L);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, 0.75f);
+        }
+      }, 8L);
+    } else {
+      player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.85f, 1.25f);
+      player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 0.9f);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.2f);
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.85f, 1.1f);
+        }
+      }, 4L);
+      Bukkit.getScheduler().runTaskLater(getPlugin(), () -> {
+        if(player.isOnline()) {
+          player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+          player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.65f, 1.35f);
+        }
+      }, 8L);
+    }
+  }
+
   public static void onMurdererDeath(Arena arena) {
+    String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>ผู้โดยสารเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+    String winSub = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build();
     for(Player player : arena.getPlayers()) {
-      VersionUtils.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
-      IUser loopUser = getPlugin().getUserManager().getUser(player);
-      if(Role.isRole(Role.INNOCENT, loopUser, arena)) {
-        addScore(loopUser, ScoreAction.SURVIVE_GAME, 0);
-      } else if(Role.isRole(Role.ANY_DETECTIVE, loopUser, arena)) {
-        addScore(loopUser, ScoreAction.WIN_GAME, 0);
-        addScore(loopUser, ScoreAction.DETECTIVE_WIN_GAME, 0);
-      }
+      HalloweenChat.sendTitles(player, winTitle, winSub, 10, 60, 10);
     }
     //we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTask(getPlugin(), () -> getPlugin().getArenaManager().stopGame(false, arena));
@@ -75,7 +115,11 @@ public class ArenaUtils extends PluginArenaUtils {
       innocentLocator.setItemMeta(innocentMeta);
       for(Player p : list) {
         if(arena.isMurderAlive(p)) {
-          ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+          if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(p)) {
+            arena.getVentManager().updateSavedItem(p, ItemPosition.INNOCENTS_LOCATOR.getMurdererItemPosition(), innocentLocator);
+          } else {
+            ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+          }
         }
       }
       arena.setMurdererLocatorReceived(true);
@@ -84,11 +128,11 @@ public class ArenaUtils extends PluginArenaUtils {
         if(Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
           continue;
         }
-        new TitleBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT")
+        HalloweenChat.sendTitleEntry(p, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT")
           .asKey()
           .player(p)
           .arena(arena)
-          .sendPlayer();
+          .build());
       }
     }
 
@@ -115,11 +159,35 @@ public class ArenaUtils extends PluginArenaUtils {
       if(Role.isRole(Role.MURDERER, user, arena)) {
         continue;
       }
-      new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).send(player);
+      HalloweenChat.sendTitleEntry(player, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).build());
     }
 
     ArmorStandHologram hologram =
       new ArmorStandHologram(victim.getLocation()).appendItem(new ItemStack(Material.BOW, 1));
+    hologram.getArmorStands().forEach(stand -> stand.setPersistent(false));
+    if(hologram.getEntityItem() != null) {
+      hologram.getEntityItem().setPersistent(false);
+    }
+    hologram.setPickupHandler(picker -> {
+      if(arena.getArenaState() != IArenaState.IN_GAME || isSpectator(picker, arena) || arena.getVotingManager().isVotingActive()) {
+        return;
+      }
+      IUser pickerUser = arena.getPlugin().getUserManager().getUser(picker);
+      if(pickerUser == null || Role.isRole(Role.MURDERER, pickerUser, arena)) {
+        return;
+      }
+      ((MapRestorerManager) arena.getMapRestorerManager()).removeBowHolo();
+      arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, picker);
+      ItemPosition.setItem(pickerUser, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
+      ItemPosition.setItem(pickerUser, ItemPosition.INFINITE_ARROWS, new ItemStack(Material.ARROW, arena.getPlugin().getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
+      for(Player p : arena.getPlayersLeft()) {
+        IUser u = getPlugin().getUserManager().getUser(p);
+        if(Role.isRole(Role.INNOCENT, u, arena)) {
+          ItemPosition.setItem(u, ItemPosition.BOW_LOCATOR, null);
+        }
+      }
+    });
+    getPlugin().getHologramManager().getHolograms().add(hologram);
 
     arena.setBowHologram(hologram);
     addBowLocator(arena, hologram.getLocation());
@@ -141,6 +209,164 @@ public class ArenaUtils extends PluginArenaUtils {
     }
   }
 
+  public static void giveSpectatorLoadout(Player player, Arena arena) {
+    if(player == null || !player.isOnline() || arena == null) {
+      return;
+    }
+    arena.getPlugin().getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
+    if(arena.getTaskManager().hasAssignedTasks(player) && arena.getPlayersLeft().size() > arena.aliveMurderer()) {
+      arena.getTaskManager().giveTaskPointer(player);
+      if(arena.getMinimap() != null) {
+        player.getInventory().setItemInOffHand(arena.getMinimap().createMapItem(player));
+      }
+      arena.getTaskManager().updatePlayerStationVisibility(player);
+    }
+    player.updateInventory();
+  }
+
+  public static void forceEliminatePlayer(Player player, Arena arena) {
+    if(player == null || arena == null || arena.isDeathPlayer(player)) {
+      return;
+    }
+    if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
+      arena.getVentManager().forceExitForMeeting(player);
+    }
+    for(PotionEffect effect : player.getActivePotionEffects()) {
+      player.removePotionEffect(effect.getType());
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    if(user != null) {
+      user.adjustStatistic("DEATHS", 1);
+      user.setSpectator(true);
+    }
+    arena.addDeathPlayer(player);
+    arena.addSpectatorPlayer(player);
+
+    player.closeInventory();
+    player.getInventory().clear();
+    player.getInventory().setArmorContents(null);
+    player.getInventory().setItemInOffHand(null);
+    arena.getTaskManager().handlePlayerDeath(player);
+
+    hidePlayer(player, arena);
+    applySpectatorState(player, arena, true);
+    arena.getPlugin().getRewardsHandler().performReward(player, arena.getPlugin().getRewardsHandler().getRewardType("PLAYER_DEATH"));
+    giveSpectatorLoadout(player, arena);
+    arena.getScoreboardManager().updateScoreboards();
+  }
+
+  public static boolean isSpectator(Player player, Arena arena) {
+    if(player == null || arena == null) {
+      return false;
+    }
+    if(arena.isDeathPlayer(player) || arena.isSpectatorPlayer(player)) {
+      return true;
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    return user != null && (user.isSpectator() || user.isPermanentSpectator());
+  }
+
+  public static void applySpectatorState(Player player, Arena arena, boolean startFlying) {
+    if(player == null || !player.isOnline() || arena == null || !arena.getPlayers().contains(player)) {
+      return;
+    }
+    IArenaState state = arena.getArenaState();
+    if(state == IArenaState.WAITING_FOR_PLAYERS || state == IArenaState.ENDING || state == IArenaState.RESTARTING) {
+      return;
+    }
+    IUser user = getPlugin().getUserManager().getUser(player);
+    if((state == IArenaState.STARTING || state == IArenaState.FULL_GAME)
+      && (user == null || (!user.isSpectator() && !user.isPermanentSpectator() && !arena.isSpectatorPlayer(player)))) {
+      return;
+    }
+
+    if(user != null) {
+      user.setSpectator(true);
+    }
+    arena.addSpectatorPlayer(player);
+
+    if(CutsceneManager.isPreviewing(player)
+      || (arena.getCutsceneManager().isPlaying() && player.getGameMode() == GameMode.SPECTATOR)) {
+      return;
+    }
+
+    List<Player> firstPersonList = getPlugin().getSpectatorItemsManager().getSpectatorSettingsMenu().firstPersonMode;
+    boolean inFirstPerson = (player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null)
+      || (firstPersonList != null && firstPersonList.contains(player));
+
+    if(inFirstPerson && player.getSpectatorTarget() instanceof Player) {
+      Player specTarget = (Player) player.getSpectatorTarget();
+      if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(specTarget)) {
+        player.setSpectatorTarget(null);
+        if(firstPersonList != null) {
+          firstPersonList.remove(player);
+        }
+        inFirstPerson = false;
+      }
+    }
+
+    if(inFirstPerson) {
+      if(player.getGameMode() != GameMode.SPECTATOR) {
+        player.setGameMode(GameMode.SPECTATOR);
+      }
+      for(Player other : arena.getPlayers()) {
+        if(other != null && other.isOnline() && !other.equals(player) && !isSpectator(other, arena)) {
+          VersionUtils.hidePlayer(getPlugin(), other, player);
+        }
+      }
+      return;
+    }
+
+    if(player.getGameMode() != GameMode.ADVENTURE) {
+      player.setGameMode(GameMode.ADVENTURE);
+    }
+    VersionUtils.setCollidable(player, false);
+    player.setFallDistance(0.0f);
+    player.setFireTicks(0);
+    if(player.getFlySpeed() < 0.15f) {
+      player.setFlySpeed(0.15f);
+    }
+    if(player.getWalkSpeed() <= 0.05f) {
+      player.setWalkSpeed(0.2f);
+    }
+    if(!player.getAllowFlight()) {
+      player.setAllowFlight(true);
+    }
+    if(startFlying) {
+      player.setAllowFlight(true);
+      if(player.isOnGround()) {
+        player.setVelocity(new Vector(0.0, 0.18, 0.0));
+      }
+      player.setFlying(true);
+    }
+
+    List<Player> invisibleSpecs = getPlugin().getSpectatorItemsManager().getSpectatorSettingsMenu().invisibleSpectators;
+    for(Player other : arena.getPlayers()) {
+      if(other == null || !other.isOnline() || other.equals(player)) {
+        continue;
+      }
+      if(!isSpectator(other, arena)) {
+        VersionUtils.hidePlayer(getPlugin(), other, player);
+        if(arena.getVentManager() == null || !arena.getVentManager().isInsideVent(other)) {
+          VersionUtils.showPlayer(getPlugin(), player, other);
+        } else {
+          VersionUtils.hidePlayer(getPlugin(), player, other);
+        }
+      } else {
+        if(invisibleSpecs != null && invisibleSpecs.contains(other)) {
+          VersionUtils.hidePlayer(getPlugin(), other, player);
+        } else {
+          VersionUtils.showPlayer(getPlugin(), other, player);
+        }
+        if(invisibleSpecs != null && invisibleSpecs.contains(player)) {
+          VersionUtils.hidePlayer(getPlugin(), player, other);
+        } else {
+          VersionUtils.showPlayer(getPlugin(), player, other);
+        }
+      }
+    }
+  }
+
   public static void updateNameTagsVisibility(final Player p) {
     if(!getPlugin().getConfigPreferences().getOption("HIDE_NAMETAGS")) {
       return;
@@ -152,118 +378,6 @@ public class ArenaUtils extends PluginArenaUtils {
       }
       VersionUtils.updateNameTagsVisibility(
         p, players, "MMHide", arena.getArenaState() != IArenaState.IN_GAME);
-    }
-  }
-
-  public static void addScore(IUser user, ScoreAction action, int amount) {
-    XSound.matchXSound(XSound.ENTITY_EXPERIENCE_ORB_PICKUP.parseSound())
-      .play(user.getPlayer().getLocation(), 1F, 2F);
-
-    if(action == ScoreAction.GOLD_PICKUP && amount > 1) {
-      int score = action.points * amount;
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(score)
-        .value(action.action)
-        .sendPlayer();
-      user.adjustStatistic("LOCAL_SCORE", score);
-      return;
-    }
-
-    if(action == ScoreAction.DETECTIVE_WIN_GAME) {
-      int innocents = 0;
-      Arena arena = (Arena) user.getArena();
-
-      for(Player p : arena.getPlayersLeft()) {
-        if(Role.isRole(Role.INNOCENT, getPlugin().getUserManager().getUser(p), arena)) {
-          innocents++;
-        }
-      }
-
-      int overallInnocents = 100 * innocents;
-
-      user.adjustStatistic("LOCAL_SCORE", overallInnocents);
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(overallInnocents)
-        .value(new MessageBuilder(action.action).integer(innocents).build())
-        .sendPlayer();
-      return;
-    }
-    String msg =
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(action.points)
-        .value(action.action)
-        .build();
-
-    if(action.points < 0) {
-      msg = msg.replace("+", "");
-    }
-
-    user.adjustStatistic("LOCAL_SCORE", action.points);
-    user.getPlayer().sendMessage(msg);
-  }
-
-  public enum ScoreAction {
-    KILL_PLAYER(
-      100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_PLAYER")
-        .asKey()
-        .build()),
-    KILL_MURDERER(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_MURDERER")
-        .asKey()
-        .build()),
-    GOLD_PICKUP(
-      15,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_PICKUP_GOLD")
-        .asKey()
-        .build()),
-    SURVIVE_TIME(
-      150,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_TIME")
-        .asKey()
-        .build()),
-    SURVIVE_GAME(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_END")
-        .asKey()
-        .build()),
-    WIN_GAME(
-      100, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_WIN").asKey().build()),
-    DETECTIVE_WIN_GAME(
-      0,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_DETECTIVE")
-        .asKey()
-        .build()),
-    INNOCENT_KILL(
-      -100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_INNOCENT")
-        .asKey()
-        .build());
-
-    int points;
-    String action;
-
-    ScoreAction(int points, String action) {
-      this.points = points;
-      this.action = action;
-    }
-
-    public int getPoints() {
-      return points;
-    }
-
-    public String getAction() {
-      return action;
     }
   }
 }

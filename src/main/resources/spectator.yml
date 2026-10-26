@@ -2,15 +2,15 @@
 # section keys with DEFAULT_SPEED, SPEED1, SPEED2, SPEED3, SPEED4, AUTO_TELEPORT, NIGHT_VISION, FIRST_PERSON_MODE, SPECTATORS_VISIBILITY have a defined function
 
 Settings-Menu:
-  Inventory-name: "&7Spectator settings"
+  Inventory-name: "&#5A4E7C[&#FF7518ตั้งค่าโหมดผู้ชม&#5A4E7C]"
   Content:
     'DEFAULT_SPEED':
       material: LEATHER_BOOTS
       # slot at the inventory, 0 is first slot
       slot: 11
-      name: "Default Speed"
+      name: "&#F4F1DEความเร็วปกติ"
       description:
-        - "Sets the default minecraft speed"
+        - "&#B8B0C8รีเซ็ตความเร็วการบินเป็นค่าเริ่มต้น"
       permission: ""
       execute:
         # You could also add a potion effect by console command
@@ -18,72 +18,72 @@ Settings-Menu:
     'SPEED1':
       material: CHAINMAIL_BOOTS
       slot: 12
-      name: "Speed I"
+      name: "&#72EFDDความเร็วระดับ I"
       description:
-        - "Adds a speed 1 potion"
+        - "&#B8B0C8เพิ่มความเร็วการบินระดับ 1"
       permission: ""
       execute:
         - ""
     'SPEED2':
       material: IRON_BOOTS
       slot: 13
-      name: "Speed II"
+      name: "&#6EEB83ความเร็วระดับ II"
       description:
-        - "Adds a speed 2 potion"
+        - "&#B8B0C8เพิ่มความเร็วการบินระดับ 2"
       permission: ""
       execute:
         - ""
     'SPEED3':
       material: GOLDEN_BOOTS
       slot: 14
-      name: "Speed III"
+      name: "&#FFB703ความเร็วระดับ III"
       description:
-        - "Adds a speed 3 potion"
+        - "&#B8B0C8เพิ่มความเร็วการบินระดับ 3"
       permission: ""
       execute:
         - ""
     'SPEED4':
       material: DIAMOND_BOOTS
       slot: 15
-      name: "Speed IV"
+      name: "&#FF7518ความเร็วระดับ IV"
       description:
-        - "Adds a speed 4 potion"
+        - "&#B8B0C8เพิ่มความเร็วการบินระดับ 4"
       permission: ""
       execute:
         - ""
     'AUTO_TELEPORT':
       material: COMPASS
       slot: 20
-      name: "Automatically teleport"
+      name: "&#FFB703วาร์ปตามเป้าหมายอัตโนมัติ"
       description:
-        - "Automatically teleports you to your targeted player"
+        - "&#B8B0C8วาร์ปไปยังผู้รอดชีวิตที่เลือกโดยอัตโนมัติ"
       permission: ""
       execute:
         - ""
     'NIGHT_VISION':
       material: ENDER_PEARL
       slot: 21
-      name: "Night vision"
+      name: "&#72EFDDมองเห็นในความมืด"
       description:
-        - "With nigh vision you will be able to see ghosts"
+        - "&#B8B0C8ช่วยให้มองเห็นในป่ามืดได้ชัดเจนยิ่งขึ้น"
       permission: ""
       execute:
         - ""
     'FIRST_PERSON_MODE':
       material: CLOCK
       slot: 23
-      name: "First person mode"
+      name: "&#C77DFFมุมมองบุคคลที่หนึ่ง"
       description:
-        - "When in first person mode you will spectate like you would play yourself"
+        - "&#B8B0C8เข้าชมผ่านสายตาของผู้รอดชีวิตโดยตรง"
       permission: ""
       execute:
         - ""
     'SPECTATORS_VISIBILITY':
       material: REDSTONE
       slot: 24
-      name: "Spectators visibility"
+      name: "&#FF3B47แสดงผู้ชมคนอื่น"
       description:
-        - "Its a good choice if you hate other players"
+        - "&#B8B0C8เปิดหรือปิดการมองเห็นวิญญาณผู้ชมคนอื่น"
       permission: ""
       execute:
         - ""
