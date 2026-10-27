@@ -24,6 +24,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
@@ -65,6 +66,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CutsceneManager {
 
@@ -75,6 +77,8 @@ public class CutsceneManager {
   private static final double OVERLAY_DISTANCE = 0.15;
   private static final int FADE_IN_FRAMES = 60;
   private static final int FADE_OUT_FRAMES = 45;
+  private static final double AUTO_POST_STOP_HOLD_SECONDS = 2.4;
+  private static final double AUTO_CUT_PROGRESS = 0.56;
 
   private static volatile ScheduledExecutorService executor;
 
@@ -152,7 +156,7 @@ public class CutsceneManager {
   private final AtomicLong sessionCounter = new AtomicLong(0);
   private ScheduledFuture<?> playbackFuture;
   private BukkitTask syncTask;
-  private TextDisplay cameraRig;
+  private volatile List<CameraShotRig> shotRigs = Collections.emptyList();
   private TextDisplay fadeOverlay;
   private volatile BusCutsceneRig activeBusRig;
   private volatile boolean playing = false;
@@ -257,9 +261,12 @@ public class CutsceneManager {
     double sx = busStartLocation.getX();
     double sy = busStartLocation.getY();
     double sz = busStartLocation.getZ();
-    double dx = busEndLocation.getX() - sx;
-    double dy = busEndLocation.getY() - sy;
-    double dz = busEndLocation.getZ() - sz;
+    double ex = busEndLocation.getX();
+    double ey = busEndLocation.getY();
+    double ez = busEndLocation.getZ();
+    double dx = ex - sx;
+    double dy = ey - sy;
+    double dz = ez - sz;
     double horizLen = Math.sqrt(dx * dx + dz * dz);
     double fx = horizLen > 1e-4 ? (dx / horizLen) : 1.0;
     double fz = horizLen > 1e-4 ? (dz / horizLen) : 0.0;
@@ -267,10 +274,35 @@ public class CutsceneManager {
     double rz = fx;
 
     double driveSec = Math.max(1.5, busDriveDurationSeconds);
-    double totalSec = driveSec + 2.2;
-    int totalFrames = Math.max(FPS * 3, (int) Math.round(totalSec * FPS));
+    double totalSec = driveSec + AUTO_POST_STOP_HOLD_SECONDS;
+    int totalFrames = Math.max(FPS * 4, (int) Math.round(totalSec * FPS));
+    int cutFrameIdx = Math.max(
+      FADE_IN_FRAMES + 20,
+      Math.min(totalFrames - FADE_OUT_FRAMES - 30, (int) Math.round(driveSec * AUTO_CUT_PROGRESS * FPS))
+    );
+
     double cruiseFraction = 0.65;
     double cruiseSpeed = 2.0 / (1.0 + cruiseFraction);
+    double cutRoadFraction = Math.min(1.0, cruiseSpeed * AUTO_CUT_PROGRESS);
+
+    double clearRight = 9.6;
+    double clearLeft = 9.6;
+    if(world != null && Bukkit.isPrimaryThread()) {
+      clearRight = measureSideClearance(world, sx, sy, sz, dx, dy, dz, rx, rz, 1.0, cutRoadFraction);
+      clearLeft = measureSideClearance(world, sx, sy, sz, dx, dy, dz, rx, rz, -1.0, cutRoadFraction);
+    }
+    double sideSign = (clearLeft > clearRight + 1.0) ? -1.0 : 1.0;
+    double chosenSideClear = sideSign > 0.0 ? clearRight : clearLeft;
+    double sideStartDist = Math.max(5.8, Math.min(8.8, chosenSideClear - 0.8));
+    double sideEndDist = Math.max(5.4, sideStartDist - 0.9);
+
+    double frontClear = 17.2;
+    if(world != null && Bukkit.isPrimaryThread()) {
+      frontClear = measureFrontClearance(world, ex, ey, ez, fx, fz, rx, rz, sideSign * 1.9);
+    }
+    double frontStartDist = Math.max(11.8, Math.min(16.2, frontClear - 0.8));
+    double frontEndDist = Math.max(11.4, Math.min(13.8, frontStartDist - 2.2));
+    double blastStartSec = driveSec * 0.96;
 
     for(int i = 0; i < totalFrames; i++) {
       double elapsed = (double) i / FPS;
@@ -288,30 +320,138 @@ public class CutsceneManager {
       double by = sy + dy * s;
       double bz = sz + dz * s;
 
-      double overall = (double) i / Math.max(1, totalFrames - 1);
-      double smoothOverall = overall * overall * (3.0 - 2.0 * overall);
-      double forwardOffset = 13.5 - 3.5 * smoothOverall;
-      double rightOffset = 6.2 - 1.4 * smoothOverall;
-      double heightOffset = 2.4 - 0.8 * smoothOverall;
+      double camX;
+      double camY;
+      double camZ;
+      double targetX;
+      double targetY;
+      double targetZ;
+      float shakeYaw = 0.0f;
+      float shakePitch = 0.0f;
 
-      double camX = bx + fx * forwardOffset + rx * rightOffset;
-      double camY = by + heightOffset;
-      double camZ = bz + fz * forwardOffset + rz * rightOffset;
+      if(i < cutFrameIdx) {
+        double p1 = (double) i / Math.max(1, cutFrameIdx - 1);
+        double sp1 = p1 * p1 * (3.0 - 2.0 * p1);
+        double forwardOffset = 3.2 - 4.8 * sp1;
+        double lateralOffset = sideSign * (sideStartDist + (sideEndDist - sideStartDist) * sp1);
+        double eyeY = by + 2.65 - 0.30 * sp1;
 
-      double targetX = bx + fx * 6.8;
-      double targetY = by + 2.3;
-      double targetZ = bz + fz * 6.8;
+        camX = bx + fx * forwardOffset + rx * lateralOffset;
+        camY = eyeY - PLAYER_EYE_OFFSET;
+        camZ = bz + fz * forwardOffset + rz * lateralOffset;
+
+        double lookForward = 1.4 - 0.6 * sp1;
+        targetX = bx + fx * lookForward;
+        targetY = by + 3.15;
+        targetZ = bz + fz * lookForward;
+      } else {
+        double p2 = (double) (i - cutFrameIdx) / Math.max(1, totalFrames - 1 - cutFrameIdx);
+        double sp2 = p2 * p2 * (3.0 - 2.0 * p2);
+        double frontDist = frontStartDist + (frontEndDist - frontStartDist) * sp2;
+        double lateralOffset = sideSign * (2.2 - 0.8 * sp2);
+        double eyeY = ey + 1.68 - 0.22 * sp2;
+
+        double blastDt = elapsed - blastStartSec;
+        if(blastDt >= 0.0 && blastDt <= 0.50) {
+          double decay = 1.0 - (blastDt / 0.50);
+          decay = decay * decay;
+          eyeY += Math.sin(blastDt * 58.0) * 0.065 * decay;
+          shakePitch = (float) (Math.cos(blastDt * 64.0) * 1.35 * decay);
+          shakeYaw = (float) (Math.sin(blastDt * 47.0) * 0.75 * decay);
+        }
+
+        camX = ex + fx * frontDist + rx * lateralOffset;
+        camY = eyeY - PLAYER_EYE_OFFSET;
+        camZ = ez + fz * frontDist + rz * lateralOffset;
+
+        double settle = u >= 1.0 ? Math.min(1.0, (elapsed - driveSec) / Math.max(0.4, AUTO_POST_STOP_HOLD_SECONDS * 0.7)) : 0.0;
+        double smoothSettle = settle * settle * (3.0 - 2.0 * settle);
+        double lookNoseOffset = 6.5 + 0.8 * smoothSettle;
+        targetX = bx + fx * lookNoseOffset;
+        targetY = by + 2.85 - 0.40 * smoothSettle;
+        targetZ = bz + fz * lookNoseOffset;
+      }
 
       double lookDx = targetX - camX;
       double lookDy = targetY - (camY + PLAYER_EYE_OFFSET);
       double lookDz = targetZ - camZ;
       double lookHoriz = Math.sqrt(lookDx * lookDx + lookDz * lookDz);
-      float yaw = (float) Math.toDegrees(Math.atan2(-lookDx, lookDz));
-      float pitch = (float) Math.toDegrees(-Math.atan2(lookDy, Math.max(1e-4, lookHoriz)));
+      float yaw = (float) Math.toDegrees(Math.atan2(-lookDx, lookDz)) + shakeYaw;
+      float pitch = (float) Math.toDegrees(-Math.atan2(lookDy, Math.max(1e-4, lookHoriz))) + shakePitch;
 
       generated.add(new CutsceneFrame(worldName, camX, camY, camZ, yaw, pitch));
     }
     return generated;
+  }
+
+  private static double measureSideClearance(
+    World world,
+    double sx,
+    double sy,
+    double sz,
+    double dx,
+    double dy,
+    double dz,
+    double rx,
+    double rz,
+    double sign,
+    double maxRoadFraction
+  ) {
+    double minClear = 9.6;
+    int samples = 8;
+    for(int sIdx = 0; sIdx <= samples; sIdx++) {
+      double frac = maxRoadFraction * ((double) sIdx / (double) samples);
+      double bx = sx + dx * frac;
+      double by = sy + dy * frac;
+      double bz = sz + dz * frac;
+      for(double dist = 4.2; dist <= 9.5; dist += 0.5) {
+        double tx = bx + rx * sign * dist;
+        double tz = bz + rz * sign * dist;
+        if(isOccludedAt(world, tx, by + 2.4, tz) || isOccludedAt(world, tx, by + 1.5, tz)) {
+          if(dist < minClear) {
+            minClear = dist;
+          }
+          break;
+        }
+      }
+    }
+    return minClear;
+  }
+
+  private static double measureFrontClearance(
+    World world,
+    double ex,
+    double ey,
+    double ez,
+    double fx,
+    double fz,
+    double rx,
+    double rz,
+    double lateralOffset
+  ) {
+    for(double dist = 10.2; dist <= 17.0; dist += 0.5) {
+      double tx = ex + fx * dist + rx * lateralOffset;
+      double tz = ez + fz * dist + rz * lateralOffset;
+      if(isOccludedAt(world, tx, ey + 1.6, tz) || isOccludedAt(world, tx, ey + 2.4, tz)) {
+        return dist;
+      }
+    }
+    return 17.2;
+  }
+
+  private static boolean isOccludedAt(World world, double x, double y, double z) {
+    int bx = (int) Math.floor(x);
+    int by = (int) Math.floor(y);
+    int bz = (int) Math.floor(z);
+    if(!world.isChunkLoaded(bx >> 4, bz >> 4)) {
+      return false;
+    }
+    try {
+      Block b = world.getBlockAt(bx, by, bz);
+      return b.getType().isOccluding();
+    } catch(Throwable ignored) {
+      return false;
+    }
   }
 
   public Location getInitialEyeLocation() {
@@ -342,9 +482,13 @@ public class CutsceneManager {
       return (double) frames.size() / FPS;
     }
     if(hasBusCutscene()) {
-      return Math.max(1.5, busDriveDurationSeconds) + 2.2;
+      return Math.max(1.5, busDriveDurationSeconds) + AUTO_POST_STOP_HOLD_SECONDS;
     }
     return 0.0;
+  }
+
+  public boolean isUsingAutoCamera() {
+    return frames.isEmpty() && hasBusCutscene();
   }
 
   public void startCutscene(Runnable onComplete) {
@@ -383,7 +527,9 @@ public class CutsceneManager {
       preparePlayerForCutscene(player, arena.getPlayers(), initialEyeLoc, null);
     }
 
-    cameraRig = spawnCameraRig(initialEyeLoc);
+    List<CameraShotRig> spawnedShots = spawnShotRigs(snapshotFrames, fallbackWorld);
+    shotRigs = spawnedShots;
+    TextDisplay initialRig = resolveActiveRig(spawnedShots, 0);
     fadeOverlay = spawnFadeOverlay(initialOverlayLoc);
     if(hasBusCutscene()) {
       activeBusRig = BusCutsceneRig.spawn(
@@ -402,8 +548,8 @@ public class CutsceneManager {
       if(!player.isOnline()) {
         continue;
       }
-      if(cameraRig != null && cameraRig.isValid() && player.getWorld().equals(cameraRig.getWorld())) {
-        runWithInternalBypass(player, () -> player.setSpectatorTarget(cameraRig));
+      if(initialRig != null && initialRig.isValid() && player.getWorld().equals(initialRig.getWorld())) {
+        runWithInternalBypass(player, () -> player.setSpectatorTarget(initialRig));
       }
       HalloweenChat.sendTitles(
         player,
@@ -415,8 +561,8 @@ public class CutsceneManager {
       );
       player.playSound(player.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 0.5f, 1.2f);
     }
-    if(cameraRig != null && cameraRig.isValid()) {
-      PacketCameraSender.sendSetCamera(cameraRig, activeViewers);
+    if(initialRig != null && initialRig.isValid()) {
+      PacketCameraSender.sendSetCamera(initialRig, activeViewers);
     }
 
     final long startNanos = System.nanoTime();
@@ -427,9 +573,11 @@ public class CutsceneManager {
       totalCutsceneSec,
       customCamera
     );
+    final AtomicReference<TextDisplay> lastSentHighFreqRig = new AtomicReference<>(initialRig);
 
     syncTask = new BukkitRunnable() {
       private int tickCount = 0;
+      private TextDisplay lastSyncedRig = initialRig;
 
       @Override
       public void run() {
@@ -444,36 +592,42 @@ public class CutsceneManager {
           return;
         }
         tickCount++;
-        CutsceneFrame currentFrame = snapshotFrames.get(Math.min(frameIdx, totalFrames - 1));
+        int clampedIdx = Math.min(frameIdx, totalFrames - 1);
+        CutsceneFrame currentFrame = snapshotFrames.get(clampedIdx);
         Location eyeLoc = currentFrame.toEyeLocation(fallbackWorld);
+        TextDisplay activeRig = resolveActiveRig(spawnedShots, clampedIdx);
+        boolean shotSwitched = activeRig != null && activeRig != lastSyncedRig;
+        if(shotSwitched) {
+          lastSyncedRig = activeRig;
+        }
         if(eyeLoc != null && eyeLoc.getWorld() != null) {
-          if(cameraRig != null && cameraRig.isValid()) {
-            cameraRig.teleport(eyeLoc);
+          if(activeRig != null && activeRig.isValid()) {
+            activeRig.teleport(eyeLoc);
           }
           updateFadeOverlayTick(fadeOverlay, currentFrame, fallbackWorld, frameIdx, totalFrames);
           int remainingSec = Math.max(1, (int) Math.ceil((double) (totalFrames - frameIdx) / FPS));
           Collection<Player> currentArenaPlayers = arena.getPlayers();
           List<Player> updatedViewers = new ArrayList<>(currentArenaPlayers.size());
-          boolean shouldReconfirmCamera = tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
+          boolean shouldReconfirmCamera = shotSwitched || tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
           for(Player player : currentArenaPlayers) {
             if(player == null || !player.isOnline()) {
               continue;
             }
             updatedViewers.add(player);
-            if(cameraRig != null && cameraRig.isValid()) {
-              if(!player.getWorld().equals(cameraRig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
-                teleportToCutsceneCamera(player, eyeLoc, cameraRig);
+            if(activeRig != null && activeRig.isValid()) {
+              if(!player.getWorld().equals(activeRig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 2304.0) {
+                teleportToCutsceneCamera(player, eyeLoc, activeRig);
               } else {
                 runWithInternalBypass(player, () -> {
                   if(player.getGameMode() != GameMode.SPECTATOR) {
                     player.setGameMode(GameMode.SPECTATOR);
                   }
                   player.setFlySpeed(0.0f);
-                  if(player.getSpectatorTarget() != cameraRig) {
-                    player.setSpectatorTarget(cameraRig);
+                  if(player.getSpectatorTarget() != activeRig) {
+                    player.setSpectatorTarget(activeRig);
                   } else if(!PacketCameraSender.isSetCameraSupported() && (tickCount == 2 || tickCount == 6)) {
                     player.setSpectatorTarget(null);
-                    player.setSpectatorTarget(cameraRig);
+                    player.setSpectatorTarget(activeRig);
                   }
                 });
               }
@@ -499,8 +653,8 @@ public class CutsceneManager {
             double elapsedSec = (double) (System.nanoTime() - startNanos) / 1_000_000_000.0;
             activeBusRig.tickMainThread(elapsedSec, effectiveDriveSec, updatedViewers, PacketCameraSender::updateServerEntityPosition);
           }
-          if(shouldReconfirmCamera && cameraRig != null && cameraRig.isValid()) {
-            PacketCameraSender.sendSetCamera(cameraRig, updatedViewers);
+          if(shouldReconfirmCamera && activeRig != null && activeRig.isValid()) {
+            PacketCameraSender.sendSetCamera(activeRig, updatedViewers);
           }
         }
       }
@@ -522,8 +676,11 @@ public class CutsceneManager {
       }
       CutsceneFrame frame = snapshotFrames.get(frameIdx);
       List<Player> viewersSnapshot = activeViewers;
-      TextDisplay rig = cameraRig;
+      TextDisplay rig = resolveActiveRig(spawnedShots, frameIdx);
       if(rig != null) {
+        if(lastSentHighFreqRig.getAndSet(rig) != rig) {
+          PacketCameraSender.sendSetCamera(rig, viewersSnapshot);
+        }
         PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewersSnapshot);
       }
       TextDisplay overlay = fadeOverlay;
@@ -775,15 +932,8 @@ public class CutsceneManager {
       }
       activeBusRig = null;
     }
-    if(cameraRig != null) {
-      try {
-        if(cameraRig.isValid()) {
-          cameraRig.remove();
-        }
-      } catch(Throwable ignored) {
-      }
-      cameraRig = null;
-    }
+    destroyShotRigs(shotRigs);
+    shotRigs = Collections.emptyList();
     if(fadeOverlay != null) {
       try {
         if(fadeOverlay.isValid()) {
@@ -792,6 +942,73 @@ public class CutsceneManager {
       } catch(Throwable ignored) {
       }
       fadeOverlay = null;
+    }
+  }
+
+  private static List<CameraShotRig> spawnShotRigs(List<CutsceneFrame> frames, World fallbackWorld) {
+    List<CameraShotRig> list = new ArrayList<>(4);
+    if(frames == null || frames.isEmpty()) {
+      return list;
+    }
+    for(int i = 0; i < frames.size(); i++) {
+      if(i == 0 || isHardCutBetween(frames.get(i - 1), frames.get(i))) {
+        Location shotEyeLoc = frames.get(i).toEyeLocation(fallbackWorld);
+        if(shotEyeLoc != null && shotEyeLoc.getWorld() != null) {
+          shotEyeLoc.getChunk().load(true);
+          TextDisplay rig = spawnCameraRig(shotEyeLoc);
+          if(rig != null) {
+            list.add(new CameraShotRig(i, rig));
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  private static boolean isHardCutBetween(CutsceneFrame a, CutsceneFrame b) {
+    if(a == null || b == null) {
+      return false;
+    }
+    if(a.worldName != null && b.worldName != null && !a.worldName.equals(b.worldName)) {
+      return true;
+    }
+    double dx = a.x - b.x;
+    double dy = a.y - b.y;
+    double dz = a.z - b.z;
+    if(dx * dx + dy * dy + dz * dz > 4.0) {
+      return true;
+    }
+    float dYaw = Math.abs(CutsceneFrame.wrapDegrees(a.yaw - b.yaw));
+    return dYaw > 55.0f;
+  }
+
+  private static TextDisplay resolveActiveRig(List<CameraShotRig> rigs, int frameIdx) {
+    if(rigs == null || rigs.isEmpty()) {
+      return null;
+    }
+    for(int i = rigs.size() - 1; i >= 0; i--) {
+      CameraShotRig shot = rigs.get(i);
+      if(frameIdx >= shot.startFrame && shot.rig != null && shot.rig.isValid()) {
+        return shot.rig;
+      }
+    }
+    CameraShotRig first = rigs.get(0);
+    return (first.rig != null && first.rig.isValid()) ? first.rig : null;
+  }
+
+  private static void destroyShotRigs(List<CameraShotRig> rigs) {
+    if(rigs == null || rigs.isEmpty()) {
+      return;
+    }
+    for(CameraShotRig shot : rigs) {
+      if(shot != null && shot.rig != null) {
+        try {
+          if(shot.rig.isValid()) {
+            shot.rig.remove();
+          }
+        } catch(Throwable ignored) {
+        }
+      }
     }
   }
 
@@ -1103,9 +1320,10 @@ public class CutsceneManager {
 
     teleportToCutsceneCamera(player, startEyeLoc, null);
 
-    TextDisplay rig = spawnCameraRig(startEyeLoc);
+    List<CameraShotRig> spawnedShots = spawnShotRigs(cutsceneFrames, fallbackWorld);
+    TextDisplay initialRig = resolveActiveRig(spawnedShots, 0);
     TextDisplay overlay = spawnFadeOverlay(startOverlayLoc);
-    previewSession.rig = rig;
+    previewSession.shotRigs = spawnedShots;
     previewSession.overlay = overlay;
     if(cm.hasBusCutscene()) {
       previewSession.busRig = BusCutsceneRig.spawn(
@@ -1120,13 +1338,16 @@ public class CutsceneManager {
       );
     }
 
-    if(rig != null && rig.isValid() && player.getWorld().equals(rig.getWorld())) {
-      runWithInternalBypass(player, () -> player.setSpectatorTarget(rig));
-      PacketCameraSender.sendSetCamera(rig, viewerList);
+    if(initialRig != null && initialRig.isValid() && player.getWorld().equals(initialRig.getWorld())) {
+      runWithInternalBypass(player, () -> player.setSpectatorTarget(initialRig));
+      PacketCameraSender.sendSetCamera(initialRig, viewerList);
     }
+
+    final AtomicReference<TextDisplay> lastSentHighFreqRig = new AtomicReference<>(initialRig);
 
     BukkitTask syncTask = new BukkitRunnable() {
       private int tickCount = 0;
+      private TextDisplay lastSyncedRig = initialRig;
 
       @Override
       public void run() {
@@ -1143,30 +1364,36 @@ public class CutsceneManager {
           return;
         }
         tickCount++;
-        boolean shouldReconfirmCamera = tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
-        CutsceneFrame frame = cutsceneFrames.get(Math.min(idx, totalFrames - 1));
+        int clampedIdx = Math.min(idx, totalFrames - 1);
+        CutsceneFrame frame = cutsceneFrames.get(clampedIdx);
         Location eyeLoc = frame.toEyeLocation(fallbackWorld);
+        TextDisplay activeRig = resolveActiveRig(spawnedShots, clampedIdx);
+        boolean shotSwitched = activeRig != null && activeRig != lastSyncedRig;
+        if(shotSwitched) {
+          lastSyncedRig = activeRig;
+        }
+        boolean shouldReconfirmCamera = shotSwitched || tickCount <= 6 || tickCount == 10 || tickCount == 15 || tickCount % 10 == 0;
         if(eyeLoc != null && eyeLoc.getWorld() != null) {
-          if(rig != null && rig.isValid()) {
-            rig.teleport(eyeLoc);
-            if(!player.getWorld().equals(rig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 1024.0) {
-              teleportToCutsceneCamera(player, eyeLoc, rig);
+          if(activeRig != null && activeRig.isValid()) {
+            activeRig.teleport(eyeLoc);
+            if(!player.getWorld().equals(activeRig.getWorld()) || player.getLocation().distanceSquared(eyeLoc) > 2304.0) {
+              teleportToCutsceneCamera(player, eyeLoc, activeRig);
             } else {
               runWithInternalBypass(player, () -> {
                 if(player.getGameMode() != GameMode.SPECTATOR) {
                   player.setGameMode(GameMode.SPECTATOR);
                 }
                 player.setFlySpeed(0.0f);
-                if(player.getSpectatorTarget() != rig) {
-                  player.setSpectatorTarget(rig);
+                if(player.getSpectatorTarget() != activeRig) {
+                  player.setSpectatorTarget(activeRig);
                 } else if(!PacketCameraSender.isSetCameraSupported() && (tickCount == 2 || tickCount == 6)) {
                   player.setSpectatorTarget(null);
-                  player.setSpectatorTarget(rig);
+                  player.setSpectatorTarget(activeRig);
                 }
               });
             }
             if(shouldReconfirmCamera) {
-              PacketCameraSender.sendSetCamera(rig, viewerList);
+              PacketCameraSender.sendSetCamera(activeRig, viewerList);
             }
           } else {
             Location fallbackLoc = frame.toLocation(fallbackWorld);
@@ -1212,7 +1439,11 @@ public class CutsceneManager {
         return;
       }
       CutsceneFrame frame = cutsceneFrames.get(idx);
+      TextDisplay rig = resolveActiveRig(spawnedShots, idx);
       if(rig != null) {
+        if(lastSentHighFreqRig.getAndSet(rig) != rig) {
+          PacketCameraSender.sendSetCamera(rig, viewerList);
+        }
         PacketCameraSender.sendEntityPosition60Fps(rig, frame, viewerList);
       }
       if(overlay != null && computeFadeAlpha(idx, totalFrames) > 0) {
@@ -1282,14 +1513,8 @@ public class CutsceneManager {
             } catch(Throwable ignored) {
             }
           }
-          if(session.rig != null) {
-            try {
-              if(session.rig.isValid()) {
-                session.rig.remove();
-              }
-            } catch(Throwable ignored) {
-            }
-          }
+          destroyShotRigs(session.shotRigs);
+          session.shotRigs = Collections.emptyList();
           if(session.overlay != null) {
             try {
               if(session.overlay.isValid()) {
@@ -1381,14 +1606,8 @@ public class CutsceneManager {
         }
       }
     }
-    if(session.rig != null) {
-      try {
-        if(session.rig.isValid()) {
-          session.rig.remove();
-        }
-      } catch(Throwable ignored) {
-      }
-    }
+    destroyShotRigs(session.shotRigs);
+    session.shotRigs = Collections.emptyList();
     if(session.overlay != null) {
       try {
         if(session.overlay.isValid()) {
@@ -1612,6 +1831,16 @@ public class CutsceneManager {
     }
   }
 
+  private static final class CameraShotRig {
+    private final int startFrame;
+    private final TextDisplay rig;
+
+    private CameraShotRig(int startFrame, TextDisplay rig) {
+      this.startFrame = startFrame;
+      this.rig = rig;
+    }
+  }
+
   private static class PreviewSession {
     private final UUID sessionToken;
     private final PluginMain plugin;
@@ -1623,7 +1852,7 @@ public class CutsceneManager {
     private final boolean originalFlying;
     private volatile BukkitTask syncTask;
     private volatile ScheduledFuture<?> highFreqFuture;
-    private volatile TextDisplay rig;
+    private volatile List<CameraShotRig> shotRigs = Collections.emptyList();
     private volatile TextDisplay overlay;
     private volatile BusCutsceneRig busRig;
 

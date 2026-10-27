@@ -256,11 +256,12 @@ public class TaskAndVentArgument {
               : "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbusstart " + arenaId + " และ /mma setbusend " + arenaId + ")"));
           String cutsceneStatus;
           if(!cm.getFrames().isEmpty()) {
-            cutsceneStatus = "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " / " + cm.getFrames().size() + " เฟรม @ 60FPS)";
+            cutsceneStatus = "<#6EEB83>มุมกล้องบันทึกเอง (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " / " + cm.getFrames().size() + " เฟรม @ 60FPS)"
+              + (cm.hasBusCutscene() ? " <#B8B0C8>(สลับเป็นกล้องอัตโนมัติ: /mma autocutscene " + arenaId + ")" : "");
           } else if(cm.hasBusCutscene()) {
-            cutsceneStatus = "<#6EEB83>มุมกล้องอัตโนมัติตามรถบัส (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " @ 60FPS) <#B8B0C8>(ถ่ายมุมกล้องเองได้ด้วย /mma recordcutscene " + arenaId + ")";
+            cutsceneStatus = "<#6EEB83>มุมกล้องอัตโนมัติ 2 ช็อต: ด้านข้าง -> ตัดไปด้านหน้าตอนรถเสีย (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " @ 60FPS)";
           } else {
-            cutsceneStatus = "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")";
+            cutsceneStatus = "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbusstart " + arenaId + " & /mma setbusend " + arenaId + ")";
           }
           msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene 60FPS): " + cutsceneStatus);
           msg(player, "<shadow:#000000FF><#5A4E7C>=============================================================</shadow>");
@@ -872,6 +873,23 @@ public class TaskAndVentArgument {
     registry.mapArgument(
       "murdermysteryadmin",
       new LabeledCommandArgument(
+        "autocutscene",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma autocutscene <arena>",
+          "/mma autocutscene <arena>",
+          "&7เปิดใช้มุมกล้องอัตโนมัติ (ถ่ายขนาบด้านข้างรถบัส -> ตัดไปด้านหน้าตอนรถเสีย) โดยไม่ต้องบินถ่ายเอง\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleAutoCutscene(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
         "clearbuscutscene",
         "murdermystery.admin.cleartasks",
         CommandArgument.ExecutorType.PLAYER,
@@ -892,11 +910,11 @@ public class TaskAndVentArgument {
       msg(player, "<#FF3B47>การใช้งานคำสั่ง Cutscene:");
       msg(player, "<#FFB703>/mma setbusstart <arena> [snap] <#B8B0C8>- ตั้งจุดเริ่มวิ่งของรถบัส (bus.schem)");
       msg(player, "<#FFB703>/mma setbusend <arena> [snap] <#B8B0C8>- ตั้งจุดปลายทางที่รถบัสเสียและระเบิด");
+      msg(player, "<#FFB703>/mma autocutscene <arena> <#B8B0C8>- ใช้มุมกล้องอัตโนมัติ (ด้านข้าง -> ตัดไปด้านหน้าตอนรถเสีย)");
       msg(player, "<#FFB703>/mma setbusduration <arena> <วินาที> <#B8B0C8>- ตั้งเวลารถบัสวิ่ง (ค่าเริ่มต้น 8.0s)");
       msg(player, "<#FFB703>/mma hidebusarea <arena> <pos1|pos2|clear> <#B8B0C8>- ซ่อนรถบัสจริงในแมพชั่วคราวตอนเล่น Cutscene");
-      msg(player, "<#FFB703>/mma recordcutscene <arena> <#B8B0C8>- บันทึกมุมกล้อง 60FPS (มีรถบัสวิ่งจริงให้ถ่าย)");
-      msg(player, "<#FFB703>/mma stopcutscene <#B8B0C8>- หยุดบันทึกและเซฟ Cutscene");
       msg(player, "<#FFB703>/mma previewcutscene <arena> <#B8B0C8>- ทดสอบเล่น Cutscene");
+      msg(player, "<#FFB703>/mma recordcutscene <arena> <#B8B0C8>- (ทางเลือก) บินถ่ายมุมกล้องเอง / <#FFB703>stopcutscene");
       msg(player, "<#FFB703>/mma clearcutscene <arena> <#B8B0C8>- ลบมุมกล้องที่บันทึก / <#FFB703>clearbuscutscene <#B8B0C8>- ลบรถบัสวิ่ง");
       return;
     }
@@ -912,6 +930,10 @@ public class TaskAndVentArgument {
       String secondArg = args[2].trim();
       String secondLower = secondArg.toLowerCase(Locale.ROOT);
 
+      if(firstLower.equals("auto")) {
+        handleAutoCutscene(registry, player, new String[]{args[0], secondArg});
+        return;
+      }
       if(firstLower.equals("record") || firstLower.equals("start")) {
         handleRecordCutscene(registry, player, new String[]{args[0], secondArg}, "recordcutscene");
         return;
@@ -925,6 +947,10 @@ public class TaskAndVentArgument {
         return;
       }
 
+      if(secondLower.equals("auto")) {
+        handleAutoCutscene(registry, player, new String[]{args[0], firstArg});
+        return;
+      }
       if(secondLower.equals("record") || secondLower.equals("start")) {
         handleRecordCutscene(registry, player, new String[]{args[0], firstArg}, "recordcutscene");
         return;
@@ -1017,13 +1043,46 @@ public class TaskAndVentArgument {
       return;
     }
     if(CutsceneManager.startPreview(registry.getPlugin(), player, arena)) {
+      String modeTag = arena.getCutsceneManager().isUsingAutoCamera()
+        ? "มุมกล้องอัตโนมัติ: ด้านข้าง -> ตัดไปด้านหน้าตอนรถเสีย, "
+        : "มุมกล้องบันทึกเอง, ";
       msg(
         player,
         "<#6EEB83>[+] กำลังเล่นตัวอย่าง Cutscene ของห้อง <#FFB703>" + arenaId
-          + " <#B8B0C8>(" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds())
+          + " <#B8B0C8>(" + modeTag + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds())
           + ") - พิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>หากต้องการหยุดกลางคัน"
       );
+      if(!arena.getCutsceneManager().isUsingAutoCamera() && arena.getCutsceneManager().hasBusCutscene()) {
+        msg(player, "<#B8B0C8>Tip: หากต้องการสลับเป็นมุมกล้องอัตโนมัติ (ไม่ต้องบินถ่ายเอง) พิมพ์ <#FFB703>/mma autocutscene " + arenaId);
+      }
     }
+  }
+
+  private static void handleAutoCutscene(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma autocutscene <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+    CutsceneManager cm = arena.getCutsceneManager();
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".cutscene", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+    cm.clearFrames();
+
+    if(!cm.hasBusCutscene()) {
+      msg(player, "<#FFB703>[Auto Cutscene] <#F4F1DE>ล้างมุมกล้องที่บันทึกเองแล้ว! ตั้งจุดเริ่มและจุดรถเสียเพื่อให้กล้องอัตโนมัติทำงาน:");
+      msg(player, "<#B8B0C8>1) <#FFB703>/mma setbusstart " + arenaId + " snap <#B8B0C8>(จุดเริ่มวิ่ง)");
+      msg(player, "<#B8B0C8>2) <#FFB703>/mma setbusend " + arenaId + " snap <#B8B0C8>(จุดรถเสีย)");
+      return;
+    }
+    msg(player, "<#6EEB83>[+] เปิดใช้มุมกล้อง Cutscene อัตโนมัติ (ถ่ายขนาบด้านข้างรถ -> ตัดกล้องไปด้านหน้าตอนเครื่องเสีย) สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้ว!");
+    msg(player, "<#B8B0C8>ดูตัวอย่างได้ทันทีด้วยคำสั่ง: <#FFB703>/mma previewcutscene " + arenaId);
   }
 
   private static void handleClearCutscene(ArgumentsRegistry registry, Player player, String[] args) {
@@ -1041,7 +1100,11 @@ public class TaskAndVentArgument {
     config.set("instances." + arenaId + ".cutscene", null);
     ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
     arena.getCutsceneManager().clearFrames();
-    msg(player, "<#FF3B47>[!] ลบ Cutscene ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
+    if(arena.getCutsceneManager().hasBusCutscene()) {
+      msg(player, "<#6EEB83>[+] ลบมุมกล้องที่บันทึกเองของห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว (ระบบสลับไปใช้มุมกล้องอัตโนมัติ: ด้านข้าง -> ตัดไปด้านหน้าตอนรถเสีย)");
+    } else {
+      msg(player, "<#FF3B47>[!] ลบ Cutscene ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
+    }
   }
 
   private static void handleSetTaskAmount(ArgumentsRegistry registry, CommandSender sender, String[] args, String label) {
@@ -1349,8 +1412,11 @@ public class TaskAndVentArgument {
         + String.format(Locale.US, "%.1f บล็อก", dist)
         + " <#F4F1DE>ใช้เวลาวิ่ง <#FFB703>"
         + String.format(Locale.US, "%.1f วินาที", cm.getBusDriveDurationSeconds()));
-      msg(player, "<#B8B0C8>ทดสอบได้ทันทีด้วย <#FFB703>/mma previewcutscene " + arenaId
-        + " <#B8B0C8>หรือบินถ่ายมุมกล้องเองขณะรถวิ่งด้วย <#FFB703>/mma recordcutscene " + arenaId);
+      if(cm.isUsingAutoCamera()) {
+        msg(player, "<#72EFDD>[Auto Cutscene] <#F4F1DE>สร้างมุมกล้องอัตโนมัติ (ถ่ายขนาบด้านข้าง -> ตัดกล้องไปด้านหน้าตอนเครื่องเสีย) เรียบร้อยแล้ว! ทดสอบด้วย <#FFB703>/mma previewcutscene " + arenaId);
+      } else {
+        msg(player, "<#FFB703>[หมายเหตุ] <#B8B0C8>ห้องนี้มีมุมกล้องที่บันทึกเองค้างอยู่ หากต้องการใช้มุมกล้องอัตโนมัติ (ด้านข้าง -> ตัดไปด้านหน้า) ให้พิมพ์ <#FFB703>/mma autocutscene " + arenaId);
+      }
     } else if(isStart) {
       msg(player, "<#B8B0C8>ขั้นตอนต่อไป: เดินไปจุดที่รถบัสจอดเสีย แล้วพิมพ์ <#FFB703>/mma setbusend " + arenaId);
     } else {
