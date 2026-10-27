@@ -160,6 +160,14 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
+    String meetingPointStr = section.getString(id + ".meetingpoint");
+    if(meetingPointStr != null && !meetingPointStr.isEmpty()) {
+      Location meetingLoc = LocationSerializer.getLocation(meetingPointStr);
+      if(meetingLoc != null) {
+        ((Arena) arena).setMeetingLocation(meetingLoc);
+      }
+    }
+
     int customTasksPerPlayer = section.getInt(id + ".tasksperplayer", -1);
     if(customTasksPerPlayer > 0) {
       ((Arena) arena).setTasksPerPlayer(customTasksPerPlayer);
@@ -167,9 +175,32 @@ public class ArenaRegistry extends PluginArenaRegistry {
     ((Arena) arena).setVisualTasksEnabled(
       section.getBoolean(id + ".visualtasks", plugin.getConfig().getBoolean("Tasks.Visual-Effects", true))
     );
-    ((Arena) arena).getCutsceneManager().setFrames(
-      CutsceneManager.deserializeFrames(section.getStringList(id + ".cutscene"))
-    );
+    CutsceneManager cm = ((Arena) arena).getCutsceneManager();
+    cm.setFrames(CutsceneManager.deserializeFrames(section.getStringList(id + ".cutscene")));
+
+    String busStartStr = section.getString(id + ".buscutscene.start");
+    if(busStartStr != null && !busStartStr.isEmpty()) {
+      cm.setBusStartLocation(CutsceneManager.deserializePreciseLocation(busStartStr));
+    }
+    String busEndStr = section.getString(id + ".buscutscene.end");
+    if(busEndStr != null && !busEndStr.isEmpty()) {
+      cm.setBusEndLocation(CutsceneManager.deserializePreciseLocation(busEndStr));
+    }
+    if(section.contains(id + ".buscutscene.duration")) {
+      cm.setBusDriveDurationSeconds(section.getDouble(id + ".buscutscene.duration", 8.0));
+    }
+    String busSchem = section.getString(id + ".buscutscene.schematic");
+    if(busSchem != null && !busSchem.isEmpty()) {
+      cm.setBusSchematicName(busSchem);
+    }
+    String hidePos1Str = section.getString(id + ".buscutscene.hidepos1");
+    if(hidePos1Str != null && !hidePos1Str.isEmpty()) {
+      cm.setBusHidePos1(LocationSerializer.getLocation(hidePos1Str));
+    }
+    String hidePos2Str = section.getString(id + ".buscutscene.hidepos2");
+    if(hidePos2Str != null && !hidePos2Str.isEmpty()) {
+      cm.setBusHidePos2(LocationSerializer.getLocation(hidePos2Str));
+    }
 
     List<SpecialBlock> specialBlocks = new ArrayList<>();
     for(String loc : section.getStringList(id + ".mystery-cauldrons")) {

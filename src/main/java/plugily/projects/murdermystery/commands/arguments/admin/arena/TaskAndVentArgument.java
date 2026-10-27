@@ -31,6 +31,7 @@ import plugily.projects.minigamesbox.classic.commands.arguments.data.LabeledComm
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.cutscene.BusSchematicLoader;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
@@ -240,10 +241,28 @@ public class TaskAndVentArgument {
           Location cf = arena.getCampfireLocation();
           msg(player, "<#FF7518>จุดแตรรถบัสฉุกเฉิน (Bus Horn): "
             + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbushorn " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
-          msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene 60FPS): "
-            + (arena.getCutsceneManager().hasCutscene()
-              ? "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getDurationSeconds()) + " / " + arena.getCutsceneManager().getFrames().size() + " เฟรม @ 60FPS)"
-              : "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")"));
+          Location mp = arena.getMeetingLocation();
+          msg(player, "<#FFB703>จุดรวมตัวประชุมโหวต (Meeting Point): "
+            + (mp == null
+              ? "<#B8B0C8>ใช้จุดเดียวกับ Bus Horn (แยกจุดนอกรถได้ด้วย /mma setmeetingpoint " + arenaId + ")"
+              : "<#6EEB83>" + mp.getBlockX() + ", " + mp.getBlockY() + ", " + mp.getBlockZ()));
+          CutsceneManager cm = arena.getCutsceneManager();
+          String hideBoxNote = (cm.getBusHidePos1() != null && cm.getBusHidePos2() != null)
+            ? " / ซ่อนรถจริงชั่วคราว: เปิด"
+            : "";
+          msg(player, "<#FF7518>ฉากรถบัสวิ่งและเสีย (Moving Bus): "
+            + (cm.hasBusCutscene()
+              ? "<#6EEB83>ตั้งค่าแล้ว (วิ่ง " + String.format(Locale.US, "%.1fs", cm.getBusDriveDurationSeconds()) + " / ไฟล์ " + cm.getBusSchematicName() + hideBoxNote + ")"
+              : "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbusstart " + arenaId + " และ /mma setbusend " + arenaId + ")"));
+          String cutsceneStatus;
+          if(!cm.getFrames().isEmpty()) {
+            cutsceneStatus = "<#6EEB83>ตั้งค่าแล้ว (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " / " + cm.getFrames().size() + " เฟรม @ 60FPS)";
+          } else if(cm.hasBusCutscene()) {
+            cutsceneStatus = "<#6EEB83>มุมกล้องอัตโนมัติตามรถบัส (" + String.format(Locale.US, "%.1fs", cm.getDurationSeconds()) + " @ 60FPS) <#B8B0C8>(ถ่ายมุมกล้องเองได้ด้วย /mma recordcutscene " + arenaId + ")";
+          } else {
+            cutsceneStatus = "<#FF3B47>ยังไม่ได้บันทึก (/mma recordcutscene " + arenaId + ")";
+          }
+          msg(player, "<#C77DFF>ฉากเปิดตัวก่อนเริ่มเกม (Cutscene 60FPS): " + cutsceneStatus);
           msg(player, "<shadow:#000000FF><#5A4E7C>=============================================================</shadow>");
         }
       }
@@ -485,6 +504,66 @@ public class TaskAndVentArgument {
     registry.mapArgument(
       "murdermysteryadmin",
       new LabeledCommandArgument(
+        "setmeetingpoint",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma setmeetingpoint <arena>",
+          "/mma setmeetingpoint <arena>",
+          "&7ตั้งจุดยืนล้อมวงประชุมโหวตแยกจากแตรรถบัส (เช่น ลานกว้างข้างรถบัส)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetMeetingPoint(registry, (Player) sender, args, "setmeetingpoint");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new CommandArgument(
+        "setmeeting",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetMeetingPoint(registry, (Player) sender, args, "setmeeting");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearmeetingpoint",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearmeetingpoint <arena>",
+          "/mma clearmeetingpoint <arena>",
+          "&7ล้างจุดยืนล้อมวงประชุมโหวตที่แยกไว้ (กลับไปใช้จุดเดียวกับแตรรถบัส)\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearMeetingPoint(registry, (Player) sender, args, "clearmeetingpoint");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new CommandArgument(
+        "clearmeeting",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearMeetingPoint(registry, (Player) sender, args, "clearmeeting");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
         "addvent",
         "murdermystery.admin.addvent",
         CommandArgument.ExecutorType.PLAYER,
@@ -691,15 +770,134 @@ public class TaskAndVentArgument {
         }
       }
     );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "setbusstart",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma setbusstart <arena> [snap]",
+          "/mma setbusstart <arena> [snap]",
+          "&7ตั้งจุดเริ่มต้นที่รถบัส (bus.schem) จะเริ่มวิ่งในฉากเปิดตัว\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetBusEndpoint(registry, (Player) sender, args, true);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "setbusend",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma setbusend <arena> [snap]",
+          "/mma setbusend <arena> [snap]",
+          "&7ตั้งจุดปลายทางที่รถบัส (bus.schem) วิ่งมาจอดเสียและหม้อน้ำระเบิด\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetBusEndpoint(registry, (Player) sender, args, false);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "setbusduration",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.BOTH,
+        new LabelData(
+          "/mma setbusduration <arena> <seconds>",
+          "/mma setbusduration <arena> <seconds>",
+          "&7ตั้งเวลาที่รถบัสใช้ขับจากจุดเริ่มถึงจุดรถเสีย (วินาที, ค่าเริ่มต้น 8.0)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetBusDuration(registry, sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "setbusschem",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.BOTH,
+        new LabelData(
+          "/mma setbusschem <arena> <filename.schem>",
+          "/mma setbusschem <arena> <filename.schem>",
+          "&7เลือกไฟล์ Schematic รถบัสสำหรับฉากเปิดตัว (ค่าเริ่มต้น bus.schem)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleSetBusSchematic(registry, sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "hidebusarea",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma hidebusarea <arena> <pos1|pos2|clear>",
+          "/mma hidebusarea <arena> <pos1|pos2|clear>",
+          "&7ซ่อนบล็อกรถบัสจริงในแมพชั่วคราวระหว่างเล่น Cutscene เพื่อไม่ให้ซ้อนทับรถบัสที่กำลังวิ่งเข้ามา\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleHideBusArea(registry, (Player) sender, args, "hidebusarea");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new CommandArgument(
+        "setbusbox",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleHideBusArea(registry, (Player) sender, args, "setbusbox");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearbuscutscene",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearbuscutscene <arena>",
+          "/mma clearbuscutscene <arena>",
+          "&7ล้างการตั้งค่ารถบัสเคลื่อนที่ (Moving Bus Cutscene) ของห้อง\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearBusCutscene(registry, (Player) sender, args);
+        }
+      }
+    );
   }
 
   private static void handleCutsceneMasterCommand(ArgumentsRegistry registry, Player player, String[] args) {
     if(args.length < 2) {
       msg(player, "<#FF3B47>การใช้งานคำสั่ง Cutscene:");
-      msg(player, "<#FFB703>/mma recordcutscene <arena> <#B8B0C8>- เริ่มบันทึกมุมกล้อง Cutscene");
+      msg(player, "<#FFB703>/mma setbusstart <arena> [snap] <#B8B0C8>- ตั้งจุดเริ่มวิ่งของรถบัส (bus.schem)");
+      msg(player, "<#FFB703>/mma setbusend <arena> [snap] <#B8B0C8>- ตั้งจุดปลายทางที่รถบัสเสียและระเบิด");
+      msg(player, "<#FFB703>/mma setbusduration <arena> <วินาที> <#B8B0C8>- ตั้งเวลารถบัสวิ่ง (ค่าเริ่มต้น 8.0s)");
+      msg(player, "<#FFB703>/mma hidebusarea <arena> <pos1|pos2|clear> <#B8B0C8>- ซ่อนรถบัสจริงในแมพชั่วคราวตอนเล่น Cutscene");
+      msg(player, "<#FFB703>/mma recordcutscene <arena> <#B8B0C8>- บันทึกมุมกล้อง 60FPS (มีรถบัสวิ่งจริงให้ถ่าย)");
       msg(player, "<#FFB703>/mma stopcutscene <#B8B0C8>- หยุดบันทึกและเซฟ Cutscene");
       msg(player, "<#FFB703>/mma previewcutscene <arena> <#B8B0C8>- ทดสอบเล่น Cutscene");
-      msg(player, "<#FFB703>/mma clearcutscene <arena> <#B8B0C8>- ลบ Cutscene ของห้อง");
+      msg(player, "<#FFB703>/mma clearcutscene <arena> <#B8B0C8>- ลบมุมกล้องที่บันทึก / <#FFB703>clearbuscutscene <#B8B0C8>- ลบรถบัสวิ่ง");
       return;
     }
 
@@ -766,6 +964,11 @@ public class TaskAndVentArgument {
 
     CutsceneManager.startRecording(registry.getPlugin(), player, arena);
     msg(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>REC 60FPS<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>เริ่มบันทึก Cutscene สำหรับห้อง <#FFB703>" + arenaId + " <#6EEB83>แล้ว");
+    if(arena.getCutsceneManager().hasBusCutscene()) {
+      msg(player, "<#72EFDD>[Moving Bus] <#F4F1DE>ปล่อยรถบัสจำลองวิ่งจริง ("
+        + String.format(Locale.US, "%.1fs", arena.getCutsceneManager().getBusDriveDurationSeconds())
+        + ") ให้คุณบินถ่ายมุมกล้องตามได้เลย!");
+    }
     msg(player, "<#B8B0C8>เดินหรือบินไปตามเส้นทางมุมกล้องที่ต้องการ แล้วพิมพ์ <#FFB703>/mma stopcutscene <#B8B0C8>เพื่อหยุดและบันทึก");
   }
 
@@ -810,7 +1013,7 @@ public class TaskAndVentArgument {
       return;
     }
     if(!arena.getCutsceneManager().hasCutscene()) {
-      msg(player, "<#FF3B47>ห้อง <#FFB703>" + arenaId + " <#FF3B47>ยังไม่มี Cutscene ที่บันทึกไว้! ใช้ <#FFB703>/mma recordcutscene " + arenaId);
+      msg(player, "<#FF3B47>ห้อง <#FFB703>" + arenaId + " <#FF3B47>ยังไม่มี Cutscene! ตั้งค่ารถบัสวิ่งด้วย <#FFB703>/mma setbusstart " + arenaId + " <#FF3B47>& <#FFB703>/mma setbusend " + arenaId + " <#FF3B47>หรือบันทึกมุมกล้องด้วย <#FFB703>/mma recordcutscene " + arenaId);
       return;
     }
     if(CutsceneManager.startPreview(registry.getPlugin(), player, arena)) {
@@ -1012,6 +1215,9 @@ public class TaskAndVentArgument {
 
     msg(player, "<#6EEB83>[+] ตั้งจุดแตรรถบัสฉุกเฉิน (Bus Horn) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+    if(arena.getMeetingLocation() == null) {
+      msg(player, "<#B8B0C8>Tip: หากตั้งแตรไว้ในห้องคนขับแคบๆ แนะนำให้ตั้งจุดยืนล้อมวงโหวตไว้นอกรถด้วยคำสั่ง <#FFB703>/mma setmeetingpoint " + arenaId);
+    }
   }
 
   private static void handleClearBusHorn(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
@@ -1034,6 +1240,257 @@ public class TaskAndVentArgument {
     arena.setCampfireLocation(null);
 
     msg(player, "<#FF3B47>[!] ล้างจุดแตรรถบัสฉุกเฉินของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
+  }
+
+  private static void handleSetMeetingPoint(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma " + subcommand + " <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    Block targetBlock = player.getTargetBlock(null, 5);
+    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
+      ? targetBlock.getLocation()
+      : player.getLocation().getBlock().getLocation();
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    String serialized = LocationSerializer.locationToString(loc);
+    config.set("instances." + arenaId + ".meetingpoint", serialized);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.setMeetingLocation(loc);
+
+    msg(player, "<#6EEB83>[+] ตั้งจุดยืนล้อมวงประชุมโหวต (Meeting Point) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
+      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+    msg(player, "<#B8B0C8>ผู้เล่นจะกดแตรที่ [Bus Horn] แต่จะถูกวาร์ปมายืนล้อมวงโหวตรัศมี 2.8 บล็อกรอบจุดนี้");
+  }
+
+  private static void handleClearMeetingPoint(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma " + subcommand + " <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".meetingpoint", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.setMeetingLocation(null);
+
+    msg(player, "<#FF3B47>[!] ล้างจุดยืนล้อมวงประชุมโหวตของห้อง <#FFB703>" + arenaId + " <#FF3B47>แล้ว (กลับไปใช้จุดเดียวกับแตรรถบัส)");
+  }
+
+  private static void handleSetBusEndpoint(ArgumentsRegistry registry, Player player, String[] args, boolean isStart) {
+    String cmd = isStart ? "setbusstart" : "setbusend";
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma " + cmd + " <ชื่อห้อง/arena> [snap]");
+      msg(player, "<#B8B0C8>ยืนกึ่งกลางเลนถนนจุดที่ต้องการให้รถบัสอยู่ (เติม <#FFB703>snap <#B8B0C8>ท้ายคำสั่งหากต้องการล็อกพิกัดลงจำนวนเต็มให้ตรงบล็อกเป๊ะ)");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    Location loc = player.getLocation().clone();
+    boolean snap = args.length >= 3 && (args[2].equalsIgnoreCase("snap") || args[2].equalsIgnoreCase("grid") || args[2].equalsIgnoreCase("exact"));
+    if(snap) {
+      loc.setX(Math.round(loc.getX()));
+      loc.setY(Math.floor(loc.getY()));
+      loc.setZ(Math.round(loc.getZ()));
+    } else {
+      loc.setY(Math.round(loc.getY() * 16.0) / 16.0);
+    }
+    loc.setPitch(0.0f);
+
+    CutsceneManager cm = arena.getCutsceneManager();
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    String path = "instances." + arenaId + ".buscutscene." + (isStart ? "start" : "end");
+    config.set(path, CutsceneManager.serializePreciseLocation(loc));
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    if(isStart) {
+      cm.setBusStartLocation(loc);
+    } else {
+      cm.setBusEndLocation(loc);
+    }
+
+    BusSchematicLoader.LoadedSchematic loaded = BusSchematicLoader.loadSchematic(registry.getPlugin(), cm.getBusSchematicName());
+    String coordText = String.format(Locale.US, "%.2f, %.2f, %.2f", loc.getX(), loc.getY(), loc.getZ());
+    if(isStart) {
+      msg(player, "<#6EEB83>[+] ตั้งจุดเริ่มต้นรถบัสวิ่ง (Bus Start) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>ที่ <#F4F1DE>" + coordText);
+    } else {
+      msg(player, "<#6EEB83>[+] ตั้งจุดปลายทางรถบัสเสีย (Bus Breakdown End) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>ที่ <#F4F1DE>" + coordText);
+    }
+
+    if(loaded != null) {
+      msg(player, "<#72EFDD>[Schematic] <#B8B0C8>โหลดไฟล์ <#F4F1DE>" + cm.getBusSchematicName() + " <#B8B0C8>พร้อมใช้งาน (<#6EEB83>" + loaded.getParts().size() + " <#B8B0C8>ชิ้นส่วน BlockDisplay)");
+    } else {
+      msg(player, "<#FF3B47>[!] ไม่พบไฟล์ <#FFB703>plugins/MurderMystery/schematics/" + cm.getBusSchematicName() + " <#FF3B47>กรุณาตรวจสอบไฟล์ Schematic");
+    }
+
+    if(cm.hasBusCutscene()) {
+      double dist = cm.getBusStartLocation().distance(cm.getBusEndLocation());
+      msg(player, "<#6EEB83>[พร้อมใช้งาน] <#F4F1DE>เส้นทางรถบัสตรงยาว <#FFB703>"
+        + String.format(Locale.US, "%.1f บล็อก", dist)
+        + " <#F4F1DE>ใช้เวลาวิ่ง <#FFB703>"
+        + String.format(Locale.US, "%.1f วินาที", cm.getBusDriveDurationSeconds()));
+      msg(player, "<#B8B0C8>ทดสอบได้ทันทีด้วย <#FFB703>/mma previewcutscene " + arenaId
+        + " <#B8B0C8>หรือบินถ่ายมุมกล้องเองขณะรถวิ่งด้วย <#FFB703>/mma recordcutscene " + arenaId);
+    } else if(isStart) {
+      msg(player, "<#B8B0C8>ขั้นตอนต่อไป: เดินไปจุดที่รถบัสจอดเสีย แล้วพิมพ์ <#FFB703>/mma setbusend " + arenaId);
+    } else {
+      msg(player, "<#B8B0C8>ขั้นตอนต่อไป: เดินไปจุดเริ่มปล่อยรถบัส แล้วพิมพ์ <#FFB703>/mma setbusstart " + arenaId);
+    }
+  }
+
+  private static void handleSetBusDuration(ArgumentsRegistry registry, CommandSender sender, String[] args) {
+    if(args.length < 3) {
+      msg(sender, "<#FF3B47>การใช้งาน: <#FFB703>/mma setbusduration <ชื่อห้อง/arena> <วินาที 1.5-60>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(sender, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+    double seconds;
+    try {
+      seconds = Double.parseDouble(args[2]);
+    } catch(NumberFormatException ex) {
+      msg(sender, "<#FF3B47>กรุณาระบุเวลาเป็นตัวเลขวินาที เช่น <#FFB703>/mma setbusduration " + arenaId + " 8.0");
+      return;
+    }
+    if(seconds < 1.5 || seconds > 60.0) {
+      msg(sender, "<#FF3B47>เวลารถบัสวิ่งต้องอยู่ระหว่าง <#FFB703>1.5 <#FF3B47>ถึง <#FFB703>60.0 <#FF3B47>วินาที");
+      return;
+    }
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".buscutscene.duration", seconds);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.getCutsceneManager().setBusDriveDurationSeconds(seconds);
+    msg(sender, "<#6EEB83>[+] ตั้งเวลารถบัสวิ่งจนเสียของห้อง <#FFB703>" + arenaId + " <#6EEB83>เป็น <#FFB703>"
+      + String.format(Locale.US, "%.1f วินาที", seconds) + " <#6EEB83>เรียบร้อยแล้ว");
+  }
+
+  private static void handleSetBusSchematic(ArgumentsRegistry registry, CommandSender sender, String[] args) {
+    if(args.length < 3) {
+      msg(sender, "<#FF3B47>การใช้งาน: <#FFB703>/mma setbusschem <ชื่อห้อง/arena> <ชื่อไฟล์.schem>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(sender, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    String safeName = BusSchematicLoader.sanitizeFileName(args[2]);
+    BusSchematicLoader.LoadedSchematic loaded = BusSchematicLoader.loadSchematic(registry.getPlugin(), safeName);
+    if(loaded == null) {
+      msg(sender, "<#FF3B47>ไม่พบหรืออ่านไฟล์ Schematic ไม่ได้: <#FFB703>plugins/MurderMystery/schematics/" + safeName);
+      return;
+    }
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".buscutscene.schematic", safeName);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.getCutsceneManager().setBusSchematicName(safeName);
+    msg(sender, "<#6EEB83>[+] ตั้งไฟล์ Schematic รถบัสของห้อง <#FFB703>" + arenaId + " <#6EEB83>เป็น <#F4F1DE>"
+      + safeName + " <#B8B0C8>(" + loaded.getParts().size() + " ชิ้นส่วน)");
+  }
+
+  private static void handleHideBusArea(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {
+    if(args.length < 3) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma " + subcommand + " <ชื่อห้อง/arena> <pos1|pos2|clear>");
+      msg(player, "<#B8B0C8>ใช้ครอบมุมที่ 1 และมุมที่ 2 ของรถบัสจริงที่วางไว้ในแมพ เพื่อซ่อนด้วย Packet ระหว่างเล่น Cutscene ไม่ให้ซ้อนทับรถบัสที่กำลังวิ่งเข้ามาจอด");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    String mode = args[2].trim().toLowerCase(Locale.ROOT);
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    CutsceneManager cm = arena.getCutsceneManager();
+
+    if(mode.equals("clear") || mode.equals("off") || mode.equals("none") || mode.equals("reset")) {
+      config.set("instances." + arenaId + ".buscutscene.hidepos1", null);
+      config.set("instances." + arenaId + ".buscutscene.hidepos2", null);
+      ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+      cm.setBusHidePos1(null);
+      cm.setBusHidePos2(null);
+      msg(player, "<#FF3B47>[!] ล้างกรอบซ่อนรถบัสจริงชั่วคราวของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
+      return;
+    }
+
+    if(!mode.equals("pos1") && !mode.equals("1") && !mode.equals("pos2") && !mode.equals("2")) {
+      msg(player, "<#FF3B47>กรุณาระบุ <#FFB703>pos1<#FF3B47>, <#FFB703>pos2 <#FF3B47>หรือ <#FFB703>clear");
+      return;
+    }
+
+    Block targetBlock = player.getTargetBlock(null, 5);
+    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
+      ? targetBlock.getLocation()
+      : player.getLocation().getBlock().getLocation();
+    String serialized = LocationSerializer.locationToString(loc);
+
+    boolean firstCorner = mode.equals("pos1") || mode.equals("1");
+    if(firstCorner) {
+      config.set("instances." + arenaId + ".buscutscene.hidepos1", serialized);
+      cm.setBusHidePos1(loc);
+    } else {
+      config.set("instances." + arenaId + ".buscutscene.hidepos2", serialized);
+      cm.setBusHidePos2(loc);
+    }
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    msg(player, "<#6EEB83>[+] ตั้งมุม <#FFB703>" + (firstCorner ? "Pos1" : "Pos2") + " <#6EEB83>สำหรับซ่อนรถบัสจริงระหว่าง Cutscene ที่ <#F4F1DE>"
+      + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+    if(cm.getBusHidePos1() != null && cm.getBusHidePos2() != null) {
+      msg(player, "<#72EFDD>[พร้อมใช้งาน] <#B8B0C8>ระบบจะซ่อนบล็อกในกรอบนี้เฉพาะฝั่งผู้เล่นระหว่าง Cutscene และคืนค่าบล็อกจริงทันทีเมื่อรถบัสจอดสนิทและเริ่มเกม");
+    } else {
+      msg(player, "<#B8B0C8>ขั้นตอนต่อไป: ไปที่มุมตรงข้ามของรถบัสจริง แล้วพิมพ์ <#FFB703>/mma " + subcommand + " " + arenaId + " " + (firstCorner ? "pos2" : "pos1"));
+    }
+  }
+
+  private static void handleClearBusCutscene(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: <#FFB703>/mma clearbuscutscene <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".buscutscene", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+    arena.getCutsceneManager().clearBusCutscene();
+    msg(player, "<#FF3B47>[!] ล้างการตั้งค่ารถบัสเคลื่อนที่ (Moving Bus Cutscene) ของห้อง <#FFB703>" + arenaId + " <#FF3B47>เรียบร้อยแล้ว");
   }
 
   private static void removeBlockFromConfigTasks(FileConfiguration config, String arenaId, Location targetLoc) {

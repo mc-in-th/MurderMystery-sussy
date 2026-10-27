@@ -142,20 +142,91 @@ public class CutsceneManager {
 
   private final Arena arena;
   private final List<CutsceneFrame> frames = new ArrayList<>();
+  private Location busStartLocation;
+  private Location busEndLocation;
+  private double busDriveDurationSeconds = 8.0;
+  private String busSchematicName = BusSchematicLoader.DEFAULT_SCHEMATIC_NAME;
+  private Location busHidePos1;
+  private Location busHidePos2;
   private volatile List<Player> activeViewers = Collections.emptyList();
   private final AtomicLong sessionCounter = new AtomicLong(0);
   private ScheduledFuture<?> playbackFuture;
   private BukkitTask syncTask;
   private TextDisplay cameraRig;
   private TextDisplay fadeOverlay;
+  private volatile BusCutsceneRig activeBusRig;
   private volatile boolean playing = false;
 
   public CutsceneManager(Arena arena) {
     this.arena = arena;
   }
 
+  public boolean hasBusCutscene() {
+    return busStartLocation != null
+      && busEndLocation != null
+      && busStartLocation.getWorld() != null
+      && (busEndLocation.getWorld() == null || busStartLocation.getWorld().equals(busEndLocation.getWorld()));
+  }
+
   public boolean hasCutscene() {
-    return !frames.isEmpty();
+    return !frames.isEmpty() || hasBusCutscene();
+  }
+
+  public Location getBusStartLocation() {
+    return busStartLocation;
+  }
+
+  public void setBusStartLocation(Location busStartLocation) {
+    this.busStartLocation = busStartLocation;
+  }
+
+  public Location getBusEndLocation() {
+    return busEndLocation;
+  }
+
+  public void setBusEndLocation(Location busEndLocation) {
+    this.busEndLocation = busEndLocation;
+  }
+
+  public double getBusDriveDurationSeconds() {
+    return busDriveDurationSeconds;
+  }
+
+  public void setBusDriveDurationSeconds(double busDriveDurationSeconds) {
+    this.busDriveDurationSeconds = Math.max(1.5, Math.min(60.0, busDriveDurationSeconds));
+  }
+
+  public String getBusSchematicName() {
+    return busSchematicName;
+  }
+
+  public void setBusSchematicName(String busSchematicName) {
+    this.busSchematicName = BusSchematicLoader.sanitizeFileName(busSchematicName);
+  }
+
+  public Location getBusHidePos1() {
+    return busHidePos1;
+  }
+
+  public void setBusHidePos1(Location busHidePos1) {
+    this.busHidePos1 = busHidePos1;
+  }
+
+  public Location getBusHidePos2() {
+    return busHidePos2;
+  }
+
+  public void setBusHidePos2(Location busHidePos2) {
+    this.busHidePos2 = busHidePos2;
+  }
+
+  public void clearBusCutscene() {
+    this.busStartLocation = null;
+    this.busEndLocation = null;
+    this.busDriveDurationSeconds = 8.0;
+    this.busSchematicName = BusSchematicLoader.DEFAULT_SCHEMATIC_NAME;
+    this.busHidePos1 = null;
+    this.busHidePos2 = null;
   }
 
   public boolean isPlaying() {
@@ -166,11 +237,89 @@ public class CutsceneManager {
     return playing && player != null && activeViewers.contains(player);
   }
 
+  public List<CutsceneFrame> getEffectiveFrames() {
+    if(!frames.isEmpty()) {
+      return new ArrayList<>(frames);
+    }
+    if(hasBusCutscene()) {
+      return generateAutoBusCameraFrames();
+    }
+    return new ArrayList<>();
+  }
+
+  private List<CutsceneFrame> generateAutoBusCameraFrames() {
+    List<CutsceneFrame> generated = new ArrayList<>();
+    if(!hasBusCutscene()) {
+      return generated;
+    }
+    World world = busStartLocation.getWorld();
+    String worldName = world != null ? world.getName() : "world";
+    double sx = busStartLocation.getX();
+    double sy = busStartLocation.getY();
+    double sz = busStartLocation.getZ();
+    double dx = busEndLocation.getX() - sx;
+    double dy = busEndLocation.getY() - sy;
+    double dz = busEndLocation.getZ() - sz;
+    double horizLen = Math.sqrt(dx * dx + dz * dz);
+    double fx = horizLen > 1e-4 ? (dx / horizLen) : 1.0;
+    double fz = horizLen > 1e-4 ? (dz / horizLen) : 0.0;
+    double rx = -fz;
+    double rz = fx;
+
+    double driveSec = Math.max(1.5, busDriveDurationSeconds);
+    double totalSec = driveSec + 2.2;
+    int totalFrames = Math.max(FPS * 3, (int) Math.round(totalSec * FPS));
+    double cruiseFraction = 0.65;
+    double cruiseSpeed = 2.0 / (1.0 + cruiseFraction);
+
+    for(int i = 0; i < totalFrames; i++) {
+      double elapsed = (double) i / FPS;
+      double u = Math.max(0.0, Math.min(1.0, elapsed / driveSec));
+      double s;
+      if(u <= cruiseFraction) {
+        s = cruiseSpeed * u;
+      } else {
+        double span = 1.0 - cruiseFraction;
+        double w = (u - cruiseFraction) / span;
+        s = (cruiseSpeed * cruiseFraction) + cruiseSpeed * span * (w - 0.5 * w * w);
+      }
+
+      double bx = sx + dx * s;
+      double by = sy + dy * s;
+      double bz = sz + dz * s;
+
+      double overall = (double) i / Math.max(1, totalFrames - 1);
+      double smoothOverall = overall * overall * (3.0 - 2.0 * overall);
+      double forwardOffset = 13.5 - 3.5 * smoothOverall;
+      double rightOffset = 6.2 - 1.4 * smoothOverall;
+      double heightOffset = 2.4 - 0.8 * smoothOverall;
+
+      double camX = bx + fx * forwardOffset + rx * rightOffset;
+      double camY = by + heightOffset;
+      double camZ = bz + fz * forwardOffset + rz * rightOffset;
+
+      double targetX = bx + fx * 6.8;
+      double targetY = by + 2.3;
+      double targetZ = bz + fz * 6.8;
+
+      double lookDx = targetX - camX;
+      double lookDy = targetY - (camY + PLAYER_EYE_OFFSET);
+      double lookDz = targetZ - camZ;
+      double lookHoriz = Math.sqrt(lookDx * lookDx + lookDz * lookDz);
+      float yaw = (float) Math.toDegrees(Math.atan2(-lookDx, lookDz));
+      float pitch = (float) Math.toDegrees(-Math.atan2(lookDy, Math.max(1e-4, lookHoriz)));
+
+      generated.add(new CutsceneFrame(worldName, camX, camY, camZ, yaw, pitch));
+    }
+    return generated;
+  }
+
   public Location getInitialEyeLocation() {
-    if(frames.isEmpty()) {
+    List<CutsceneFrame> effective = getEffectiveFrames();
+    if(effective.isEmpty()) {
       return null;
     }
-    return frames.get(0).toEyeLocation(getFallbackWorld());
+    return effective.get(0).toEyeLocation(getFallbackWorld());
   }
 
   public List<CutsceneFrame> getFrames() {
@@ -189,12 +338,19 @@ public class CutsceneManager {
   }
 
   public double getDurationSeconds() {
-    return (double) frames.size() / FPS;
+    if(!frames.isEmpty()) {
+      return (double) frames.size() / FPS;
+    }
+    if(hasBusCutscene()) {
+      return Math.max(1.5, busDriveDurationSeconds) + 2.2;
+    }
+    return 0.0;
   }
 
   public void startCutscene(Runnable onComplete) {
     cleanup();
-    if(frames.isEmpty()) {
+    List<CutsceneFrame> snapshotFrames = getEffectiveFrames();
+    if(snapshotFrames.isEmpty()) {
       if(onComplete != null) {
         onComplete.run();
       }
@@ -206,7 +362,7 @@ public class CutsceneManager {
     arena.getScoreboardManager().stopAllScoreboards();
     Main plugin = arena.getPlugin();
     World fallbackWorld = getFallbackWorld();
-    List<CutsceneFrame> snapshotFrames = new ArrayList<>(frames);
+    final boolean customCamera = !frames.isEmpty();
 
     List<Player> participants = new ArrayList<>(arena.getPlayers());
     List<Player> initialViewers = new ArrayList<>(participants.size());
@@ -229,6 +385,18 @@ public class CutsceneManager {
 
     cameraRig = spawnCameraRig(initialEyeLoc);
     fadeOverlay = spawnFadeOverlay(initialOverlayLoc);
+    if(hasBusCutscene()) {
+      activeBusRig = BusCutsceneRig.spawn(
+        plugin,
+        arena,
+        busStartLocation,
+        busEndLocation,
+        busSchematicName,
+        busHidePos1,
+        busHidePos2,
+        initialViewers
+      );
+    }
 
     for(Player player : initialViewers) {
       if(!player.isOnline()) {
@@ -253,6 +421,12 @@ public class CutsceneManager {
 
     final long startNanos = System.nanoTime();
     final int totalFrames = snapshotFrames.size();
+    final double totalCutsceneSec = (double) totalFrames / FPS;
+    final double effectiveDriveSec = BusCutsceneRig.computeEffectiveDriveSeconds(
+      busDriveDurationSeconds,
+      totalCutsceneSec,
+      customCamera
+    );
 
     syncTask = new BukkitRunnable() {
       private int tickCount = 0;
@@ -321,6 +495,10 @@ public class CutsceneManager {
             );
           }
           activeViewers = Collections.unmodifiableList(updatedViewers);
+          if(activeBusRig != null) {
+            double elapsedSec = (double) (System.nanoTime() - startNanos) / 1_000_000_000.0;
+            activeBusRig.tickMainThread(elapsedSec, effectiveDriveSec, updatedViewers, PacketCameraSender::updateServerEntityPosition);
+          }
           if(shouldReconfirmCamera && cameraRig != null && cameraRig.isValid()) {
             PacketCameraSender.sendSetCamera(cameraRig, updatedViewers);
           }
@@ -332,7 +510,8 @@ public class CutsceneManager {
       if(!playing || sessionCounter.get() != currentSession) {
         return;
       }
-      int frameIdx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
+      long elapsedNanos = System.nanoTime() - startNanos;
+      int frameIdx = (int) (elapsedNanos / FRAME_INTERVAL_NANOS);
       if(frameIdx >= totalFrames) {
         ScheduledFuture<?> currentFuture = playbackFuture;
         if(currentFuture != null) {
@@ -350,6 +529,12 @@ public class CutsceneManager {
       TextDisplay overlay = fadeOverlay;
       if(overlay != null && computeFadeAlpha(frameIdx, totalFrames) > 0) {
         PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewersSnapshot);
+      }
+      BusCutsceneRig busRig = activeBusRig;
+      if(busRig != null && busRig.getAnchor() != null) {
+        double elapsedSec = (double) elapsedNanos / 1_000_000_000.0;
+        BusCutsceneRig.BusPose pose = busRig.computePose(elapsedSec, effectiveDriveSec);
+        PacketCameraSender.sendEntityPositionRaw60Fps(busRig.getAnchor(), pose.x, pose.y, pose.z, 0.0f, 0.0f, viewersSnapshot);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
   }
@@ -389,6 +574,7 @@ public class CutsceneManager {
     for(Player player : arena.getPlayers()) {
       if(player != null && player.isOnline()) {
         restorePlayerVisibilityAfterCutscene(player);
+        showHornHologramToPlayer(arena.getPlugin(), arena, player);
         if(!isArenaSpectator(player)) {
           applyPostCutsceneFadeIn(player);
         }
@@ -407,6 +593,11 @@ public class CutsceneManager {
       copy.remove(player);
       activeViewers = Collections.unmodifiableList(copy);
     }
+    BusCutsceneRig busRig = activeBusRig;
+    if(busRig != null) {
+      busRig.restoreViewer(player);
+    }
+    showHornHologramToPlayer(arena.getPlugin(), arena, player);
     if(!playing) {
       return;
     }
@@ -550,7 +741,40 @@ public class CutsceneManager {
     }
   }
 
+  private static void hideHornHologramFromPlayer(PluginMain plugin, Arena arena, Player player) {
+    if(plugin == null || arena == null || player == null || !player.isOnline()) {
+      return;
+    }
+    TextDisplay hornDisplay = arena.getCampfireDisplay();
+    if(hornDisplay != null && hornDisplay.isValid()) {
+      try {
+        player.hideEntity(plugin, hornDisplay);
+      } catch(Throwable ignored) {
+      }
+    }
+  }
+
+  private static void showHornHologramToPlayer(PluginMain plugin, Arena arena, Player player) {
+    if(plugin == null || arena == null || player == null || !player.isOnline()) {
+      return;
+    }
+    TextDisplay hornDisplay = arena.getCampfireDisplay();
+    if(hornDisplay != null && hornDisplay.isValid()) {
+      try {
+        player.showEntity(plugin, hornDisplay);
+      } catch(Throwable ignored) {
+      }
+    }
+  }
+
   private void removeCameraRig() {
+    if(activeBusRig != null) {
+      try {
+        activeBusRig.cleanup(arena.getPlayers());
+      } catch(Throwable ignored) {
+      }
+      activeBusRig = null;
+    }
     if(cameraRig != null) {
       try {
         if(cameraRig.isValid()) {
@@ -578,6 +802,7 @@ public class CutsceneManager {
         VersionUtils.hidePlayer(plugin, player, other);
       }
     }
+    hideHornHologramFromPlayer(plugin, arena, player);
     teleportToCutsceneCamera(player, startEyeLoc, rig);
   }
 
@@ -628,9 +853,13 @@ public class CutsceneManager {
   private void restorePlayerFromCutscene(Player player) {
     detachPlayerCameraOnly(player);
     restorePlayerVisibilityAfterCutscene(player);
+    showHornHologramToPlayer(arena.getPlugin(), arena, player);
   }
 
   private World getFallbackWorld() {
+    if(busStartLocation != null && busStartLocation.getWorld() != null) {
+      return busStartLocation.getWorld();
+    }
     if(!arena.getPlayerSpawnPoints().isEmpty() && arena.getPlayerSpawnPoints().get(0) != null) {
       return arena.getPlayerSpawnPoints().get(0).getWorld();
     }
@@ -672,6 +901,28 @@ public class CutsceneManager {
     List<CutsceneFrame> recorded = Collections.synchronizedList(new ArrayList<>());
     CutsceneFrame initialFrame = CutsceneFrame.fromLocation(player.getLocation());
     RecordingSession session = new RecordingSession(arena, recorded, initialFrame);
+    final List<Player> recorderList = Collections.singletonList(player);
+    hideHornHologramFromPlayer(plugin, arena, player);
+
+    CutsceneManager cm = arena.getCutsceneManager();
+    final double effectiveDriveSec = BusCutsceneRig.computeEffectiveDriveSeconds(
+      cm.getBusDriveDurationSeconds(),
+      0.0,
+      false
+    );
+    if(cm.hasBusCutscene()) {
+      session.busRig = BusCutsceneRig.spawn(
+        plugin,
+        arena,
+        cm.getBusStartLocation(),
+        cm.getBusEndLocation(),
+        cm.getBusSchematicName(),
+        cm.getBusHidePos1(),
+        cm.getBusHidePos2(),
+        recorderList
+      );
+    }
+    final long recordStartNanos = System.nanoTime();
 
     BukkitTask tickTracker = new BukkitRunnable() {
       @Override
@@ -682,6 +933,10 @@ public class CutsceneManager {
           return;
         }
         session.latestFrame = CutsceneFrame.fromLocation(player.getLocation());
+        if(session.busRig != null) {
+          double elapsedSec = (double) (System.nanoTime() - recordStartNanos) / 1_000_000_000.0;
+          session.busRig.tickMainThread(elapsedSec, effectiveDriveSec, recorderList, PacketCameraSender::updateServerEntityPosition);
+        }
         int currentFrames = recorded.size();
         if(currentFrames >= MAX_RECORDING_FRAMES) {
           HalloweenChat.send(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Cutscene<shadow:#000000FF><#5A4E7C>]</shadow> <#FFB703>บันทึกครบเวลาสูงสุด ระบบทำการบันทึกให้อัตโนมัติ");
@@ -707,6 +962,12 @@ public class CutsceneManager {
       if(recorded.size() < MAX_RECORDING_FRAMES) {
         recorded.add(session.latestFrame);
       }
+      BusCutsceneRig busRig = session.busRig;
+      if(busRig != null && busRig.getAnchor() != null) {
+        double elapsedSec = (double) (System.nanoTime() - recordStartNanos) / 1_000_000_000.0;
+        BusCutsceneRig.BusPose pose = busRig.computePose(elapsedSec, effectiveDriveSec);
+        PacketCameraSender.sendEntityPositionRaw60Fps(busRig.getAnchor(), pose.x, pose.y, pose.z, 0.0f, 0.0f, recorderList);
+      }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
 
     session.tickTask = tickTracker;
@@ -729,6 +990,14 @@ public class CutsceneManager {
     if(session.tickTask != null) {
       session.tickTask.cancel();
     }
+    if(session.busRig != null) {
+      try {
+        session.busRig.cleanup(Collections.singletonList(player));
+      } catch(Throwable ignored) {
+      }
+      session.busRig = null;
+    }
+    showHornHologramToPlayer(plugin, session.arena, player);
 
     List<CutsceneFrame> rawFrames;
     synchronized(session.frames) {
@@ -787,17 +1056,19 @@ public class CutsceneManager {
     stopRecording(plugin, player, false);
     stopPreview(player);
 
-    List<CutsceneFrame> cutsceneFrames = new ArrayList<>(arena.getCutsceneManager().getFrames());
+    CutsceneManager cm = arena.getCutsceneManager();
+    List<CutsceneFrame> cutsceneFrames = cm.getEffectiveFrames();
     if(cutsceneFrames.isEmpty()) {
       return false;
     }
+    final boolean customCamera = !cm.getFrames().isEmpty();
 
     Location originalLoc = player.getLocation().clone();
     GameMode originalGameMode = player.getGameMode();
     float originalFlySpeed = player.getFlySpeed();
     boolean originalAllowFlight = player.getAllowFlight();
     boolean originalFlying = player.isFlying();
-    World fallbackWorld = arena.getCutsceneManager().getFallbackWorld();
+    World fallbackWorld = cm.getFallbackWorld();
 
     CutsceneFrame firstFrame = cutsceneFrames.get(0);
     Location startEyeLoc = firstFrame.toEyeLocation(fallbackWorld);
@@ -809,11 +1080,18 @@ public class CutsceneManager {
     final UUID previewToken = UUID.randomUUID();
     final long startNanos = System.nanoTime();
     final int totalFrames = cutsceneFrames.size();
+    final double totalCutsceneSec = (double) totalFrames / FPS;
+    final double effectiveDriveSec = BusCutsceneRig.computeEffectiveDriveSeconds(
+      cm.getBusDriveDurationSeconds(),
+      totalCutsceneSec,
+      customCamera
+    );
     final List<Player> viewerList = Collections.singletonList(player);
 
     PreviewSession previewSession = new PreviewSession(
       previewToken,
       plugin,
+      arena,
       originalLoc,
       originalGameMode,
       originalFlySpeed,
@@ -821,6 +1099,7 @@ public class CutsceneManager {
       originalFlying
     );
     activePreviews.put(player.getUniqueId(), previewSession);
+    hideHornHologramFromPlayer(plugin, arena, player);
 
     teleportToCutsceneCamera(player, startEyeLoc, null);
 
@@ -828,6 +1107,18 @@ public class CutsceneManager {
     TextDisplay overlay = spawnFadeOverlay(startOverlayLoc);
     previewSession.rig = rig;
     previewSession.overlay = overlay;
+    if(cm.hasBusCutscene()) {
+      previewSession.busRig = BusCutsceneRig.spawn(
+        plugin,
+        arena,
+        cm.getBusStartLocation(),
+        cm.getBusEndLocation(),
+        cm.getBusSchematicName(),
+        cm.getBusHidePos1(),
+        cm.getBusHidePos2(),
+        viewerList
+      );
+    }
 
     if(rig != null && rig.isValid() && player.getWorld().equals(rig.getWorld())) {
       runWithInternalBypass(player, () -> player.setSpectatorTarget(rig));
@@ -844,7 +1135,8 @@ public class CutsceneManager {
           cancel();
           return;
         }
-        int idx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
+        long elapsedNanos = System.nanoTime() - startNanos;
+        int idx = (int) (elapsedNanos / FRAME_INTERVAL_NANOS);
         if(idx >= totalFrames) {
           stopPreview(player, previewToken);
           cancel();
@@ -889,6 +1181,10 @@ public class CutsceneManager {
             }
           }
           updateFadeOverlayTick(overlay, frame, fallbackWorld, idx, totalFrames);
+          if(previewSession.busRig != null) {
+            double elapsedSec = (double) elapsedNanos / 1_000_000_000.0;
+            previewSession.busRig.tickMainThread(elapsedSec, effectiveDriveSec, viewerList, PacketCameraSender::updateServerEntityPosition);
+          }
         }
         double remaining = (double) (totalFrames - idx) / FPS;
         HalloweenChat.sendActionBar(
@@ -905,7 +1201,8 @@ public class CutsceneManager {
       if(!player.isOnline()) {
         return;
       }
-      int idx = (int) ((System.nanoTime() - startNanos) / FRAME_INTERVAL_NANOS);
+      long elapsedNanos = System.nanoTime() - startNanos;
+      int idx = (int) (elapsedNanos / FRAME_INTERVAL_NANOS);
       if(idx >= totalFrames) {
         PreviewSession active = activePreviews.get(player.getUniqueId());
         if(active != null && active.sessionToken.equals(previewToken) && active.highFreqFuture != null) {
@@ -920,6 +1217,12 @@ public class CutsceneManager {
       }
       if(overlay != null && computeFadeAlpha(idx, totalFrames) > 0) {
         PacketCameraSender.sendOverlayPosition60Fps(overlay, frame, viewerList);
+      }
+      BusCutsceneRig busRig = previewSession.busRig;
+      if(busRig != null && busRig.getAnchor() != null) {
+        double elapsedSec = (double) elapsedNanos / 1_000_000_000.0;
+        BusCutsceneRig.BusPose pose = busRig.computePose(elapsedSec, effectiveDriveSec);
+        PacketCameraSender.sendEntityPositionRaw60Fps(busRig.getAnchor(), pose.x, pose.y, pose.z, 0.0f, 0.0f, viewerList);
       }
     }, 0L, FRAME_INTERVAL_NANOS, TimeUnit.NANOSECONDS);
 
@@ -951,6 +1254,12 @@ public class CutsceneManager {
           if(session.tickTask != null) {
             session.tickTask.cancel();
           }
+          if(session.busRig != null) {
+            try {
+              session.busRig.cleanup(Collections.emptyList());
+            } catch(Throwable ignored) {
+            }
+          }
         }
       }
     }
@@ -966,6 +1275,12 @@ public class CutsceneManager {
           }
           if(session.syncTask != null) {
             session.syncTask.cancel();
+          }
+          if(session.busRig != null) {
+            try {
+              session.busRig.cleanup(Collections.emptyList());
+            } catch(Throwable ignored) {
+            }
           }
           if(session.rig != null) {
             try {
@@ -1026,6 +1341,14 @@ public class CutsceneManager {
     if(session.syncTask != null) {
       session.syncTask.cancel();
     }
+    if(session.busRig != null) {
+      try {
+        session.busRig.cleanup(Collections.singletonList(player));
+      } catch(Throwable ignored) {
+      }
+      session.busRig = null;
+    }
+    showHornHologramToPlayer(session.plugin, session.arena, player);
     try {
       runWithInternalBypass(player, () -> {
         if(player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() != null) {
@@ -1225,12 +1548,32 @@ public class CutsceneManager {
     }
   }
 
+  public static String serializePreciseLocation(Location loc) {
+    if(loc == null) {
+      return null;
+    }
+    return CutsceneFrame.fromLocation(loc).serialize();
+  }
+
+  public static Location deserializePreciseLocation(String raw) {
+    if(raw == null || raw.isEmpty()) {
+      return null;
+    }
+    CutsceneFrame frame = CutsceneFrame.deserialize(raw);
+    if(frame != null) {
+      World fallback = !Bukkit.getWorlds().isEmpty() ? Bukkit.getWorlds().get(0) : null;
+      return frame.toLocation(fallback);
+    }
+    return plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer.getLocation(raw);
+  }
+
   public static class RecordingSession {
     private final Arena arena;
     private final List<CutsceneFrame> frames;
     private volatile CutsceneFrame latestFrame;
     private BukkitTask tickTask;
     private ScheduledFuture<?> captureFuture;
+    private volatile BusCutsceneRig busRig;
 
     public RecordingSession(Arena arena, List<CutsceneFrame> frames, CutsceneFrame initialFrame) {
       this.arena = arena;
@@ -1272,6 +1615,7 @@ public class CutsceneManager {
   private static class PreviewSession {
     private final UUID sessionToken;
     private final PluginMain plugin;
+    private final Arena arena;
     private final Location originalLoc;
     private final GameMode originalGameMode;
     private final float originalFlySpeed;
@@ -1281,10 +1625,21 @@ public class CutsceneManager {
     private volatile ScheduledFuture<?> highFreqFuture;
     private volatile TextDisplay rig;
     private volatile TextDisplay overlay;
+    private volatile BusCutsceneRig busRig;
 
-    private PreviewSession(UUID sessionToken, PluginMain plugin, Location originalLoc, GameMode originalGameMode, float originalFlySpeed, boolean originalAllowFlight, boolean originalFlying) {
+    private PreviewSession(
+      UUID sessionToken,
+      PluginMain plugin,
+      Arena arena,
+      Location originalLoc,
+      GameMode originalGameMode,
+      float originalFlySpeed,
+      boolean originalAllowFlight,
+      boolean originalFlying
+    ) {
       this.sessionToken = sessionToken;
       this.plugin = plugin;
+      this.arena = arena;
       this.originalLoc = originalLoc;
       this.originalGameMode = originalGameMode;
       this.originalFlySpeed = originalFlySpeed;
@@ -1306,6 +1661,7 @@ public class CutsceneManager {
     private static Constructor<?> syncPacketConstructor;
     private static Constructor<?> rotateHeadConstructor;
     private static Constructor<?> setCameraConstructor;
+    private static Method entitySetPosMethod;
     private static volatile Method craftEntityGetHandle;
 
     private static synchronized void init() {
@@ -1315,6 +1671,11 @@ public class CutsceneManager {
       initialized = true;
       try {
         Class<?> entityClass = Class.forName("net.minecraft.world.entity.Entity");
+        try {
+          entitySetPosMethod = entityClass.getMethod("setPos", double.class, double.class, double.class);
+        } catch(Throwable ignored) {
+          entitySetPosMethod = null;
+        }
         Class<?> packetClass = Class.forName("net.minecraft.network.protocol.Packet");
         Class<?> commonListenerClass = Class.forName("net.minecraft.server.network.ServerCommonPacketListenerImpl");
         packetSendMethod = commonListenerClass.getMethod("send", packetClass);
@@ -1349,9 +1710,57 @@ public class CutsceneManager {
       }
     }
 
+    private static Object resolveNmsEntity(Entity entity) throws Exception {
+      Method getter = craftEntityGetHandle;
+      if(getter == null || !getter.getDeclaringClass().isInstance(entity)) {
+        Class<?> curr = entity.getClass();
+        Method baseMethod = curr.getMethod("getHandle");
+        while(curr.getSuperclass() != null) {
+          try {
+            baseMethod = curr.getSuperclass().getMethod("getHandle");
+            curr = curr.getSuperclass();
+          } catch(NoSuchMethodException stop) {
+            break;
+          }
+        }
+        getter = baseMethod;
+        craftEntityGetHandle = getter;
+      }
+      return getter.invoke(entity);
+    }
+
     static boolean isSetCameraSupported() {
       init();
       return setCameraSupported;
+    }
+
+    static void updateServerEntityPosition(Entity entity, double x, double y, double z) {
+      if(entity == null || !entity.isValid()) {
+        return;
+      }
+      init();
+      if(entitySetPosMethod != null) {
+        try {
+          Object nmsEntity = resolveNmsEntity(entity);
+          entitySetPosMethod.invoke(nmsEntity, x, y, z);
+          return;
+        } catch(Throwable ignored) {
+        }
+      }
+      try {
+        Location cur = entity.getLocation();
+        double dx = cur.getX() - x;
+        double dy = cur.getY() - y;
+        double dz = cur.getZ() - z;
+        if(dx * dx + dy * dy + dz * dz > 64.0 && cur.getWorld() != null) {
+          entity.teleport(
+            new Location(cur.getWorld(), x, y, z, 0.0f, 0.0f),
+            PlayerTeleportEvent.TeleportCause.PLUGIN,
+            io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS
+          );
+        }
+      } catch(Throwable ignored) {
+      }
     }
 
     static void sendSetCamera(Entity entity, List<Player> viewers) {
@@ -1360,10 +1769,7 @@ public class CutsceneManager {
         return;
       }
       try {
-        if(craftEntityGetHandle == null) {
-          craftEntityGetHandle = entity.getClass().getMethod("getHandle");
-        }
-        Object nmsEntity = craftEntityGetHandle.invoke(entity);
+        Object nmsEntity = resolveNmsEntity(entity);
         Object cameraPacket = setCameraConstructor.newInstance(nmsEntity);
         for(Player viewer : viewers) {
           if(viewer == null || !viewer.isOnline()) {
@@ -1386,7 +1792,7 @@ public class CutsceneManager {
       if(rig == null || frame == null || viewers == null || viewers.isEmpty()) {
         return;
       }
-      sendPositionPacket(rig, frame.x, frame.y + PLAYER_EYE_OFFSET, frame.z, frame.yaw, frame.pitch, viewers);
+      sendPositionPacket(rig, frame.x, frame.y + PLAYER_EYE_OFFSET, frame.z, frame.yaw, frame.pitch, true, viewers);
     }
 
     static void sendOverlayPosition60Fps(TextDisplay overlay, CutsceneFrame frame, List<Player> viewers) {
@@ -1406,11 +1812,19 @@ public class CutsceneManager {
         frame.z + dz * OVERLAY_DISTANCE,
         frame.yaw,
         frame.pitch,
+        true,
         viewers
       );
     }
 
-    private static void sendPositionPacket(TextDisplay entity, double x, double y, double z, float yaw, float pitch, List<Player> viewers) {
+    static void sendEntityPositionRaw60Fps(Entity entity, double x, double y, double z, float yaw, float pitch, List<Player> viewers) {
+      if(entity == null || viewers == null || viewers.isEmpty()) {
+        return;
+      }
+      sendPositionPacket(entity, x, y, z, yaw, pitch, false, viewers);
+    }
+
+    private static void sendPositionPacket(Entity entity, double x, double y, double z, float yaw, float pitch, boolean includeHeadRot, List<Player> viewers) {
       init();
       if(!supported) {
         return;
@@ -1421,12 +1835,12 @@ public class CutsceneManager {
         Object posMoveRot = posMoveRotConstructor.newInstance(posVec, zeroVec3, yaw, pitch);
         Object syncPacket = syncPacketConstructor.newInstance(entityId, posMoveRot, false);
 
-        if(craftEntityGetHandle == null) {
-          craftEntityGetHandle = entity.getClass().getMethod("getHandle");
+        Object headPacket = null;
+        if(includeHeadRot) {
+          Object nmsEntity = resolveNmsEntity(entity);
+          byte headYawByte = (byte) ((int) (yaw * 256.0f / 360.0f));
+          headPacket = rotateHeadConstructor.newInstance(nmsEntity, headYawByte);
         }
-        Object nmsEntity = craftEntityGetHandle.invoke(entity);
-        byte headYawByte = (byte) ((int) (yaw * 256.0f / 360.0f));
-        Object headPacket = rotateHeadConstructor.newInstance(nmsEntity, headYawByte);
 
         for(Player viewer : viewers) {
           if(viewer == null || !viewer.isOnline()) {
@@ -1439,7 +1853,9 @@ public class CutsceneManager {
           Object connection = serverPlayerConnectionField.get(handle);
           if(connection != null) {
             packetSendMethod.invoke(connection, syncPacket);
-            packetSendMethod.invoke(connection, headPacket);
+            if(headPacket != null) {
+              packetSendMethod.invoke(connection, headPacket);
+            }
           }
         }
       } catch(Throwable ignored) {

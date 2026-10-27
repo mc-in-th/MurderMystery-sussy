@@ -74,6 +74,7 @@ public class Main extends PluginMain {
       return;
     }
     getDebugger().debug("[System] [Plugin] Initialization start");
+    plugily.projects.murdermystery.arena.cutscene.BusSchematicLoader.ensureDefaultSchematics(this);
     arenaRegistry = new ArenaRegistry(this);
     new PlaceholderInitializer(this);
     messageInitializer.registerMessages();

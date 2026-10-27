@@ -1149,7 +1149,9 @@ public class ArenaEvents extends PluginArenaEvents {
       boolean exactCampfireBlock = targetLoc.getBlockX() == campfireLoc.getBlockX()
         && targetLoc.getBlockY() == campfireLoc.getBlockY()
         && targetLoc.getBlockZ() == campfireLoc.getBlockZ();
-      if(exactCampfireBlock || (!arena.getSabotageManager().hasActiveSabotage() && targetLoc.distanceSquared(campfireLoc) <= 2.25)) {
+      boolean clickedAdjacentTaskOrSabotage = !exactCampfireBlock
+        && (arena.getSabotageManager().getSabotageStationAt(targetLoc) != null || isExactTaskLocation(arena, targetLoc));
+      if(exactCampfireBlock || (!clickedAdjacentTaskOrSabotage && !arena.getSabotageManager().hasActiveSabotage() && targetLoc.distanceSquared(campfireLoc) <= 2.25)) {
         event.setCancelled(true);
         arena.getVotingManager().startVoting(player, null);
         return;
@@ -1181,6 +1183,22 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena.getTaskManager().interactTask(player, targetLoc)) {
       event.setCancelled(true);
     }
+  }
+
+  private static boolean isExactTaskLocation(Arena arena, Location targetLoc) {
+    if(arena == null || targetLoc == null || targetLoc.getWorld() == null) {
+      return false;
+    }
+    for(Location loc : arena.getAllTaskLocations()) {
+      if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
+        if(targetLoc.getBlockX() == loc.getBlockX()
+          && targetLoc.getBlockY() == loc.getBlockY()
+          && targetLoc.getBlockZ() == loc.getBlockZ()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

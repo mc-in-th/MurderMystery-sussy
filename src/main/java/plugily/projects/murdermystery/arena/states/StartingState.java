@@ -113,11 +113,11 @@ public class StartingState extends PluginStartingState {
 
       arena.getPlugin().getDebugger().debug("After: Arena: {0} | Murders = {1}, Players = {2} | Players: Murders = {3}", arena.getId(), maxmurderer, arena.getPlayersLeft().size(), pluginArena.getMurdererList());
 
-      pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
-      pluginArena.spawnCampfireHologram();
       pluginArena.clearPluginBossBars();
 
       Runnable finishStart = () -> {
+        pluginArena.getSpecialBlocks().forEach(pluginArena::loadSpecialBlock);
+        pluginArena.spawnCampfireHologram();
         int size = pluginArena.getPlayerSpawnPoints().size();
         List<Player> innocentPlayers = new ArrayList<>();
         for(Player player : arena.getPlayersLeft()) {

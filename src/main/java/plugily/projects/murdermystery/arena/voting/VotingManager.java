@@ -390,18 +390,23 @@ public class VotingManager {
     return startVoting(reportingPlayer, null);
   }
 
-  public boolean startVoting(Player reportingPlayer, String victimName) {
-    if(voteState != VoteState.NONE || arena.getArenaState() != IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying()) {
-      return false;
-    }
-
-    Location center = arena.getCampfireLocation();
+  private Location resolveMeetingCenter() {
+    Location center = arena.getEffectiveMeetingLocation();
     if(center == null && !arena.getPlayerSpawnPoints().isEmpty()) {
       center = arena.getPlayerSpawnPoints().get(0);
     }
     if(center == null) {
       center = arena.getStartLocation();
     }
+    return center;
+  }
+
+  public boolean startVoting(Player reportingPlayer, String victimName) {
+    if(voteState != VoteState.NONE || arena.getArenaState() != IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying()) {
+      return false;
+    }
+
+    Location center = resolveMeetingCenter();
     if(center == null || center.getWorld() == null) {
       return false;
     }
@@ -1284,9 +1289,12 @@ public class VotingManager {
       wasMurderer = Role.isRole(Role.MURDERER, ejectedUser, arena);
     }
 
-    Location center = arena.getCampfireLocation();
+    Location center = resolveMeetingCenter();
     if(center != null && center.getWorld() != null) {
-      Location fireCenter = center.clone().add(0.5, 1.0, 0.5);
+      double cx = center.getBlockX() + 0.5;
+      double cz = center.getBlockZ() + 0.5;
+      double safeY = findSafeStandingY(center, cx, center.getBlockY(), cz);
+      Location fireCenter = new Location(center.getWorld(), cx, safeY, cz);
       if(ejectedOnline) {
         meetingCircleLocations.put(ejectedPlayer.getUniqueId(), fireCenter);
         VersionUtils.teleport(ejectedPlayer, fireCenter);

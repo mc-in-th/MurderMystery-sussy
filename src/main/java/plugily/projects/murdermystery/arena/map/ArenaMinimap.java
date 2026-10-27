@@ -99,6 +99,9 @@ public class ArenaMinimap {
     if(arena.getCampfireLocation() != null) {
       allLocs.add(arena.getCampfireLocation());
     }
+    if(arena.getMeetingLocation() != null) {
+      allLocs.add(arena.getMeetingLocation());
+    }
     allLocs.addAll(arena.getPlayerSpawnPoints());
     for(SpecialBlock sb : arena.getSpecialBlocks()) {
       if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION) {

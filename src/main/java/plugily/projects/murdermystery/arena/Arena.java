@@ -123,6 +123,7 @@ public class Arena extends PluginArena {
   private final Map<TaskType, List<Location>> specificTaskLocations = new EnumMap<>(TaskType.class);
   private final Map<SabotageType, Location> sabotageLocations = new EnumMap<>(SabotageType.class);
   private Location campfireLocation;
+  private Location meetingLocation;
   private TextDisplay campfireDisplay;
   private int tasksPerPlayer = -1;
   private boolean visualTasksEnabled = true;
@@ -714,7 +715,7 @@ public class Arena extends PluginArena {
       }
     }
     if(campfireLocation != null) {
-      removeNearbyDisplays(campfireLocation.clone().add(0.5, 1.8, 0.5), 1.5, 2.5, 1.5, true);
+      removeStaleCampfireDisplays(getCampfireHologramLocation());
     }
     for(TextDisplay td : new ArrayList<>(textDisplays)) {
       if(td != null) {
@@ -1129,6 +1130,18 @@ public class Arena extends PluginArena {
     spawnCampfireHologram();
   }
 
+  public Location getMeetingLocation() {
+    return meetingLocation;
+  }
+
+  public void setMeetingLocation(Location meetingLocation) {
+    this.meetingLocation = meetingLocation;
+  }
+
+  public Location getEffectiveMeetingLocation() {
+    return meetingLocation != null ? meetingLocation : campfireLocation;
+  }
+
   public int getTasksPerPlayer() {
     return tasksPerPlayer;
   }
@@ -1183,6 +1196,53 @@ public class Arena extends PluginArena {
     return sb.toString();
   }
 
+  private boolean hasLowCeilingAboveCampfire() {
+    if(campfireLocation == null || campfireLocation.getWorld() == null) {
+      return false;
+    }
+    try {
+      Block base = campfireLocation.getBlock();
+      return base.getRelative(0, 2, 0).getType().isSolid()
+        || base.getRelative(0, 3, 0).getType().isSolid();
+    } catch(Throwable ignored) {
+      return false;
+    }
+  }
+
+  private Location getCampfireHologramLocation() {
+    if(campfireLocation == null) {
+      return null;
+    }
+    double yOffset = hasLowCeilingAboveCampfire() ? 0.95 : 1.8;
+    return campfireLocation.clone().add(0.5, yOffset, 0.5);
+  }
+
+  private void removeStaleCampfireDisplays(Location holoLoc) {
+    if(holoLoc == null || holoLoc.getWorld() == null) {
+      return;
+    }
+    try {
+      holoLoc.getChunk().load();
+      for(Entity entity : holoLoc.getWorld().getNearbyEntities(holoLoc, 1.5, 2.5, 1.5)) {
+        if(entity instanceof TextDisplay && !entity.equals(campfireDisplay)) {
+          TextDisplay td = (TextDisplay) entity;
+          if(textDisplays.contains(td)) {
+            continue;
+          }
+          String rawText = "";
+          try {
+            rawText = HalloweenChat.strip(td.getText());
+          } catch(Throwable ignored) {
+          }
+          if(rawText.contains("Bus Horn") || rawText.contains("Emergency Campfire") || rawText.contains("บีบแตร")) {
+            entity.remove();
+          }
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
   public void updateCampfireHologram() {
     if(campfireLocation == null || campfireLocation.getWorld() == null) {
       return;
@@ -1195,16 +1255,8 @@ public class Arena extends PluginArena {
       spawnCampfireHologram();
       return;
     }
-    Location holoLoc = campfireLocation.clone().add(0.5, 1.8, 0.5);
-    try {
-      for(Entity entity : campfireLocation.getWorld().getNearbyEntities(holoLoc, 1.5, 2.5, 1.5)) {
-        if(entity instanceof TextDisplay && !entity.equals(campfireDisplay)) {
-          textDisplays.remove(entity);
-          entity.remove();
-        }
-      }
-    } catch(Throwable ignored) {
-    }
+    Location holoLoc = getCampfireHologramLocation();
+    removeStaleCampfireDisplays(holoLoc);
     campfireDisplay.setDefaultBackground(false);
     campfireDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
     campfireDisplay.text(HalloweenChat.component(buildCampfireHologramText()));
@@ -1223,12 +1275,33 @@ public class Arena extends PluginArena {
       campfireDisplay = null;
     }
     if(campfireLocation != null && campfireLocation.getWorld() != null) {
-      Location holoLoc = campfireLocation.clone().add(0.5, 1.8, 0.5);
-      removeNearbyDisplays(holoLoc, 1.5, 2.5, 1.5, true);
+      Location holoLoc = getCampfireHologramLocation();
+      removeStaleCampfireDisplays(holoLoc);
       campfireDisplay = spawnTextDisplay(
         holoLoc,
         buildCampfireHologramText()
       );
+      if(campfireDisplay != null && hasLowCeilingAboveCampfire()) {
+        try {
+          campfireDisplay.setTransformation(new Transformation(
+            new Vector3f(0.0f, 0.0f, 0.0f),
+            new AxisAngle4f(),
+            new Vector3f(0.72f, 0.72f, 0.72f),
+            new AxisAngle4f()
+          ));
+        } catch(Throwable ignored) {
+        }
+      }
+      if(campfireDisplay != null && cutsceneManager != null && cutsceneManager.isPlaying()) {
+        for(Player p : getPlayers()) {
+          if(p != null && p.isOnline()) {
+            try {
+              p.hideEntity(plugin, campfireDisplay);
+            } catch(Throwable ignored) {
+            }
+          }
+        }
+      }
     }
   }
 }
