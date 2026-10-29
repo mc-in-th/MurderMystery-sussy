@@ -51,6 +51,12 @@ public class TaskMinigameManager {
     registerMinigame(new UnlockManifoldsMinigame(arena));
     registerMinigame(new ChargeBatteryMinigame(arena));
     registerMinigame(new CleanAirFilterMinigame(arena));
+    registerMinigame(new RadioSignalMinigame(arena));
+    registerMinigame(new FetchCoolantMinigame(arena));
+    registerMinigame(new HydraulicFluidMinigame(arena));
+    registerMinigame(new DetourRouteMinigame(arena));
+    registerMinigame(new SpareBatteryMinigame(arena));
+    registerMinigame(new SparePartsMinigame(arena));
   }
 
   public void registerMinigame(TaskMinigame minigame) {

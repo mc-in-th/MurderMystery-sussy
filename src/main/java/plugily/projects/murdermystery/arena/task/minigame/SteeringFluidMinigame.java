@@ -38,7 +38,7 @@ import java.util.UUID;
 
 public class SteeringFluidMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ถ่ายน้ำมันไฮดรอลิกสำรอง<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>เช็คน้ำมันพวงมาลัยเพาเวอร์<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static class SteeringSession {
     int angle;
@@ -79,7 +79,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
       return false;
     }
     String plain = HalloweenChat.strip(title);
-    return plain.contains("ไฮดรอลิก") || plain.contains("พวงมาลัย") || plain.contains("Steering");
+    return plain.contains("พวงมาลัย") || plain.contains("Steering");
   }
 
   @Override
@@ -94,7 +94,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
     String dirHint = session.angle < 0 ? "หมุนขวา" : "หมุนซ้าย";
-    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มลูกศร <#FFB703>" + dirHint + "ที่เรืองแสง <#F4F1DE>เพื่อตั้งเข็มแรงดันวาล์วให้ตรง <#6EEB83>0");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มลูกศร <#FFB703>" + dirHint + "ที่เรืองแสง <#F4F1DE>เพื่อดึงพวงมาลัยกลับเข้าศูนย์ <#6EEB83>0");
   }
 
   private void buildGui(Inventory inv, SteeringSession session) {
@@ -107,29 +107,29 @@ public class SteeringFluidMinigame implements TaskMinigame {
         Material.COMPASS,
         1,
         false,
-        TaskGuiHelper.tag("<#6EEB83>", "ขั้นที่ 2/2 - แรงดันวาล์วสมดุลที่ 0 แล้ว"),
+        TaskGuiHelper.tag("<#6EEB83>", "ขั้นที่ 2/2 - พวงมาลัยตรงศูนย์ 0 แล้ว"),
         "",
-        "<#F4F1DE>คลิกปุ่ม <#6EEB83>มรกตเรืองแสงด้านล่าง <#F4F1DE>เพื่อล็อกวาล์วถ่ายน้ำมันไฮดรอลิก"
+        "<#F4F1DE>คลิกปุ่ม <#6EEB83>มรกตเรืองแสงด้านล่าง <#F4F1DE>เพื่อล็อกระบบพวงมาลัย"
       ));
     } else if(session.angle < 0) {
       inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
         Material.COMPASS,
         Math.abs(session.angle),
         false,
-        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - เข็มแรงดันตกซ้าย (" + session.angle + ")"),
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - พวงมาลัยเอียงซ้าย (" + session.angle + ")"),
         "",
         "<#F4F1DE>คลิกปุ่มลูกศร <#FFB703>หมุนขวาที่เรืองแสง <#F4F1DE>อีก <#6EEB83>" + Math.abs(session.angle) + " ครั้ง",
-        "<#F4F1DE>เพื่อให้เข็มแรงดันเลื่อนมาตรงช่องกลาง <#6EEB83>0"
+        "<#F4F1DE>เพื่อให้เข็มสีแดงเลื่อนมาตรงช่องกลาง <#6EEB83>0"
       ));
     } else {
       inv.setItem(BANNER_SLOT, TaskGuiHelper.createItem(
         Material.COMPASS,
         session.angle,
         false,
-        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - เข็มแรงดันเกินขวา (+" + session.angle + ")"),
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - พวงมาลัยเอียงขวา (+" + session.angle + ")"),
         "",
         "<#F4F1DE>คลิกปุ่มลูกศร <#FFB703>หมุนซ้ายที่เรืองแสง <#F4F1DE>อีก <#6EEB83>" + session.angle + " ครั้ง",
-        "<#F4F1DE>เพื่อให้เข็มแรงดันเลื่อนมาตรงช่องกลาง <#6EEB83>0"
+        "<#F4F1DE>เพื่อให้เข็มสีแดงเลื่อนมาตรงช่องกลาง <#6EEB83>0"
       ));
     }
 
@@ -143,36 +143,36 @@ public class SteeringFluidMinigame implements TaskMinigame {
           XMaterial.LIME_STAINED_GLASS_PANE,
           1,
           false,
-          TaskGuiHelper.tag("<#6EEB83>", "0 - แรงดันสมดุลพอดี"),
+          TaskGuiHelper.tag("<#6EEB83>", "0 - ตรงศูนย์กลางพอดี"),
           "",
-          "<#6EEB83>ถ่ายน้ำมันไฮดรอลิกเข้าถังสำรองพร้อมใช้งานแล้ว"
+          "<#6EEB83>แรงดันพวงมาลัยเพาเวอร์สมดุลแล้ว"
         );
       } else if(slotAngle == 0) {
         led = TaskGuiHelper.createItem(
           XMaterial.YELLOW_STAINED_GLASS_PANE,
           1,
           false,
-          TaskGuiHelper.tag("<#FFB703>", "0 - จุดสมดุลแรงดัน"),
+          TaskGuiHelper.tag("<#FFB703>", "0 - เป้าหมายศูนย์กลาง"),
           "",
-          TaskGuiHelper.hint("<#FFB703>", "หมุนวาล์วให้เข็มมาตรงช่องนี้")
+          TaskGuiHelper.hint("<#FFB703>", "เลื่อนเข็มให้มาตรงช่องนี้")
         );
       } else if(slotAngle == session.angle) {
         led = TaskGuiHelper.createItem(
           XMaterial.RED_STAINED_GLASS_PANE,
           1,
           false,
-          TaskGuiHelper.tag("<#FF3B47>", "เข็มแรงดัน " + label + (slotAngle < 0 ? " (แรงดันต่ำ)" : " (แรงดันเกิน)")),
+          TaskGuiHelper.tag("<#FF3B47>", "เข็มปัจจุบัน " + label + (slotAngle < 0 ? " (เอียงซ้าย)" : " (เอียงขวา)")),
           "",
-          TaskGuiHelper.hint("<#FFB703>", slotAngle < 0 ? "กดปุ่มหมุนขวาเพื่อเพิ่มแรงดัน" : "กดปุ่มหมุนซ้ายเพื่อลดแรงดัน")
+          TaskGuiHelper.hint("<#FFB703>", slotAngle < 0 ? "กดปุ่มหมุนขวาเพื่อดึงกลับ" : "กดปุ่มหมุนซ้ายเพื่อดึงกลับ")
         );
       } else {
         led = TaskGuiHelper.createItem(
           XMaterial.GRAY_STAINED_GLASS_PANE,
           1,
           false,
-          TaskGuiHelper.tag("<#B8B0C8>", "ขีดวัดแรงดัน " + label),
+          TaskGuiHelper.tag("<#B8B0C8>", "ขีดวัดองศา " + label),
           "",
-          "<#B8B0C8>มาตรวัดวาล์วถังน้ำมันไฮดรอลิก"
+          "<#B8B0C8>ระยะปรับตั้งพวงมาลัย"
         );
       }
       inv.setItem(SCALE_SLOTS[i], led);
@@ -183,22 +183,22 @@ public class SteeringFluidMinigame implements TaskMinigame {
       XMaterial.ARROW,
       needLeft ? session.angle : 1,
       needLeft,
-      needLeft ? TaskGuiHelper.clickName("<- หมุนซ้ายลดแรงดันเข้าศูนย์") : TaskGuiHelper.tag("<#B8B0C8>", "<- หมุนวาล์วลดแรงดัน"),
+      needLeft ? TaskGuiHelper.clickName("<- หมุนซ้ายดึงกลับเข้าศูนย์") : TaskGuiHelper.tag("<#B8B0C8>", "<- หมุนพวงมาลัยไปทางซ้าย"),
       "",
       needLeft
-        ? "<#F4F1DE>กดอีก <#6EEB83>" + session.angle + " ครั้ง <#F4F1DE>เพื่อเข้าจุดสมดุล 0"
-        : "<#B8B0C8>ปรับแรงดันวาล์วไปทางซ้าย (-1)"
+        ? "<#F4F1DE>กดอีก <#6EEB83>" + session.angle + " ครั้ง <#F4F1DE>เพื่อเข้าศูนย์ 0"
+        : "<#B8B0C8>ปรับองศาพวงมาลัยไปทางซ้าย (-1)"
     ));
 
     inv.setItem(RESERVOIR_SLOT, TaskGuiHelper.createItem(
-      centered ? Material.EMERALD : Material.HOPPER,
+      centered ? Material.EMERALD : Material.MINECART,
       1,
       false,
-      TaskGuiHelper.tag(centered ? "<#6EEB83>" : "<#FF3B47>", centered ? "แรงดันวาล์วสมดุล 0 แล้ว" : "ถังจ่ายน้ำมันไฮดรอลิกสำรอง"),
+      TaskGuiHelper.tag(centered ? "<#6EEB83>" : "<#FF3B47>", centered ? "พวงมาลัยตรงศูนย์ 0 แล้ว" : "กระปุกน้ำมันพวงมาลัย"),
       "",
       centered
-        ? TaskGuiHelper.hint("<#6EEB83>", "กดปุ่มมรกตด้านล่างเพื่อล็อกวาล์วได้เลย")
-        : "<#F4F1DE>ค่าปัจจุบัน " + (session.angle < 0 ? "<#FF3B47>แรงดันต่ำ " + session.angle : "<#FF3B47>แรงดันเกิน +" + session.angle)
+        ? TaskGuiHelper.hint("<#6EEB83>", "กดปุ่มมรกตด้านล่างเพื่อล็อกพวงมาลัยได้เลย")
+        : "<#F4F1DE>ตำแหน่งปัจจุบัน " + (session.angle < 0 ? "<#FF3B47>เอียงซ้าย " + session.angle : "<#FF3B47>เอียงขวา +" + session.angle)
     ));
 
     boolean needRight = session.angle < 0;
@@ -206,11 +206,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
       XMaterial.ARROW,
       needRight ? Math.abs(session.angle) : 1,
       needRight,
-      needRight ? TaskGuiHelper.clickName("หมุนขวาเพิ่มแรงดันเข้าศูนย์ ->") : TaskGuiHelper.tag("<#B8B0C8>", "หมุนวาล์วเพิ่มแรงดัน ->"),
+      needRight ? TaskGuiHelper.clickName("หมุนขวาดึงกลับเข้าศูนย์ ->") : TaskGuiHelper.tag("<#B8B0C8>", "หมุนพวงมาลัยไปทางขวา ->"),
       "",
       needRight
-        ? "<#F4F1DE>กดอีก <#6EEB83>" + Math.abs(session.angle) + " ครั้ง <#F4F1DE>เพื่อเข้าจุดสมดุล 0"
-        : "<#B8B0C8>ปรับแรงดันวาล์วไปทางขวา (+1)"
+        ? "<#F4F1DE>กดอีก <#6EEB83>" + Math.abs(session.angle) + " ครั้ง <#F4F1DE>เพื่อเข้าศูนย์ 0"
+        : "<#B8B0C8>ปรับองศาพวงมาลัยไปทางขวา (+1)"
     ));
 
     if(centered) {
@@ -218,9 +218,9 @@ public class SteeringFluidMinigame implements TaskMinigame {
         XMaterial.EMERALD_BLOCK,
         1,
         true,
-        TaskGuiHelper.confirmName("ล็อกวาล์วถ่ายน้ำมันไฮดรอลิก"),
+        TaskGuiHelper.confirmName("ล็อกระบบพวงมาลัยเพาเวอร์"),
         "",
-        "<#F4F1DE>แรงดันวาล์วสมดุลตรง <#6EEB83>0 <#F4F1DE>สมบูรณ์",
+        "<#F4F1DE>ตั้งศูนย์พวงมาลัยตรง <#6EEB83>0 <#F4F1DE>สมบูรณ์",
         "",
         TaskGuiHelper.hint("<#6EEB83>", "กดคลิกที่นี่เพื่อเสร็จสิ้นภารกิจ")
       ));
@@ -229,9 +229,9 @@ public class SteeringFluidMinigame implements TaskMinigame {
         XMaterial.IRON_BARS,
         1,
         false,
-        TaskGuiHelper.lockedName("ล็อกวาล์วถ่ายน้ำมัน"),
+        TaskGuiHelper.lockedName("ล็อกระบบพวงมาลัย"),
         "",
-        "<#FF3B47>ต้องปรับแรงดันวาล์วให้ตรงศูนย์ 0 ก่อน"
+        "<#FF3B47>ต้องปรับพวงมาลัยให้ตรงศูนย์ 0 ก่อน"
       ));
     }
   }
@@ -282,7 +282,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
 
         XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        TaskGuiHelper.sendSuccessBar(player, "ถ่ายน้ำมันไฮดรอลิกสำรองสำเร็จ");
+        TaskGuiHelper.sendSuccessBar(player, "เช็คน้ำมันพวงมาลัยเพาเวอร์สำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -294,7 +294,7 @@ public class SteeringFluidMinigame implements TaskMinigame {
         }, 8L);
       } else {
         XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.85F, 1F);
-        TaskGuiHelper.sendErrorBar(player, "คลิกลูกศรที่เรืองแสงให้เข็มแรงดันตรงศูนย์ 0 ก่อน");
+        TaskGuiHelper.sendErrorBar(player, "คลิกลูกศรที่เรืองแสงให้เข็มตรงศูนย์ 0 ก่อน");
       }
       return true;
     }
@@ -302,9 +302,9 @@ public class SteeringFluidMinigame implements TaskMinigame {
     if(rawSlot >= 0 && rawSlot < 36) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
       if(session.angle == 0) {
-        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อล็อกวาล์วถ่ายน้ำมัน");
+        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อล็อกพวงมาลัย");
       } else {
-        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกปุ่มลูกศรที่เรืองแสง <#F4F1DE>เพื่อปรับแรงดันเข้าศูนย์ 0");
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกปุ่มลูกศรที่เรืองแสง <#F4F1DE>เพื่อปรับเข้าศูนย์ 0");
       }
     }
     return true;
@@ -313,11 +313,11 @@ public class SteeringFluidMinigame implements TaskMinigame {
   private void checkAngleFeedback(Player player, SteeringSession session) {
     if(session.angle == 0) {
       XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
-      TaskGuiHelper.sendTaskBar(player, "<#6EEB83>แรงดันสมดุลที่ 0 พอดีแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อล็อกวาล์ว");
+      TaskGuiHelper.sendTaskBar(player, "<#6EEB83>ตรงศูนย์ 0 พอดีแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อล็อกพวงมาลัย");
     } else if(session.angle < 0) {
-      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>แรงดันยังต่ำ <#FFB703>" + session.angle + " <#B8B0C8>(คลิกหมุนขวาต่อ)");
+      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ยังเอียงซ้าย <#FFB703>" + session.angle + " <#B8B0C8>(คลิกหมุนขวาต่อ)");
     } else {
-      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>แรงดันยังเกิน <#FFB703>+" + session.angle + " <#B8B0C8>(คลิกหมุนซ้ายต่อ)");
+      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ยังเอียงขวา <#FFB703>+" + session.angle + " <#B8B0C8>(คลิกหมุนซ้ายต่อ)");
     }
   }
 

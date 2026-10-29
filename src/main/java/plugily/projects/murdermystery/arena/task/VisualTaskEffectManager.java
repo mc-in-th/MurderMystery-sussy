@@ -114,7 +114,7 @@ public class VisualTaskEffectManager {
 
     Particle dustParticle = resolveDustParticle();
 
-    if(taskType == TaskType.CHECK_RADIATOR_WATER) {
+    if(taskType == TaskType.CHECK_RADIATOR_WATER || taskType == TaskType.FETCH_COOLANT_WATER) {
       spawnRadiatorSteamBurst(origin, dustParticle);
     } else if(taskType == TaskType.CHECK_TIRE_PRESSURE) {
       spawnTirePumpWave(origin, dustParticle);
@@ -238,7 +238,7 @@ public class VisualTaskEffectManager {
       ? session.stationLocation.clone().add(0.5, 0.8, 0.5)
       : pLoc.clone().add(0.0, 0.8, 0.0);
 
-    if(session.taskType == TaskType.CHECK_RADIATOR_WATER) {
+    if(session.taskType == TaskType.CHECK_RADIATOR_WATER || session.taskType == TaskType.FETCH_COOLANT_WATER) {
       spawnSafeParticle(world, "CLOUD", "CLOUD", sLoc.clone().add(0, 0.4, 0), 2, 0.2, 0.25, 0.2, 0.01);
       spawnSafeParticle(world, "SPLASH", "WATER_SPLASH", sLoc.clone().add(0, 0.3, 0), 4, 0.25, 0.2, 0.25, 0.05);
     } else if(session.taskType == TaskType.CHECK_TIRE_PRESSURE) {
