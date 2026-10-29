@@ -42,7 +42,7 @@ import java.util.UUID;
 
 public class ControlPanelMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>แผงควบคุมระบบไฟ<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ส่งสัญญาณวิทยุขอรถช่าง<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static final int MONITOR_SLOT = 4;
   private static final int[] LIGHT_SLOTS = {11, 12, 13, 14, 15};
@@ -50,11 +50,11 @@ public class ControlPanelMinigame implements TaskMinigame {
   private static final int STATUS_SLOT = 31;
 
   private static final String[] SWITCH_NAMES = {
-    "ไฟหน้ารถ",
-    "ปั๊มน้ำมัน",
-    "พัดลมหม้อน้ำ",
-    "ระบบสตาร์ท",
-    "ระบบปรับอากาศ"
+    "เสารับสัญญาณหลัก",
+    "คลื่นความถี่ฉุกเฉิน",
+    "ระบบขยายสัญญาณ",
+    "พิกัดจุดรถบัสเสีย",
+    "ส่งรหัสขอรถช่าง"
   };
 
   private static class PanelSession {
@@ -94,7 +94,11 @@ public class ControlPanelMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && HalloweenChat.strip(title).contains("แผงควบคุมระบบไฟ");
+    if(title == null) {
+      return false;
+    }
+    String plain = HalloweenChat.strip(title);
+    return plain.contains("ส่งสัญญาณวิทยุ") || plain.contains("แผงควบคุมระบบไฟ");
   }
 
   @Override
@@ -138,7 +142,7 @@ public class ControlPanelMinigame implements TaskMinigame {
         Material.EMERALD,
         1,
         true,
-        TaskGuiHelper.doneName("แผงควบคุมระบบไฟพร้อมทำงานแล้ว"),
+        TaskGuiHelper.doneName("ส่งสัญญาณวิทยุขอรถช่างสำเร็จ"),
         "",
         seqBuilder.toString()
       ));
@@ -149,7 +153,7 @@ public class ControlPanelMinigame implements TaskMinigame {
         false,
         TaskGuiHelper.tag("<#FFB703>", "สวิตช์ถัดไป - หมายเลข #" + (targetSwitch + 1)),
         "",
-        "<#F4F1DE>ลำดับการเปิดไฟ " + seqBuilder,
+        "<#F4F1DE>ลำดับการจูนสัญญาณ " + seqBuilder,
         "",
         TaskGuiHelper.hint("<#FFB703>", "คลิกสวิตช์ที่เรืองแสงใต้ไฟสีเหลือง")
       ));
@@ -166,16 +170,16 @@ public class ControlPanelMinigame implements TaskMinigame {
           XMaterial.LIME_STAINED_GLASS_PANE,
           1,
           finished,
-          TaskGuiHelper.tag("<#6EEB83>", "ไฟสัญญาณ #" + num + " - เปิดแล้ว"),
+          TaskGuiHelper.tag("<#6EEB83>", "ช่องสัญญาณ #" + num + " - เชื่อมต่อแล้ว"),
           "",
-          "<#6EEB83>ระบบ " + SWITCH_NAMES[i] + " ทำงานปกติ"
+          "<#6EEB83>วงจร " + SWITCH_NAMES[i] + " พร้อมส่งข้อมูล"
         );
       } else if(isNext) {
         light = TaskGuiHelper.createItem(
           XMaterial.YELLOW_STAINED_GLASS_PANE,
           1,
           true,
-          TaskGuiHelper.tag("<#FFB703>", "ไฟสัญญาณ #" + num + " - ลำดับถัดไป"),
+          TaskGuiHelper.tag("<#FFB703>", "ช่องสัญญาณ #" + num + " - ลำดับถัดไป"),
           "",
           TaskGuiHelper.hint("<#FFB703>", "คลิกสวิตช์ #" + num + " ที่อยู่ด้านล่างนี้")
         );
@@ -184,9 +188,9 @@ public class ControlPanelMinigame implements TaskMinigame {
           XMaterial.GRAY_STAINED_GLASS_PANE,
           1,
           false,
-          TaskGuiHelper.tag("<#B8B0C8>", "ไฟสัญญาณ #" + num + " - รอคิว"),
+          TaskGuiHelper.tag("<#B8B0C8>", "ช่องสัญญาณ #" + num + " - รอคิว"),
           "",
-          "<#B8B0C8>ยังไม่ถึงลำดับการสับสวิตช์นี้"
+          "<#B8B0C8>ยังไม่ถึงลำดับการสับสวิตช์ช่องนี้"
         );
       }
       inv.setItem(LIGHT_SLOTS[i], light);
@@ -199,7 +203,7 @@ public class ControlPanelMinigame implements TaskMinigame {
           false,
           TaskGuiHelper.doneName("สวิตช์ #" + num + " (" + SWITCH_NAMES[i] + ")"),
           "",
-          "<#6EEB83>จ่ายกระแสไฟเรียบร้อยแล้ว"
+          "<#6EEB83>ส่งสัญญาณช่องนี้เรียบร้อยแล้ว"
         );
       } else if(isNext) {
         sw = TaskGuiHelper.createItem(
@@ -208,7 +212,7 @@ public class ControlPanelMinigame implements TaskMinigame {
           true,
           TaskGuiHelper.clickName("สับสวิตช์ #" + num + " (" + SWITCH_NAMES[i] + ")"),
           "",
-          "<#F4F1DE>เปิดวงจร <#FFB703>" + SWITCH_NAMES[i],
+          "<#F4F1DE>เปิดช่องสัญญาณ <#FFB703>" + SWITCH_NAMES[i],
           "",
           TaskGuiHelper.hint("<#FFB703>", "กดคลิกสวิตช์นี้เป็นลำดับถัดไป")
         );
@@ -229,7 +233,7 @@ public class ControlPanelMinigame implements TaskMinigame {
       finished ? Material.EMERALD : Material.REDSTONE,
       Math.max(1, session.currentStep),
       finished,
-      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#FF7518>", "เปิดสวิตช์แล้ว " + session.currentStep + "/5 ตัว"),
+      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#FF7518>", "เชื่อมต่อสัญญาณแล้ว " + session.currentStep + "/5 ช่อง"),
       "",
       "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(session.currentStep, 5, 10)
     ));
@@ -289,7 +293,7 @@ public class ControlPanelMinigame implements TaskMinigame {
         sessions.remove(player.getUniqueId());
 
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
-        TaskGuiHelper.sendSuccessBar(player, "เชื่อมต่อแผงควบคุมระบบไฟครบทุกจุดแล้ว");
+        TaskGuiHelper.sendSuccessBar(player, "ส่งสัญญาณวิทยุขอรถช่างครบทุกช่องแล้ว");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -301,7 +305,7 @@ public class ControlPanelMinigame implements TaskMinigame {
         }, 8L);
       } else {
         int nextSw = session.requiredSequence.get(session.currentStep) + 1;
-        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>เปิดสวิตช์สำเร็จ <#F4F1DE>ลำดับถัดไปคือ <#FFB703>สวิตช์ #" + nextSw);
+        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>เชื่อมต่อช่องสัญญาณแล้ว <#F4F1DE>ลำดับถัดไปคือ <#FFB703>สวิตช์ #" + nextSw);
       }
     } else {
       session.resetProgressKeepSequence();
@@ -309,7 +313,7 @@ public class ControlPanelMinigame implements TaskMinigame {
       XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.65F);
 
       int firstSw = session.requiredSequence.get(0) + 1;
-      TaskGuiHelper.sendErrorBar(player, "สับผิดตัว เบรกเกอร์ตัดไฟ เริ่มสับใหม่ที่สวิตช์ #" + firstSw);
+      TaskGuiHelper.sendErrorBar(player, "สับผิดช่อง สัญญาณวิทยุขาดหาย เริ่มจูนใหม่ที่สวิตช์ #" + firstSw);
       buildGui(topInv, session);
     }
 

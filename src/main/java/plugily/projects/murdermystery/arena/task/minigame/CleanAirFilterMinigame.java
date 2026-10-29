@@ -41,7 +41,7 @@ import java.util.UUID;
 
 public class CleanAirFilterMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ทำความสะอาดไส้กรองอากาศ<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ค้นหากล่องฟิวส์และอะไหล่<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static final int TOTAL_CLOGS = 6;
   private static final int STATUS_SLOT = 4;
@@ -92,7 +92,11 @@ public class CleanAirFilterMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && HalloweenChat.strip(title).contains("ทำความสะอาดไส้กรองอากาศ");
+    if(title == null) {
+      return false;
+    }
+    String plain = HalloweenChat.strip(title);
+    return plain.contains("กล่องฟิวส์") || plain.contains("ทำความสะอาดไส้กรองอากาศ");
   }
 
   @Override
@@ -106,7 +110,7 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกเศษใบไม้หรือหยากไย่ที่เรืองแสงในตะแกรงเพื่อดึงออกให้ครบ <#FFB703>6 จุด");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกหยากไย่หรือเศษใบไม้ที่เรืองแสงบนชั้นวางเพื่อค้นหาอะไหล่ให้ครบ <#FFB703>6 จุด");
   }
 
   private void buildGui(Inventory inv, FilterSession session) {
@@ -121,19 +125,19 @@ public class CleanAirFilterMinigame implements TaskMinigame {
         Material.EMERALD,
         1,
         true,
-        TaskGuiHelper.doneName("ไส้กรองอากาศสะอาดสมบูรณ์"),
+        TaskGuiHelper.doneName("พบกล่องฟิวส์และอะไหล่สำรองครบแล้ว"),
         "",
-        "<#6EEB83>อากาศไหลเข้าเครื่องยนต์ได้เต็มประสิทธิภาพ"
+        "<#6EEB83>รวบรวมฟิวส์และอะไหล่สำหรับซ่อมรถบัสเรียบร้อย"
       );
     } else {
       statusItem = TaskGuiHelper.createItem(
-        Material.HOPPER,
+        Material.CHEST,
         remaining,
         false,
-        TaskGuiHelper.tag("<#FF7518>", "สิ่งอุดตันที่เหลือ " + remaining + "/" + TOTAL_CLOGS + " จุด"),
+        TaskGuiHelper.tag("<#FF7518>", "จุดที่ต้องรื้อค้นอีก " + remaining + "/" + TOTAL_CLOGS + " จุด"),
         "",
-        "<#F4F1DE>คลิกที่ <#FFB703>เศษใบไม้และหยากไย่เรืองแสง <#F4F1DE>ในช่องตะแกรง",
-        "<#F4F1DE>เพื่อดึงสิ่งสกปรกออกจากไส้กรองทีละจุด"
+        "<#F4F1DE>คลิกที่ <#FFB703>หยากไย่และเศษใบไม้เรืองแสง <#F4F1DE>บนชั้นวางของ",
+        "<#F4F1DE>เพื่อรื้อหาฟิวส์และอะไหล่สำรองทีละช่อง"
       );
     }
     inv.setItem(STATUS_SLOT, statusItem);
@@ -141,16 +145,16 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     for(int slot : FILTER_SLOTS) {
       if(session.clogSlots.contains(slot)) {
         XMaterial clogMat = CLOG_MATERIALS[slot % CLOG_MATERIALS.length];
-        String clogType = (clogMat == XMaterial.COBWEB) ? "หยากไย่อุดตัน" : "เศษใบไม้อุดตัน";
+        String clogType = (clogMat == XMaterial.COBWEB) ? "หยากไย่บังชั้นวาง" : "เศษใบไม้ทับกล่องอะไหล่";
         ItemStack clog = TaskGuiHelper.createItem(
           clogMat,
           1,
           true,
-          TaskGuiHelper.clickName("ดึง" + clogType + "ออก"),
+          TaskGuiHelper.clickName("รื้อ" + clogType + "ออก"),
           "",
-          "<#F4F1DE>ขวางทางเดินอากาศของเครื่องยนต์รถบัส",
+          "<#F4F1DE>บดบังกล่องฟิวส์และอะไหล่สำรองบนชั้น",
           "",
-          TaskGuiHelper.hint("<#FFB703>", "กดคลิกเพื่อดึงทิ้งทันที")
+          TaskGuiHelper.hint("<#FFB703>", "กดคลิกเพื่อรื้อค้นทันที")
         );
         inv.setItem(slot, clog);
       } else {
@@ -158,21 +162,21 @@ public class CleanAirFilterMinigame implements TaskMinigame {
           XMaterial.IRON_BARS,
           1,
           false,
-          TaskGuiHelper.tag("<#6EEB83>", "ช่องตะแกรงสะอาด"),
+          TaskGuiHelper.tag("<#6EEB83>", "ตรวจค้นช่องเก็บของแล้ว"),
           "",
-          "<#B8B0C8>อากาศไหลผ่านได้ปกติ"
+          "<#B8B0C8>เก็บฟิวส์และอะไหล่สำรองจากช่องนี้แล้ว"
         );
         inv.setItem(slot, grate);
       }
     }
 
     inv.setItem(BIN_SLOT, TaskGuiHelper.createItem(
-      XMaterial.COMPOSTER,
+      Material.CHEST,
       Math.max(1, cleared),
       remaining == 0,
-      TaskGuiHelper.tag(remaining == 0 ? "<#6EEB83>" : "<#FFB703>", "ทำความสะอาดแล้ว " + cleared + "/" + TOTAL_CLOGS + " จุด"),
+      TaskGuiHelper.tag(remaining == 0 ? "<#6EEB83>" : "<#FFB703>", "ค้นพบอะไหล่แล้ว " + cleared + "/" + TOTAL_CLOGS + " จุด"),
       "",
-      "<#F4F1DE>ความสะอาด " + TaskGuiHelper.buildPipeBar(cleared, TOTAL_CLOGS, 12)
+      "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(cleared, TOTAL_CLOGS, 12)
     ));
   }
 
@@ -189,7 +193,7 @@ public class CleanAirFilterMinigame implements TaskMinigame {
     if(!session.clogSlots.contains(rawSlot)) {
       if(rawSlot >= 0 && rawSlot < 45) {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
-        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่เศษใบไม้หรือหยากไย่ที่เรืองแสง <#F4F1DE>เพื่อดึงออก");
+        TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่หยากไย่หรือเศษใบไม้ที่เรืองแสง <#F4F1DE>เพื่อรื้อหาอะไหล่");
       }
       return true;
     }
@@ -205,7 +209,7 @@ public class CleanAirFilterMinigame implements TaskMinigame {
       completedSessions.add(player.getUniqueId());
       sessions.remove(player.getUniqueId());
       XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
-      TaskGuiHelper.sendSuccessBar(player, "ทำความสะอาดไส้กรองอากาศสำเร็จ");
+      TaskGuiHelper.sendSuccessBar(player, "ค้นหากล่องฟิวส์และอะไหล่สำเร็จ");
 
       Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
         if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -216,7 +220,7 @@ public class CleanAirFilterMinigame implements TaskMinigame {
         }
       }, 8L);
     } else {
-      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>กำจัดสิ่งอุดตันแล้ว <#6EEB83>" + cleared + "/" + TOTAL_CLOGS + " จุด");
+      TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นพบอะไหล่แล้ว <#6EEB83>" + cleared + "/" + TOTAL_CLOGS + " จุด");
     }
     return true;
   }

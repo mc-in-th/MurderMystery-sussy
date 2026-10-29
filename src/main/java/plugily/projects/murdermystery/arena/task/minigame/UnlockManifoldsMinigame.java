@@ -41,7 +41,7 @@ import java.util.UUID;
 
 public class UnlockManifoldsMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ปลดล็อกท่อแรงดัน<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>ตรวจสอบแผนที่เส้นทางสำรอง<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static final int INFO_SLOT = 4;
   private static final int STATUS_SLOT = 31;
@@ -82,7 +82,11 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && HalloweenChat.strip(title).contains("ปลดล็อกท่อแรงดัน");
+    if(title == null) {
+      return false;
+    }
+    String plain = HalloweenChat.strip(title);
+    return plain.contains("แผนที่เส้นทาง") || plain.contains("ปลดล็อกท่อแรงดัน");
   }
 
   @Override
@@ -95,8 +99,8 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 0.8F, 1.2F);
-    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ไปถึง <#6EEB83>10");
+    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.25F);
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกจุดพิกัดบนแผนที่เรียงลำดับจาก <#FFB703>#1 <#F4F1DE>ไปถึง <#6EEB83>#10");
   }
 
   private void buildGui(Inventory inv, ManifoldSession session) {
@@ -110,19 +114,19 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
         Material.EMERALD,
         10,
         true,
-        TaskGuiHelper.doneName("ปลดล็อกท่อแรงดันครบ 10 วาล์วแล้ว"),
+        TaskGuiHelper.doneName("บันทึกพิกัดเส้นทางสำรองครบ 10 จุดแล้ว"),
         "",
-        "<#6EEB83>แรงดันในท่อไอเสียสมดุลเรียบร้อย"
+        "<#6EEB83>ได้เส้นทางลัดออกจากเมืองเรียบร้อย"
       ));
     } else {
       inv.setItem(INFO_SLOT, TaskGuiHelper.createItem(
-        XMaterial.COMPARATOR,
+        Material.MAP,
         session.nextExpected,
         false,
-        TaskGuiHelper.tag("<#FFB703>", "กดหมายเลขถัดไป -> #" + session.nextExpected),
+        TaskGuiHelper.tag("<#FFB703>", "คลิกพิกัดถัดไป -> จุดที่ #" + session.nextExpected),
         "",
-        "<#F4F1DE>มองหาปุ่มที่มีตัวเลข <#FFB703>" + session.nextExpected + " <#F4F1DE>ในแผงด้านล่าง",
-        "<#F4F1DE>แล้วคลิกเรียงลำดับตั้งแต่ <#FFB703>1 <#F4F1DE>จนถึง <#6EEB83>10"
+        "<#F4F1DE>มองหาหมุดพิกัดหมายเลข <#FFB703>" + session.nextExpected + " <#F4F1DE>บนแผนที่ด้านล่าง",
+        "<#F4F1DE>แล้วคลิกไล่เส้นทางตั้งแต่ <#FFB703>1 <#F4F1DE>จนถึง <#6EEB83>10"
       ));
     }
 
@@ -137,18 +141,18 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
           XMaterial.LIME_STAINED_GLASS_PANE,
           num,
           finished,
-          TaskGuiHelper.doneName("วาล์วหมายเลข #" + num),
+          TaskGuiHelper.doneName("พิกัดเส้นทาง #" + num),
           "",
-          "<#6EEB83>ปลดล็อกเรียบร้อยแล้ว"
+          "<#6EEB83>บันทึกจุดผ่านทางแล้ว"
         );
       } else if(highlightStart) {
         btn = TaskGuiHelper.createItem(
           XMaterial.BLUE_STAINED_GLASS_PANE,
           num,
           true,
-          TaskGuiHelper.clickName("เริ่มที่วาล์วหมายเลข #1"),
+          TaskGuiHelper.clickName("เริ่มที่พิกัดต้นทาง #1"),
           "",
-          "<#F4F1DE>คลิกที่นี่เพื่อเริ่มปลดล็อกลำดับที่ <#FFB703>1",
+          "<#F4F1DE>คลิกที่นี่เพื่อเริ่มลากเส้นทางจุดที่ <#FFB703>1",
           "",
           TaskGuiHelper.hint("<#FFB703>", "จากนั้นไล่กด 2, 3 ... ไปจนถึง 10")
         );
@@ -157,19 +161,19 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
           XMaterial.BLUE_STAINED_GLASS_PANE,
           num,
           false,
-          TaskGuiHelper.tag("<#72EFDD>", "วาล์วหมายเลข #" + num),
+          TaskGuiHelper.tag("<#72EFDD>", "พิกัดเส้นทาง #" + num),
           "",
-          TaskGuiHelper.hint("<#B8B0C8>", "กดเมื่อถึงลำดับหมายเลข " + num)
+          TaskGuiHelper.hint("<#B8B0C8>", "กดเมื่อถึงลำดับจุดที่ " + num)
         );
       }
       inv.setItem(MANIFOLD_SLOTS[i], btn);
     }
 
     inv.setItem(STATUS_SLOT, TaskGuiHelper.createItem(
-      finished ? Material.EMERALD : Material.IRON_INGOT,
+      finished ? Material.EMERALD : Material.PAPER,
       Math.max(1, unlocked),
       finished,
-      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#FF7518>", "ปลดล็อกแล้ว " + unlocked + "/10 วาล์ว"),
+      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#FF7518>", "บันทึกเส้นทางแล้ว " + unlocked + "/10 จุด"),
       "",
       "<#F4F1DE>ความคืบหน้า " + TaskGuiHelper.buildPipeBar(unlocked, 10, 10)
     ));
@@ -195,7 +199,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     if(idx == -1) {
       if(rawSlot >= 0 && rawSlot < 36) {
         XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
-        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นหาแล้วคลิกปุ่ม <#FFB703>หมายเลข #" + session.nextExpected);
+        TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นหาแล้วคลิกหมุดพิกัด <#FFB703>หมายเลข #" + session.nextExpected);
       }
       return true;
     }
@@ -203,7 +207,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     int clickedNum = session.numbers.get(idx);
     if(clickedNum < session.nextExpected) {
       XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.2F);
-      TaskGuiHelper.sendTaskBar(player, "<#6EEB83>หมายเลข #" + clickedNum + " เปิดแล้ว <#FFB703>คลิกหมายเลข #" + session.nextExpected + " ถัดไป");
+      TaskGuiHelper.sendTaskBar(player, "<#6EEB83>พิกัด #" + clickedNum + " บันทึกแล้ว <#FFB703>คลิกพิกัด #" + session.nextExpected + " ถัดไป");
       return true;
     }
 
@@ -217,7 +221,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
         XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
-        TaskGuiHelper.sendSuccessBar(player, "ปลดล็อกท่อแรงดันครบ 10 วาล์วสำเร็จ");
+        TaskGuiHelper.sendSuccessBar(player, "ตรวจสอบสมุดแผนที่เส้นทางสำรองสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
           if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
@@ -228,12 +232,12 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>ปลดล็อก #" + clickedNum + " แล้ว <#F4F1DE>ถัดไปคลิก <#FFB703>หมายเลข #" + session.nextExpected);
+        TaskGuiHelper.sendTaskBar(player, "<#6EEB83>บันทึกจุด #" + clickedNum + " แล้ว <#F4F1DE>ถัดไปคลิก <#FFB703>พิกัด #" + session.nextExpected);
       }
     } else {
       session.nextExpected = 1;
       XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.6F);
-      TaskGuiHelper.sendErrorBar(player, "กดผิดลำดับ (#" + clickedNum + ") เริ่มกดใหม่ตั้งแต่หมายเลข #1");
+      TaskGuiHelper.sendErrorBar(player, "ลากเส้นทางผิดลำดับ (#" + clickedNum + ") เริ่มไล่ใหม่ตั้งแต่จุดที่ #1");
       buildGui(topInv, session);
     }
     return true;

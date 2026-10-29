@@ -100,16 +100,16 @@ public class MessageInitializer {
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE", new Message("In-Game.Messages.Arena.Task.Win.Subtitle",
         HalloweenChat.color("<#B8B0C8>ผู้โดยสารหลบหนีออกจากป่ามืดได้สำเร็จ")));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_FIND_DIESEL_FUEL", new Message("In-Game.Messages.Arena.Task.Types.Find-Diesel-Fuel", "หาน้ำมันดีเซล"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", new Message("In-Game.Messages.Arena.Task.Types.Check-Control-Panel", "ตรวจสอบแผงควบคุมรถบัส"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_CONTROL_PANEL", new Message("In-Game.Messages.Arena.Task.Types.Check-Control-Panel", "ส่งสัญญาณวิทยุขอรถช่าง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_REPAIR_ENGINE_WIRING", new Message("In-Game.Messages.Arena.Task.Types.Repair-Engine-Wiring", "ซ่อมสายไฟเครื่องยนต์"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_RADIATOR_WATER", new Message("In-Game.Messages.Arena.Task.Types.Check-Radiator-Water", "เช็คระดับน้ำในหม้อน้ำ"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_RADIATOR_WATER", new Message("In-Game.Messages.Arena.Task.Types.Check-Radiator-Water", "ตักน้ำหล่อเย็นหม้อน้ำ"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_ENGINE_OIL", new Message("In-Game.Messages.Arena.Task.Types.Check-Engine-Oil", "เช็คน้ำมันเครื่อง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_TIRE_PRESSURE", new Message("In-Game.Messages.Arena.Task.Types.Check-Tire-Pressure", "เช็คลมยาง"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", new Message("In-Game.Messages.Arena.Task.Types.Check-Steering-Fluid", "เช็คน้ำมันพวงมาลัย"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHECK_STEERING_FLUID", new Message("In-Game.Messages.Arena.Task.Types.Check-Steering-Fluid", "ถ่ายน้ำมันไฮดรอลิกสำรอง"));
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAN_WINDSHIELD", new Message("In-Game.Messages.Arena.Task.Types.Clean-Windshield", "เช็ดคราบโคลนกระจกหน้ารถ"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_UNLOCK_MANIFOLDS", new Message("In-Game.Messages.Arena.Task.Types.Unlock-Manifolds", "ปลดล็อกท่อแรงดัน"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHARGE_BATTERY", new Message("In-Game.Messages.Arena.Task.Types.Charge-Battery", "พ่วงชาร์จแบตเตอรี่รถบัส"));
-    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", new Message("In-Game.Messages.Arena.Task.Types.Clean-Air-Filter", "ทำความสะอาดไส้กรองอากาศ"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_UNLOCK_MANIFOLDS", new Message("In-Game.Messages.Arena.Task.Types.Unlock-Manifolds", "ตรวจสอบสมุดแผนที่เส้นทางสำรอง"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CHARGE_BATTERY", new Message("In-Game.Messages.Arena.Task.Types.Charge-Battery", "พ่วงชาร์จแบตเตอรี่สำรอง"));
+    getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_TASK_CLEAN_AIR_FILTER", new Message("In-Game.Messages.Arena.Task.Types.Clean-Air-Filter", "ค้นหากล่องฟิวส์และอะไหล่"));
 
     getMessageManager().registerMessage("IN_GAME_MESSAGES_ARENA_VOTING_COOLDOWN", new Message("In-Game.Messages.Arena.Voting.Cooldown",
         HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus Horn<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>แตรรถบัสยังติดคูลดาวน์อยู่")));

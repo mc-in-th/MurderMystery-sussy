@@ -138,7 +138,7 @@ public class TaskAndVentArgument {
         new LabelData(
           "/mma settask <arena> <taskType>",
           "/mma settask <arena> <taskType>",
-          "&7ตั้งจุดสำหรับภารกิจที่เจาะจง (เช่น diesel, wiring, panel)\n&6Permission: &7murdermystery.admin.addtask")) {
+          "&7ตั้งจุดสำหรับภารกิจที่เจาะจง (เช่น diesel, wiring, radio)\n&6Permission: &7murdermystery.admin.addtask")) {
         @Override
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;

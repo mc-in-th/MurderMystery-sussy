@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class ChargeBatteryMinigame implements TaskMinigame {
 
-  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>พ่วงชาร์จแบตเตอรี่รถบัส<shadow:#000000FF><#5A4E7C>]</shadow>");
+  public static final String GUI_TITLE = HalloweenChat.color("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>พ่วงชาร์จแบตเตอรี่สำรอง<shadow:#000000FF><#5A4E7C>]</shadow>");
 
   private static final int STATUS_SLOT = 4;
   private static final int GENERATOR_SLOT = 10;
@@ -73,7 +73,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
 
   @Override
   public boolean isGui(String title) {
-    return title != null && HalloweenChat.strip(title).contains("พ่วงชาร์จแบตเตอรี่รถบัส");
+    return title != null && HalloweenChat.strip(title).contains("พ่วงชาร์จแบตเตอรี่");
   }
 
   @Override
@@ -89,7 +89,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
     player.openInventory(inv);
 
     XSound.BLOCK_BEACON_AMBIENT.play(player.getLocation(), 0.7F, 1.4F);
-    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกสวิตช์เรืองแสงด้านล่างเพื่อเริ่มพ่วงชาร์จแบตเตอรี่");
+    TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกสวิตช์เรืองแสงด้านล่างเพื่อเริ่มพ่วงชาร์จแบตเตอรี่สำรอง");
   }
 
   private void buildGui(Inventory inv, BatterySession session) {
@@ -104,9 +104,9 @@ public class ChargeBatteryMinigame implements TaskMinigame {
         Material.EMERALD,
         1,
         true,
-        TaskGuiHelper.doneName("ชาร์จแบตเตอรี่เต็ม 100%"),
+        TaskGuiHelper.doneName("ชาร์จแบตเตอรี่สำรองเต็ม 100%"),
         "",
-        "<#6EEB83>ระบบไฟสำรองรถบัสพร้อมทำงานแล้ว"
+        "<#6EEB83>แบตเตอรี่สำรองพร้อมนำไปพ่วงสตาร์ทรถบัสแล้ว"
       );
     } else if(session.charging) {
       status = TaskGuiHelper.createItem(
@@ -124,7 +124,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
         XMaterial.DAYLIGHT_DETECTOR,
         1,
         false,
-        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - เริ่มพ่วงสายแบตเตอรี่"),
+        TaskGuiHelper.tag("<#FF7518>", "ขั้นที่ 1/2 - เริ่มพ่วงสายแบตเตอรี่สำรอง"),
         "",
         "<#F4F1DE>คลิกปุ่ม <#FFB703>สวิตช์พ่วงไฟ <#F4F1DE>ที่เรืองแสงด้านล่าง",
         "<#F4F1DE>แล้วถือหน้าจอนี้รอจนประจุเต็ม <#6EEB83>100%"
@@ -136,7 +136,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       Material.REDSTONE_BLOCK,
       1,
       false,
-      TaskGuiHelper.tag("<#FFB703>", "เครื่องปั่นไฟฉุกเฉิน 24V"),
+      TaskGuiHelper.tag("<#FFB703>", "ตู้เครื่องปั่นไฟสำรอง 24V"),
       "",
       "<#F4F1DE>สถานะ " + (session.charging ? "<#6EEB83>กำลังจ่ายกระแสไฟ" : "<#B8B0C8>รอเปิดสวิตช์")
     ));
@@ -179,7 +179,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
       finished ? Material.EMERALD_BLOCK : Material.IRON_BLOCK,
       1,
       finished,
-      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#72EFDD>", "แบตเตอรี่หลักรถบัส"),
+      TaskGuiHelper.tag(finished ? "<#6EEB83>" : "<#72EFDD>", "แบตเตอรี่สำรองรถบัส"),
       "",
       "<#F4F1DE>ประจุไฟสะสม " + (finished ? "<#6EEB83>" : "<#FFB703>") + percent + "%"
     ));
@@ -190,18 +190,18 @@ public class ChargeBatteryMinigame implements TaskMinigame {
         XMaterial.EMERALD_BLOCK,
         1,
         true,
-        TaskGuiHelper.doneName("พ่วงชาร์จแบตเตอรี่สำเร็จ"),
+        TaskGuiHelper.doneName("พ่วงชาร์จแบตเตอรี่สำรองสำเร็จ"),
         "",
-        "<#6EEB83>ประจุไฟเต็ม 100% พร้อมออกเดินทาง"
+        "<#6EEB83>ประจุไฟเต็ม 100% พร้อมนำไปสตาร์ทรถบัส"
       );
     } else if(session.charging) {
       startBtn = TaskGuiHelper.createItem(
         XMaterial.CLOCK,
         Math.max(1, session.step),
         false,
-        TaskGuiHelper.tag("<#6EEB83>", "กำลังชาร์จแบตเตอรี่ " + percent + "%"),
+        TaskGuiHelper.tag("<#6EEB83>", "กำลังชาร์จแบตเตอรี่สำรอง " + percent + "%"),
         "",
-        "<#F4F1DE>กำลังส่งกระแสไฟเข้าแบตเตอรี่รถบัส",
+        "<#F4F1DE>กำลังส่งกระแสไฟเข้าแบตเตอรี่สำรอง",
         "",
         TaskGuiHelper.hint("<#FFB703>", "ห้ามปิดหน้าจอนี้จนกว่าจะครบ 100%")
       );
@@ -210,9 +210,9 @@ public class ChargeBatteryMinigame implements TaskMinigame {
         XMaterial.LEVER,
         1,
         true,
-        TaskGuiHelper.clickName("หนีบสายพ่วงแบตเตอรี่"),
+        TaskGuiHelper.clickName("หนีบสายพ่วงแบตเตอรี่สำรอง"),
         "",
-        "<#F4F1DE>เชื่อมต่อเครื่องปั่นไฟเข้ากับแบตเตอรี่รถบัส",
+        "<#F4F1DE>เชื่อมต่อตู้ปั่นไฟเข้ากับแบตเตอรี่สำรองรถบัส",
         "",
         TaskGuiHelper.hint("<#FFB703>", "กดคลิกที่นี่เพื่อเริ่มชาร์จไฟ")
       );
@@ -267,7 +267,7 @@ public class ChargeBatteryMinigame implements TaskMinigame {
           completedSessions.add(player.getUniqueId());
           sessions.remove(player.getUniqueId());
           XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
-          TaskGuiHelper.sendSuccessBar(player, "พ่วงชาร์จแบตเตอรี่เต็ม 100% สำเร็จ");
+          TaskGuiHelper.sendSuccessBar(player, "พ่วงชาร์จแบตเตอรี่สำรองเต็ม 100% สำเร็จ");
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
             if(player.isOnline() && arena.getPlayers().contains(player) && !arena.getVotingManager().isVotingActive()) {
