@@ -421,6 +421,7 @@ public class Arena extends PluginArena {
   private final Set<String> glowEntries = new HashSet<>();
 
   private boolean taskWin = false;
+  private boolean startedWithCrewMajority = false;
 
   public boolean isSabotageWin() {
     return sabotageWin;
@@ -438,6 +439,26 @@ public class Arena extends PluginArena {
     this.taskWin = taskWin;
   }
 
+  public void setStartedWithCrewMajority(boolean startedWithCrewMajority) {
+    this.startedWithCrewMajority = startedWithCrewMajority;
+  }
+
+  public int getAliveInnocentCount() {
+    return Math.max(0, getPlayersLeft().size() - aliveMurderer());
+  }
+
+  public boolean hasMurdererReachedPlayerCountWin() {
+    int aliveMurds = aliveMurderer();
+    if(aliveMurds <= 0) {
+      return false;
+    }
+    int aliveInnocents = Math.max(0, getPlayersLeft().size() - aliveMurds);
+    if(aliveInnocents <= 0) {
+      return true;
+    }
+    return startedWithCrewMajority && aliveInnocents <= aliveMurds;
+  }
+
   public boolean isMurdererVictory() {
     if(taskWin) {
       return false;
@@ -445,8 +466,7 @@ public class Arena extends PluginArena {
     if(sabotageWin) {
       return true;
     }
-    int aliveMurds = aliveMurderer();
-    return aliveMurds > 0 && getPlayersLeft().size() <= aliveMurds;
+    return hasMurdererReachedPlayerCountWin();
   }
 
   public void removeNearbyDisplays(Location loc, double rx, double ry, double rz, boolean textOnly) {

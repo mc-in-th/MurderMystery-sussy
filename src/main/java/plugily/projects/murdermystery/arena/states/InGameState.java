@@ -76,14 +76,8 @@ public class InGameState extends PluginInGameState {
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }
-    if(pluginArena.getPlayersLeft().size() <= pluginArena.aliveMurderer()) {
-      if(pluginArena.aliveMurderer() > 0) {
-        String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
-        String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
-        for(Player p : pluginArena.getPlayers()) {
-          HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
-        }
-      }
+    if(pluginArena.hasMurdererReachedPlayerCountWin() || pluginArena.getPlayersLeft().size() <= pluginArena.aliveMurderer()) {
+      ArenaUtils.sendMurdererWinTitles(pluginArena);
       getPlugin().getArenaManager().stopGame(false, pluginArena);
       return;
     }

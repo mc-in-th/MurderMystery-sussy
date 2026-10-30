@@ -203,6 +203,7 @@ public class ArenaManager extends PluginArenaManager {
               pluginArena.addToMurdererList(newMurderer);
               pluginArena.getTaskManager().removePlayer(newMurderer);
               pluginArena.getTaskManager().addPlayerToBossBar(newMurderer);
+              pluginArena.setStartedWithCrewMajority(playersLeft.size() > pluginArena.aliveMurderer() * 2);
             }
 
             if(!wasPlayingCutscene) {
@@ -233,13 +234,8 @@ public class ArenaManager extends PluginArenaManager {
           }
         }
 
-        int aliveMurds = pluginArena.aliveMurderer();
-        if(aliveMurds > 0 && arena.getPlayersLeft().size() <= aliveMurds) {
-          String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
-          String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
-          for(Player p : pluginArena.getPlayers()) {
-            HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
-          }
+        if(pluginArena.hasMurdererReachedPlayerCountWin() || arena.getPlayersLeft().size() <= pluginArena.aliveMurderer()) {
+          ArenaUtils.sendMurdererWinTitles(pluginArena);
           stopGame(false, arena);
           return;
         }
@@ -248,6 +244,9 @@ public class ArenaManager extends PluginArenaManager {
           plugin.getCorpseHandler().spawnCorpse(player, pluginArena);
         }
       } else {
+        if(pluginArena.aliveMurderer() > 0) {
+          ArenaUtils.sendMurdererWinTitles(pluginArena);
+        }
         stopGame(false, arena);
       }
     }

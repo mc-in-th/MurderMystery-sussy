@@ -242,7 +242,11 @@ public class PlaceholderInitializer {
         if(pluginArena.isSabotageWin()) {
           summaryEnding = "<#FF3B47>เครื่องยนต์รถบัสระเบิด ฆาตกรเป็นฝ่ายชนะ";
         } else if(pluginArena.isMurdererVictory()) {
-          summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL").asKey().arena(pluginArena).build();
+          if(pluginArena.getAliveInnocentCount() > 0) {
+            summaryEnding = "<#FF3B47>เหลือผู้โดยสารเพียงคนเดียว ฆาตกรเป็นฝ่ายชนะ";
+          } else {
+            summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_ALL").asKey().arena(pluginArena).build();
+          }
         } else if(pluginArena.isTaskWin()) {
           summaryEnding = new MessageBuilder("IN_GAME_MESSAGES_ARENA_TASK_WIN_SUBTITLE").asKey().arena(pluginArena).build();
         } else {

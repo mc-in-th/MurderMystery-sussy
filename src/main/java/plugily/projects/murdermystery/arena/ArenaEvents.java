@@ -541,6 +541,11 @@ public class ArenaEvents extends PluginArenaEvents {
     arena.addSpectatorPlayer(player);
     user.setSpectator(true);
 
+    if(!gameStopping && !arena.getVotingManager().isVotingActive() && arena.hasMurdererReachedPlayerCountWin()) {
+      gameStopping = true;
+      ArenaUtils.onMurdererWin(arena);
+    }
+
     player.closeInventory();
     player.getInventory().clear();
     player.getInventory().setArmorContents(null);

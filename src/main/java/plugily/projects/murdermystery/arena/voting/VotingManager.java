@@ -1396,13 +1396,7 @@ public class VotingManager {
   }
 
   private void triggerMurdererMeetingWin() {
-    if(arena.aliveMurderer() > 0) {
-      String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
-      String winSub = "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
-      for(Player p : arena.getPlayers()) {
-        HalloweenChat.sendTitles(p, winTitle, winSub, 10, 60, 10);
-      }
-    }
+    ArenaUtils.sendMurdererWinTitles(arena);
     Bukkit.getScheduler().runTask(arena.getPlugin(), () -> arena.getPlugin().getArenaManager().stopGame(false, arena));
   }
 
@@ -1416,7 +1410,7 @@ public class VotingManager {
         ArenaUtils.onMurdererDeath(arena);
         return true;
       }
-      if(arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
+      if(arena.hasMurdererReachedPlayerCountWin() || arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
         triggerMurdererMeetingWin();
         return true;
       }
@@ -1480,7 +1474,7 @@ public class VotingManager {
             ArenaUtils.onMurdererDeath(arena);
             return true;
           }
-          if(arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
+          if(arena.hasMurdererReachedPlayerCountWin() || arena.getPlayersLeft().size() <= arena.aliveMurderer()) {
             triggerMurdererMeetingWin();
             return true;
           }

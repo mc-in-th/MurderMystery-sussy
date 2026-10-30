@@ -981,7 +981,9 @@ public class TaskManager {
           totalTasks--;
         }
       }
-      boolean hasLivingInnocents = !playerTasks.isEmpty() && arena.getPlayersLeft().size() > arena.aliveMurderer();
+      boolean hasLivingInnocents = !playerTasks.isEmpty()
+        && !arena.hasMurdererReachedPlayerCountWin()
+        && arena.getPlayersLeft().size() > arena.aliveMurderer();
       if(hasLivingInnocents && totalTasks > 0 && completedTasks >= totalTasks) {
         allTasksCompleted = true;
         if(!arena.getVotingManager().isVotingActive() && !arena.getCutsceneManager().isPlaying()) {

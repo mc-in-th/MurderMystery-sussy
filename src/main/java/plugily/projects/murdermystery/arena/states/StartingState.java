@@ -110,6 +110,7 @@ public class StartingState extends PluginStartingState {
       getMaxRolesToSet(pluginArena);
 
       addRole(pluginArena, Role.MURDERER, playersToSet);
+      pluginArena.setStartedWithCrewMajority(arena.getPlayersLeft().size() > pluginArena.aliveMurderer() * 2);
 
       arena.getPlugin().getDebugger().debug("After: Arena: {0} | Murders = {1}, Players = {2} | Players: Murders = {3}", arena.getId(), maxmurderer, arena.getPlayersLeft().size(), pluginArena.getMurdererList());
 

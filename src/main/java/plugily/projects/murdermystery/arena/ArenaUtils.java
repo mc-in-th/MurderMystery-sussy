@@ -108,6 +108,28 @@ public class ArenaUtils extends PluginArenaUtils {
     Bukkit.getScheduler().runTask(getPlugin(), () -> getPlugin().getArenaManager().stopGame(false, arena));
   }
 
+  public static void sendMurdererWinTitles(Arena arena) {
+    if(arena == null || arena.aliveMurderer() <= 0) {
+      return;
+    }
+    String winTitle = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกรเป็นฝ่ายชนะ<shadow:#000000FF><#5A4E7C>]</shadow>";
+    String winSub = arena.getAliveInnocentCount() > 0
+      ? "<#B8B0C8>เหลือผู้โดยสารเพียงคนเดียว ไม่อาจต้านทานฆาตกรได้"
+      : "<#B8B0C8>ผู้โดยสารทั้งหมดถูกสังหารแล้ว";
+    for(Player player : arena.getPlayers()) {
+      HalloweenChat.sendTitles(player, winTitle, winSub, 10, 60, 10);
+    }
+  }
+
+  public static void onMurdererWin(Arena arena) {
+    sendMurdererWinTitles(arena);
+    Bukkit.getScheduler().runTask(getPlugin(), () -> {
+      if(arena.getArenaState() == IArenaState.IN_GAME) {
+        getPlugin().getArenaManager().stopGame(false, arena);
+      }
+    });
+  }
+
   public static void updateInnocentLocator(Arena arena) {
     java.util.List<Player> list = arena.getPlayersLeft();
 
