@@ -27,6 +27,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.scoreboard.Team;
+import java.util.HashSet;
+import java.util.Set;
 import org.bukkit.util.Vector;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
@@ -367,17 +372,121 @@ public class ArenaUtils extends PluginArenaUtils {
     }
   }
 
-  public static void updateNameTagsVisibility(final Player p) {
-    if(!getPlugin().getConfigPreferences().getOption("HIDE_NAMETAGS")) {
+  private static final String NAMETAG_HIDE_TEAM = "MM_NT_HIDE";
+  private static final String LEGACY_NAMETAG_TEAM = "MMHide";
+
+  private static boolean shouldHidePlayerNameTag(Player player) {
+    if(player == null || !player.isOnline()) {
+      return false;
+    }
+    IPluginArena rawArena = getPlugin().getArenaRegistry().getArena(player);
+    if(!(rawArena instanceof Arena)) {
+      return false;
+    }
+    Arena arena = (Arena) rawArena;
+    if(arena == null) {
+      return false;
+    }
+    return arena.getArenaState() == IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying();
+  }
+
+  private static void applyHideTeamEntry(Scoreboard sb, String entry, boolean hide) {
+    if(sb == null || entry == null || entry.isEmpty()) {
       return;
     }
-    for(Player players : getPlugin().getServer().getOnlinePlayers()) {
-      IPluginArena arena = getPlugin().getArenaRegistry().getArena(players);
-      if(arena == null) {
+    try {
+      if(!hide) {
+        Team legacy = sb.getTeam(LEGACY_NAMETAG_TEAM);
+        if(legacy != null && legacy.hasEntry(entry)) {
+          legacy.removeEntry(entry);
+        }
+      }
+      Team team = sb.getTeam(NAMETAG_HIDE_TEAM);
+      if(team == null) {
+        if(!hide) {
+          return;
+        }
+        team = sb.registerNewTeam(NAMETAG_HIDE_TEAM);
+        team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+        team.setCanSeeFriendlyInvisibles(false);
+      } else {
+        if(team.getOption(Team.Option.NAME_TAG_VISIBILITY) != Team.OptionStatus.NEVER) {
+          team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        }
+        if(team.getOption(Team.Option.COLLISION_RULE) != Team.OptionStatus.NEVER) {
+          team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+        }
+        if(team.canSeeFriendlyInvisibles()) {
+          team.setCanSeeFriendlyInvisibles(false);
+        }
+      }
+      if(hide) {
+        if(!team.hasEntry(entry)) {
+          team.addEntry(entry);
+        }
+      } else if(team.hasEntry(entry)) {
+        team.removeEntry(entry);
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
+  public static void syncAllNameTags() {
+    ScoreboardManager sbManager = Bukkit.getScoreboardManager();
+    if(sbManager == null) {
+      return;
+    }
+    Scoreboard mainSb = sbManager.getMainScoreboard();
+    Set<Scoreboard> scoreboards = new HashSet<>();
+    if(mainSb != null) {
+      scoreboards.add(mainSb);
+    }
+    for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
+      if(viewer != null && viewer.isOnline()) {
+        Scoreboard viewerSb = viewer.getScoreboard();
+        if(viewerSb != null) {
+          scoreboards.add(viewerSb);
+        }
+      }
+    }
+    for(Player target : getPlugin().getServer().getOnlinePlayers()) {
+      if(target == null || !target.isOnline()) {
         continue;
       }
-      VersionUtils.updateNameTagsVisibility(
-        p, players, "MMHide", arena.getArenaState() != IArenaState.IN_GAME);
+      boolean hide = shouldHidePlayerNameTag(target);
+      String entry = target.getName();
+      for(Scoreboard sb : scoreboards) {
+        applyHideTeamEntry(sb, entry, hide);
+      }
     }
+  }
+
+  public static void syncArenaNameTags(Arena arena) {
+    syncAllNameTags();
+  }
+
+  public static void restorePlayerNameTag(Player player) {
+    if(player == null) {
+      return;
+    }
+    ScoreboardManager sbManager = Bukkit.getScoreboardManager();
+    if(sbManager == null) {
+      return;
+    }
+    String entry = player.getName();
+    applyHideTeamEntry(sbManager.getMainScoreboard(), entry, false);
+    if(player.isOnline()) {
+      applyHideTeamEntry(player.getScoreboard(), entry, false);
+    }
+    for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
+      if(viewer != null && viewer.isOnline()) {
+        applyHideTeamEntry(viewer.getScoreboard(), entry, false);
+      }
+    }
+  }
+
+  public static void updateNameTagsVisibility(final Player p) {
+    syncAllNameTags();
   }
 }

@@ -504,6 +504,7 @@ public class CutsceneManager {
     final long currentSession = sessionCounter.incrementAndGet();
     playing = true;
     arena.getScoreboardManager().stopAllScoreboards();
+    ArenaUtils.syncArenaNameTags(arena);
     Main plugin = arena.getPlugin();
     World fallbackWorld = getFallbackWorld();
     final boolean customCamera = !frames.isEmpty();
@@ -738,6 +739,7 @@ public class CutsceneManager {
       }
     }
     restoreScoreboards();
+    ArenaUtils.syncArenaNameTags(arena);
   }
 
   public void handlePlayerLeave(Player player) {

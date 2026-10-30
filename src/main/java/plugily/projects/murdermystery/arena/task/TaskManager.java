@@ -303,10 +303,15 @@ public class TaskManager {
       }
     }
 
+    List<Location> occupiedHologramLocs = new ArrayList<>(arena.collectActiveStationHologramLocations(null, null));
+
     for(Map.Entry<Location, Set<TaskType>> entry : locationTasks.entrySet()) {
       Location loc = entry.getKey();
       Set<TaskType> types = entry.getValue();
-      Location displayLoc = loc.clone().add(0.5, 1.4, 0.5);
+      Location displayLoc = arena.resolveClearHologramLocation(loc, 1.4, occupiedHologramLocs);
+      if(displayLoc != null) {
+        occupiedHologramLocs.add(displayLoc);
+      }
 
       String activeText;
       String completedText;
@@ -336,9 +341,10 @@ public class TaskManager {
         completedText = sbDone.toString();
       }
 
-      arena.removeNearbyDisplays(displayLoc, 1.2, 1.8, 1.2, false);
       TextDisplay activeHologram = arena.spawnTextDisplay(displayLoc, activeText, false);
       TextDisplay completedHologram = arena.spawnTextDisplay(displayLoc, completedText, false);
+      arena.applyCompactHologramScaleIfNeeded(activeHologram, displayLoc);
+      arena.applyCompactHologramScaleIfNeeded(completedHologram, displayLoc);
       BlockDisplay glowingBlock = arena.spawnBlockDisplay(loc, null, ChatColor.GOLD);
 
       stationDisplays.add(new TaskStationDisplay(loc, types, activeHologram, completedHologram, glowingBlock));
@@ -473,7 +479,7 @@ public class TaskManager {
     return findStationByEntity(entity) != null;
   }
 
-  private TaskStationDisplay findStationByEntity(Entity entity) {
+  public TaskStationDisplay findStationByEntity(Entity entity) {
     if(entity == null) {
       return null;
     }
@@ -485,6 +491,36 @@ public class TaskManager {
       }
     }
     return null;
+  }
+
+  public boolean isTaskStationBlock(Location targetLoc) {
+    if(targetLoc == null || targetLoc.getWorld() == null) {
+      return false;
+    }
+    for(Location loc : arena.getAllTaskLocations()) {
+      if(isSameBlock(loc, targetLoc)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean hasPlayerTaskAtBlock(Player player, Location targetLoc) {
+    if(player == null || targetLoc == null || targetLoc.getWorld() == null) {
+      return false;
+    }
+    List<GameTask> tasks = playerTasks.get(player);
+    if(tasks == null || tasks.isEmpty()) {
+      return false;
+    }
+    Location matchedStation = findStationForClickedBlock(targetLoc);
+    Location checkLoc = matchedStation != null ? matchedStation : targetLoc;
+    for(GameTask task : tasks) {
+      if(isSameBlock(task.getLocation(), checkLoc)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean interactTaskEntity(Player player, Entity entity) {
@@ -532,6 +568,13 @@ public class TaskManager {
     }
 
     if(closestTask != null) {
+      if(!ArenaUtils.isSpectator(player, arena)
+        && arena.getSabotageManager() != null
+        && arena.getSabotageManager().hasActiveSabotage()
+        && isSameBlock(closestTask.getLocation(), arena.getSabotageManager().getActiveFixLocation())) {
+        arena.getSabotageManager().openFixGUI(player);
+        return true;
+      }
       return openOrCompleteTask(player, closestTask);
     }
 
@@ -549,6 +592,13 @@ public class TaskManager {
     }
 
     if(nearestStation != null) {
+      if(!ArenaUtils.isSpectator(player, arena)
+        && arena.getSabotageManager() != null
+        && arena.getSabotageManager().hasActiveSabotage()
+        && isSameBlock(nearestStation, arena.getSabotageManager().getActiveFixLocation())) {
+        arena.getSabotageManager().openFixGUI(player);
+        return true;
+      }
       return interactAtStation(player, nearestStation);
     }
 
@@ -899,7 +949,16 @@ public class TaskManager {
 
         if(dustParticle != null) {
           try {
-            Location blockTop = target.clone().add(0.5, 1.2, 0.5);
+            Location blockTop = null;
+            for(TaskStationDisplay station : stationDisplays) {
+              if(isSameBlock(station.getLocation(), target) && station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
+                blockTop = station.getActiveHologram().getLocation().clone();
+                break;
+              }
+            }
+            if(blockTop == null) {
+              blockTop = arena.resolveClearHologramLocation(target, 1.2, Collections.emptyList());
+            }
             Particle.DustOptions amber = new Particle.DustOptions(Color.fromRGB(255, 183, 3), 1.4F);
             player.spawnParticle(dustParticle, blockTop, 2, 0.1, 0.2, 0.1, 0, amber);
           } catch(Exception ignored) {
@@ -1017,7 +1076,34 @@ public class TaskManager {
     }
 
     List<GameTask> pTasks = playerTasks.get(player);
+    boolean isSpec = ArenaUtils.isSpectator(player, arena);
+    Location activeSabotageLoc = (arena.getSabotageManager() != null && arena.getSabotageManager().hasActiveSabotage())
+      ? arena.getSabotageManager().getActiveFixLocation()
+      : null;
+
     for(TaskStationDisplay station : stationDisplays) {
+      if(!isSpec && activeSabotageLoc != null && isSameBlock(activeSabotageLoc, station.getLocation())) {
+        if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getActiveHologram());
+          } catch(Throwable ignored) {
+          }
+        }
+        if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
+          } catch(Throwable ignored) {
+          }
+        }
+        if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
+          try {
+            player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
+          } catch(Throwable ignored) {
+          }
+        }
+        continue;
+      }
+
       boolean hasTaskHere = false;
       boolean hasUnfinishedTaskHere = false;
 

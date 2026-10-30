@@ -169,8 +169,10 @@ public class StartingState extends PluginStartingState {
             pluginArena.getSabotageManager().addPlayerToBossBar(p);
           }
         }
+        ArenaUtils.syncArenaNameTags(pluginArena);
       };
 
+      ArenaUtils.syncArenaNameTags(pluginArena);
       if(pluginArena.getCutsceneManager().hasCutscene()) {
         pluginArena.getCutsceneManager().startCutscene(finishStart);
       } else {

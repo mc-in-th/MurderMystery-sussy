@@ -44,6 +44,7 @@ public class InGameState extends PluginInGameState {
     if(pluginArena == null) {
       return;
     }
+    ArenaUtils.syncArenaNameTags(pluginArena);
     pluginArena.clearPluginBossBars();
 
     if(pluginArena.getCutsceneManager().isPlaying()) {

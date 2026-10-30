@@ -89,6 +89,7 @@ import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.arena.sabotage.SabotageType;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
+import plugily.projects.murdermystery.arena.task.TaskManager.TaskStationDisplay;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 import plugily.projects.murdermystery.utils.ItemPosition;
@@ -988,6 +989,10 @@ public class ArenaEvents extends PluginArenaEvents {
         && arena.getTaskManager().hasAssignedTasks(player)) {
         if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
           event.setCancelled(true);
+        } else if(arena.getSabotageManager().isSabotageDisplayEntity(event.getRightClicked())
+          && arena.getSabotageManager().getActiveFixLocation() != null
+          && arena.getTaskManager().interactTask(player, arena.getSabotageManager().getActiveFixLocation())) {
+          event.setCancelled(true);
         }
       }
       return;
@@ -1035,9 +1040,11 @@ public class ArenaEvents extends PluginArenaEvents {
         arena.getVotingManager().startVoting(player, null);
         return;
       }
-      if(arena.getSabotageManager().hasActiveSabotage() && arena.getSabotageManager().isAtFixStation(player, event.getRightClicked().getLocation())) {
+      if(arena.getSabotageManager().isSabotageDisplayEntity(event.getRightClicked())) {
         event.setCancelled(true);
-        arena.getSabotageManager().openFixGUI(player);
+        if(arena.getSabotageManager().hasActiveSabotage()) {
+          arena.getSabotageManager().openFixGUI(player);
+        }
         return;
       }
       if(arena.getVentDisplays().contains(event.getRightClicked()) || arena.getVentBlockDisplays().contains(event.getRightClicked())) {
@@ -1070,15 +1077,30 @@ public class ArenaEvents extends PluginArenaEvents {
         return;
       }
 
-      if(!Role.isRole(Role.MURDERER, user, arena)) {
-        if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
+      TaskStationDisplay clickedStation = arena.getTaskManager().findStationByEntity(event.getRightClicked());
+      if(clickedStation != null) {
+        Location activeFixLoc = arena.getSabotageManager().getActiveFixLocation();
+        if(arena.getSabotageManager().hasActiveSabotage()
+          && activeFixLoc != null
+          && clickedStation.getLocation() != null
+          && activeFixLoc.getWorld() != null
+          && activeFixLoc.getWorld().equals(clickedStation.getLocation().getWorld())
+          && activeFixLoc.getBlockX() == clickedStation.getLocation().getBlockX()
+          && activeFixLoc.getBlockY() == clickedStation.getLocation().getBlockY()
+          && activeFixLoc.getBlockZ() == clickedStation.getLocation().getBlockZ()) {
           event.setCancelled(true);
+          arena.getSabotageManager().openFixGUI(player);
+          return;
         }
-      } else {
-        if(arena.getTaskManager().isStationDisplayEntity(event.getRightClicked())) {
+        if(!Role.isRole(Role.MURDERER, user, arena)) {
+          if(arena.getTaskManager().interactTaskEntity(player, event.getRightClicked())) {
+            event.setCancelled(true);
+          }
+        } else {
           event.setCancelled(true);
           HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้");
         }
+        return;
       }
     }
   }
@@ -1197,6 +1219,12 @@ public class ArenaEvents extends PluginArenaEvents {
 
     SabotageType stationType = arena.getSabotageManager().getSabotageStationAt(targetLoc);
     if(stationType != null) {
+      if(!Role.isRole(Role.MURDERER, user, arena)
+        && arena.getTaskManager().hasPlayerTaskAtBlock(player, targetLoc)
+        && arena.getTaskManager().interactTask(player, targetLoc)) {
+        event.setCancelled(true);
+        return;
+      }
       event.setCancelled(true);
       HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>" + stationType.getDisplayName() + " <#6EEB83>ทำงานปกติ");
       return;

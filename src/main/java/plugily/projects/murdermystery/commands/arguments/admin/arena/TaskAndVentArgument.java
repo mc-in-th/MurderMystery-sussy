@@ -205,6 +205,10 @@ public class TaskAndVentArgument {
             + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
             + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ()
             + " <#6EEB83>(รวมเฉพาะภารกิจนี้ <#FFB703>" + list.size() + " <#6EEB83>จุด)");
+          SabotageType sharedSab = arena.getSabotageManager().getSabotageStationAt(loc);
+          if(sharedSab != null) {
+            msg(player, "<#FFB703>[หมายเหตุ] <#B8B0C8>บล็อกนี้เป็นจุดแก้ Sabotage (<#FF3B47>" + sharedSab.getDisplayName() + "<#B8B0C8>) ด้วย ระบบจะสลับให้แก้ Sabotage ก่อนเมื่อเกิดเหตุฉุกเฉิน และทำภารกิจได้ตามปกติในเวลาอื่น");
+          }
         }
       }
     );
@@ -1310,6 +1314,9 @@ public class TaskAndVentArgument {
     msg(player, "<#6EEB83>[+] ตั้งบล็อกแก้ Sabotage <#FF3B47>" + type.getIcon() + " " + type.getDisplayName()
       + " <#6EEB83>ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+    if(arena.getTaskManager().isTaskStationBlock(loc)) {
+      msg(player, "<#FFB703>[หมายเหตุ] <#B8B0C8>บล็อกนี้มีจุดภารกิจ (Task) อยู่ด้วย ระบบจะสลับแสดง Sabotage อัตโนมัติเฉพาะตอนเกิดเหตุฉุกเฉิน และคืนค่าป้ายภารกิจเมื่อซ่อมเสร็จ");
+    }
   }
 
   private static void handleSetBusHorn(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {

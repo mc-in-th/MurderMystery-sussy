@@ -23,8 +23,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.type.Stairs;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
@@ -67,12 +71,14 @@ import plugily.projects.murdermystery.arena.states.RestartingState;
 import plugily.projects.murdermystery.arena.states.StartingState;
 import plugily.projects.murdermystery.arena.states.WaitingState;
 import plugily.projects.murdermystery.arena.task.TaskManager;
+import plugily.projects.murdermystery.arena.task.TaskManager.TaskStationDisplay;
 import plugily.projects.murdermystery.arena.task.TaskType;
 import plugily.projects.murdermystery.arena.voting.VotingManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -367,9 +373,30 @@ public class Arena extends PluginArena {
           }
           block.setTextDisplay(null);
         }
-        Location ventLoc = block.getLocation().clone().add(0.5, 1.2, 0.5);
-        removeNearbyDisplays(ventLoc, 1.2, 1.8, 1.2, false);
+        Location ventBlockLoc = block.getLocation().getBlock().getLocation();
+        ventBlockDisplays.removeIf(existingBd -> {
+          if(existingBd == null || !existingBd.isValid()) {
+            return true;
+          }
+          Location exLoc = existingBd.getLocation();
+          if(exLoc.getWorld() != null && exLoc.getWorld().equals(ventBlockLoc.getWorld())
+            && exLoc.getBlockX() == ventBlockLoc.getBlockX()
+            && exLoc.getBlockY() == ventBlockLoc.getBlockY()
+            && exLoc.getBlockZ() == ventBlockLoc.getBlockZ()) {
+            blockDisplays.remove(existingBd);
+            removeEntityGlowColor(existingBd);
+            existingBd.remove();
+            return true;
+          }
+          return false;
+        });
+        Location ventLoc = resolveClearHologramLocation(
+          block.getLocation(),
+          1.2,
+          collectActiveStationHologramLocations(null, null)
+        );
         TextDisplay td = spawnTextDisplay(ventLoc, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sewer Vent<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>ท่อระบายน้ำ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาหรือ <#FFB703>SHIFT <#B8B0C8>เพื่อมุดท่อ<shadow:#000000FF><#5A4E7C>)</shadow>", false);
+        applyCompactHologramScaleIfNeeded(td, ventLoc);
         block.setTextDisplay(td);
         if(td != null) {
           ventDisplays.add(td);
@@ -429,12 +456,16 @@ public class Arena extends PluginArena {
     try {
       loc.getChunk().load();
       for(Entity entity : loc.getWorld().getNearbyEntities(loc, rx, ry, rz)) {
+        if(entity.equals(campfireDisplay)
+          || ventDisplays.contains(entity)
+          || ventBlockDisplays.contains(entity)
+          || (taskManager != null && taskManager.isStationDisplayEntity(entity))
+          || (sabotageManager != null && sabotageManager.isSabotageDisplayEntity(entity))) {
+          continue;
+        }
         if(entity.isPersistent()
-          && !entity.equals(campfireDisplay)
           && !textDisplays.contains(entity)
-          && !ventDisplays.contains(entity)
-          && !blockDisplays.contains(entity)
-          && !ventBlockDisplays.contains(entity)) {
+          && !blockDisplays.contains(entity)) {
           continue;
         }
         if(entity instanceof TextDisplay) {
@@ -1264,12 +1295,240 @@ public class Arena extends PluginArena {
     }
   }
 
+  public static boolean isAirForHologram(@Nullable Block block) {
+    if(block == null) {
+      return false;
+    }
+    Material type = block.getType();
+    return type.isAir() || type == Material.LIGHT || type == Material.STRUCTURE_VOID;
+  }
+
+  public boolean isVentBlock(@Nullable Location loc) {
+    if(loc == null || loc.getWorld() == null) {
+      return false;
+    }
+    for(SpecialBlock sb : specialBlocks) {
+      if(sb.getSpecialBlockType() == SpecialBlock.SpecialBlockType.RAPID_TELEPORTATION
+        && isSameBlockLocation(sb.getLocation(), loc)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public List<Location> collectActiveStationHologramLocations(@Nullable Entity excludeA, @Nullable Entity excludeB) {
+    List<Location> locs = new ArrayList<>();
+    if(campfireDisplay != null && campfireDisplay.isValid() && !campfireDisplay.equals(excludeA) && !campfireDisplay.equals(excludeB)) {
+      locs.add(campfireDisplay.getLocation());
+    }
+    for(TextDisplay vd : ventDisplays) {
+      if(vd != null && vd.isValid() && !vd.equals(excludeA) && !vd.equals(excludeB)) {
+        locs.add(vd.getLocation());
+      }
+    }
+    if(taskManager != null) {
+      for(TaskStationDisplay st : taskManager.getStationDisplays()) {
+        TextDisplay active = st.getActiveHologram();
+        if(active != null && active.isValid() && !active.equals(excludeA) && !active.equals(excludeB)) {
+          locs.add(active.getLocation());
+        }
+      }
+    }
+    return locs;
+  }
+
+  private static boolean hasOccupiedHologramInCell(World world, int cx, int cy, int cz, @Nullable Collection<Location> occupied) {
+    if(occupied == null || occupied.isEmpty() || world == null) {
+      return false;
+    }
+    for(Location occ : occupied) {
+      if(occ != null && world.equals(occ.getWorld())
+        && occ.getBlockX() == cx
+        && (int) Math.floor(occ.getY()) == cy
+        && occ.getBlockZ() == cz) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasVeryCloseHologram(Location candidate, @Nullable Collection<Location> occupied) {
+    if(occupied == null || occupied.isEmpty() || candidate == null || candidate.getWorld() == null) {
+      return false;
+    }
+    for(Location occ : occupied) {
+      if(occ != null && candidate.getWorld().equals(occ.getWorld())
+        && candidate.distanceSquared(occ) < 0.20) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public Location resolveClearHologramLocation(@Nullable Location stationBlockLoc, double preferredYOffset, @Nullable Collection<Location> occupiedLocations) {
+    if(stationBlockLoc == null || stationBlockLoc.getWorld() == null) {
+      return stationBlockLoc;
+    }
+    World world = stationBlockLoc.getWorld();
+    try {
+      stationBlockLoc.getChunk().load();
+    } catch(Throwable ignored) {
+    }
+
+    int bx = stationBlockLoc.getBlockX();
+    int by = stationBlockLoc.getBlockY();
+    int bz = stationBlockLoc.getBlockZ();
+
+    boolean selfAirY1 = isAirForHologram(world.getBlockAt(bx, by + 1, bz));
+    boolean selfAirY2 = isAirForHologram(world.getBlockAt(bx, by + 2, bz));
+    int prefBlockY = (int) Math.floor(by + preferredYOffset);
+    boolean selfAirPref = isAirForHologram(world.getBlockAt(bx, prefBlockY, bz));
+
+    if(preferredYOffset >= 1.15) {
+      if(selfAirY1 && selfAirY2 && selfAirPref && !hasOccupiedHologramInCell(world, bx, prefBlockY, bz, occupiedLocations)) {
+        return new Location(world, bx + 0.5, by + preferredYOffset, bz + 0.5);
+      }
+    } else if(selfAirY1) {
+      double clampedY = by + Math.max(preferredYOffset, 1.08);
+      int cy = (int) Math.floor(clampedY);
+      if(isAirForHologram(world.getBlockAt(bx, cy, bz)) && !hasOccupiedHologramInCell(world, bx, cy, bz, occupiedLocations)) {
+        return new Location(world, bx + 0.5, clampedY, bz + 0.5);
+      }
+    }
+
+    int prefDx = 0;
+    int prefDz = 0;
+    try {
+      Block baseBlock = world.getBlockAt(bx, by, bz);
+      BlockData bd = baseBlock.getBlockData();
+      if(bd instanceof Directional) {
+        BlockFace facing = ((Directional) bd).getFacing();
+        prefDx = facing.getModX();
+        prefDz = facing.getModZ();
+        if(bd instanceof Stairs) {
+          prefDx = -prefDx;
+          prefDz = -prefDz;
+        }
+      }
+    } catch(Throwable ignored) {
+    }
+
+    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    int bestScore = Integer.MIN_VALUE;
+    Location bestLoc = null;
+    boolean bestAirY2 = false;
+    int bestDx = 0;
+    int bestDz = 0;
+
+    for(int[] d : dirs) {
+      int nx = bx + d[0];
+      int nz = bz + d[1];
+      boolean airY = isAirForHologram(world.getBlockAt(nx, by, nz));
+      boolean airY1 = isAirForHologram(world.getBlockAt(nx, by + 1, nz));
+      if(!airY && !airY1) {
+        continue;
+      }
+      boolean airY2 = isAirForHologram(world.getBlockAt(nx, by + 2, nz));
+      boolean airYm1 = isAirForHologram(world.getBlockAt(nx, by - 1, nz));
+
+      int score = 0;
+      if(airY && airY1) {
+        score += 120;
+      } else if(airY) {
+        score += 75;
+      } else {
+        score += 35;
+      }
+      if(airY2) {
+        score += 30;
+      }
+      if(airYm1) {
+        score += 15;
+      }
+      if((prefDx != 0 || prefDz != 0) && d[0] == prefDx && d[1] == prefDz) {
+        score += 40;
+      }
+
+      Material below1 = world.getBlockAt(nx, by - 1, nz).getType();
+      Material below2 = world.getBlockAt(nx, by - 2, nz).getType();
+      if(below1 == Material.BARRIER || below2 == Material.BARRIER) {
+        score -= 80;
+      }
+
+      double ry;
+      if(airY && airY1) {
+        ry = airY2 ? (by + Math.min(preferredYOffset, 1.25)) : (by + 0.65);
+      } else if(airY) {
+        ry = by + 0.15;
+      } else {
+        ry = airY2 ? (by + 1.25) : (by + 1.08);
+      }
+
+      int cellY = (int) Math.floor(ry);
+      if(hasOccupiedHologramInCell(world, nx, cellY, nz, occupiedLocations)) {
+        score -= 60;
+      }
+
+      if(score > bestScore) {
+        bestScore = score;
+        bestLoc = new Location(world, nx + 0.5, ry, nz + 0.5);
+        bestAirY2 = airY2;
+        bestDx = d[0];
+        bestDz = d[1];
+      }
+    }
+
+    if(bestLoc != null) {
+      if(hasVeryCloseHologram(bestLoc, occupiedLocations)) {
+        if(bestAirY2) {
+          bestLoc.add(0.0, 0.55, 0.0);
+        } else {
+          bestLoc.add(-bestDx * 0.25, 0.0, -bestDz * 0.25);
+        }
+      }
+      return bestLoc;
+    }
+
+    if(selfAirY1) {
+      return new Location(world, bx + 0.5, by + 1.08, bz + 0.5);
+    }
+    if(isAirForHologram(world.getBlockAt(bx, by - 1, bz))) {
+      return new Location(world, bx + 0.5, by - 0.65, bz + 0.5);
+    }
+    return new Location(world, bx + 0.5, by + preferredYOffset, bz + 0.5);
+  }
+
+  public void applyCompactHologramScaleIfNeeded(@Nullable TextDisplay display, @Nullable Location holoLoc) {
+    if(display == null || holoLoc == null || holoLoc.getWorld() == null) {
+      return;
+    }
+    try {
+      int hx = holoLoc.getBlockX();
+      int hy = (int) Math.floor(holoLoc.getY());
+      int hz = holoLoc.getBlockZ();
+      boolean ceilingAbove = !isAirForHologram(holoLoc.getWorld().getBlockAt(hx, hy + 1, hz));
+      if(ceilingAbove) {
+        display.setTransformation(new Transformation(
+          new Vector3f(0.0f, 0.0f, 0.0f),
+          new AxisAngle4f(),
+          new Vector3f(0.76f, 0.76f, 0.76f),
+          new AxisAngle4f()
+        ));
+      }
+    } catch(Throwable ignored) {
+    }
+  }
+
   private Location getCampfireHologramLocation() {
     if(campfireLocation == null) {
       return null;
     }
-    double yOffset = hasLowCeilingAboveCampfire() ? 0.95 : 1.8;
-    return campfireLocation.clone().add(0.5, yOffset, 0.5);
+    double yOffset = hasLowCeilingAboveCampfire() ? 1.08 : 1.8;
+    return resolveClearHologramLocation(
+      campfireLocation,
+      yOffset,
+      collectActiveStationHologramLocations(campfireDisplay, null)
+    );
   }
 
   private void removeStaleCampfireDisplays(Location holoLoc) {
@@ -1312,6 +1571,11 @@ public class Arena extends PluginArena {
     }
     Location holoLoc = getCampfireHologramLocation();
     removeStaleCampfireDisplays(holoLoc);
+    if(holoLoc != null && holoLoc.getWorld() != null
+      && holoLoc.getWorld().equals(campfireDisplay.getWorld())
+      && campfireDisplay.getLocation().distanceSquared(holoLoc) > 0.04) {
+      campfireDisplay.teleport(holoLoc);
+    }
     campfireDisplay.setDefaultBackground(false);
     campfireDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
     campfireDisplay.text(HalloweenChat.component(buildCampfireHologramText()));

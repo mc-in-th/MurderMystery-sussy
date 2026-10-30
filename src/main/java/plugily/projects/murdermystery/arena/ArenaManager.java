@@ -157,6 +157,8 @@ public class ArenaManager extends PluginArenaManager {
     pluginArena.cleanUpBossBars(player);
     super.leaveAttempt(player, arena);
     pluginArena.cleanUpBossBars(player);
+    ArenaUtils.restorePlayerNameTag(player);
+    Bukkit.getScheduler().runTaskLater(plugin, () -> ArenaUtils.restorePlayerNameTag(player), 2L);
     if(pluginArena.isDeathPlayer(player)) {
       pluginArena.removeDeathPlayer(player);
     }
@@ -299,5 +301,7 @@ public class ArenaManager extends PluginArenaManager {
       }
     }
     super.stopGame(quickStop, arena);
+    ArenaUtils.syncAllNameTags();
+    Bukkit.getScheduler().runTaskLater(plugin, ArenaUtils::syncAllNameTags, 2L);
   }
 }

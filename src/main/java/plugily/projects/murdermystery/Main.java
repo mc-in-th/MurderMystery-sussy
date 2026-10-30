@@ -82,10 +82,7 @@ public class Main extends PluginMain {
     new AdditionalValueInitializer(this);
     initializePluginClasses();
 
-    if(getConfigPreferences().getOption("HIDE_NAMETAGS")) {
-      getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
-        getServer().getOnlinePlayers().forEach(ArenaUtils::updateNameTagsVisibility), 60, 140);
-    }
+    getServer().getScheduler().scheduleSyncRepeatingTask(this, ArenaUtils::syncAllNameTags, 40L, 40L);
 
     getDebugger().debug("Full {0} plugin enabled", getName());
     getDebugger()

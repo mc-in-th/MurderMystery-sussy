@@ -34,7 +34,7 @@ public class AdditionalValueInitializer {
     getConfigPreferences().registerOption("CORPSES_INTEGRATION_OVERWRITE", new ConfigOption("Corpses.Integration-Overwrite", true));
     getConfigPreferences().registerOption("BOW_KILL_DETECTIVE", new ConfigOption("Bow.Kill-Detective", true));
     getConfigPreferences().registerOption("HIDE_DEATH", new ConfigOption("Hide.Death", false));
-    getConfigPreferences().registerOption("HIDE_NAMETAGS", new ConfigOption("Hide.Nametags", false));
+    getConfigPreferences().registerOption("HIDE_NAMETAGS", new ConfigOption("Hide.Nametags", true));
     getConfigPreferences().registerOption("GOLD_SPAWNER_MODE_ALL", new ConfigOption("Gold.Spawner-Mode", false));
     getConfigPreferences().registerOption("GOLD_LIMITER", new ConfigOption("Gold.Limiter", false));
     getConfigPreferences().registerOption("GOLD_MULTIPLE", new ConfigOption("Gold.Multiple", false));

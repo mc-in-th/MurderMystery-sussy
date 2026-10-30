@@ -24,6 +24,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.Inventory;
@@ -39,6 +40,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.task.TaskManager.TaskStationDisplay;
 import plugily.projects.murdermystery.arena.task.minigame.TaskGuiHelper;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
@@ -99,6 +101,62 @@ public class SabotageManager {
 
   public Location getActiveFixLocation() {
     return activeFixLocation;
+  }
+
+  public boolean isSabotageDisplayEntity(Entity entity) {
+    return entity != null && (entity.equals(fixTextDisplay) || entity.equals(fixBlockDisplay));
+  }
+
+  private static boolean isSameBlock(Location a, Location b) {
+    if(a == null || b == null || a.getWorld() == null || b.getWorld() == null) {
+      return false;
+    }
+    return a.getWorld().equals(b.getWorld())
+      && a.getBlockX() == b.getBlockX()
+      && a.getBlockY() == b.getBlockY()
+      && a.getBlockZ() == b.getBlockZ();
+  }
+
+  private List<Location> collectOtherStationHolograms(Location sabotageLoc) {
+    List<Location> locs = new ArrayList<>();
+    if(arena.getCampfireDisplay() != null && arena.getCampfireDisplay().isValid()
+      && !isSameBlock(arena.getCampfireLocation(), sabotageLoc)) {
+      locs.add(arena.getCampfireDisplay().getLocation());
+    }
+    for(TextDisplay vd : arena.getVentDisplays()) {
+      if(vd != null && vd.isValid()) {
+        locs.add(vd.getLocation());
+      }
+    }
+    if(arena.getTaskManager() != null) {
+      for(TaskStationDisplay st : arena.getTaskManager().getStationDisplays()) {
+        if(!isSameBlock(st.getLocation(), sabotageLoc)
+          && st.getActiveHologram() != null
+          && st.getActiveHologram().isValid()) {
+          locs.add(st.getActiveHologram().getLocation());
+        }
+      }
+    }
+    return locs;
+  }
+
+  public void showEmergencyVisualsToPlayer(Player player) {
+    if(player == null || !player.isOnline()) {
+      return;
+    }
+    if(fixTextDisplay != null && fixTextDisplay.isValid()) {
+      try {
+        player.showEntity(arena.getPlugin(), fixTextDisplay);
+      } catch(Throwable ignored) {
+      }
+    }
+    if(fixBlockDisplay != null && fixBlockDisplay.isValid()) {
+      try {
+        arena.setEntityGlowColor(fixBlockDisplay, ChatColor.RED);
+        player.showEntity(arena.getPlugin(), fixBlockDisplay);
+      } catch(Throwable ignored) {
+      }
+    }
   }
 
   private void hideMeltdownBossBarAll() {
@@ -406,6 +464,7 @@ public class SabotageManager {
     this.activeFixLocation = stationLoc;
 
     spawnEmergencyVisuals(type, activeFixLocation);
+    arena.getTaskManager().updateAllPlayersStationVisibility();
 
     if(type == SabotageType.LIGHTS) {
       for(int i = 0; i < 5; i++) {
@@ -483,7 +542,7 @@ public class SabotageManager {
       return;
     }
 
-    Location textLoc = loc.clone().add(0.5, 2.0, 0.5);
+    Location textLoc = arena.resolveClearHologramLocation(loc, 1.4, collectOtherStationHolograms(loc));
     String text;
     if(type == SabotageType.LIGHTS) {
       text = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>กู้ระบบไฟฟ้า\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อสับคัตเอาท์<shadow:#000000FF><#5A4E7C>)</shadow>";
@@ -494,16 +553,11 @@ public class SabotageManager {
     }
 
     fixTextDisplay = arena.spawnTextDisplay(textLoc, text, false);
+    arena.applyCompactHologramScaleIfNeeded(fixTextDisplay, textLoc);
     fixBlockDisplay = arena.spawnBlockDisplay(loc, null, ChatColor.RED);
 
-    if(fixBlockDisplay != null) {
-      for(Player p : arena.getPlayers()) {
-        try {
-          arena.setEntityGlowColor(fixBlockDisplay, ChatColor.RED);
-          p.showEntity(arena.getPlugin(), fixBlockDisplay);
-        } catch(Throwable ignored) {
-        }
-      }
+    for(Player p : arena.getPlayers()) {
+      showEmergencyVisualsToPlayer(p);
     }
   }
 
@@ -532,17 +586,36 @@ public class SabotageManager {
       return false;
     }
     if(clickedLoc != null && clickedLoc.getWorld() != null && clickedLoc.getWorld().equals(activeFixLocation.getWorld())) {
-      if(clickedLoc.getBlockX() == activeFixLocation.getBlockX() && clickedLoc.getBlockY() == activeFixLocation.getBlockY() && clickedLoc.getBlockZ() == activeFixLocation.getBlockZ()) {
+      if(isSameBlock(clickedLoc, activeFixLocation)) {
         return true;
       }
-      if(clickedLoc.distanceSquared(activeFixLocation) <= 4.0) {
+      if(isSameBlock(clickedLoc, arena.getCampfireLocation())
+        || arena.isVentBlock(clickedLoc)
+        || (arena.getTaskManager() != null && arena.getTaskManager().isTaskStationBlock(clickedLoc))) {
+        return false;
+      }
+      if(clickedLoc.getBlockX() == activeFixLocation.getBlockX()
+        && clickedLoc.getBlockZ() == activeFixLocation.getBlockZ()
+        && clickedLoc.getBlockY() - activeFixLocation.getBlockY() == 1) {
         return true;
       }
+      return clickedLoc.distanceSquared(activeFixLocation) <= 1.25;
     }
     try {
       Block target = player.getTargetBlockExact(5);
-      if(target != null && target.getLocation().distanceSquared(activeFixLocation) <= 4.0) {
-        return true;
+      if(target != null) {
+        Location tLoc = target.getLocation();
+        if(isSameBlock(tLoc, activeFixLocation)) {
+          return true;
+        }
+        if(isSameBlock(tLoc, arena.getCampfireLocation())
+          || arena.isVentBlock(tLoc)
+          || (arena.getTaskManager() != null && arena.getTaskManager().isTaskStationBlock(tLoc))) {
+          return false;
+        }
+        if(tLoc.distanceSquared(activeFixLocation) <= 1.5) {
+          return true;
+        }
       }
     } catch(Throwable ignored) {
     }
@@ -778,6 +851,7 @@ public class SabotageManager {
 
     SabotageType resolved = activeSabotage;
     activeSabotage = null;
+    activeFixLocation = null;
     cooldownRemaining = COOLDOWN_DURATION;
 
     for(Player p : arena.getPlayers()) {
@@ -798,9 +872,7 @@ public class SabotageManager {
       p.removePotionEffect(PotionEffectType.NIGHT_VISION);
     }
 
-    if(resolved == SabotageType.COMMS) {
-      arena.getTaskManager().updateAllPlayersStationVisibility();
-    }
+    arena.getTaskManager().updateAllPlayersStationVisibility();
 
     String title = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Sabotage<shadow:#000000FF><#5A4E7C>]</shadow>";
     String sub = "<#FFB703>" + fixer.getName() + " <#6EEB83>กู้ระบบสำเร็จแล้ว";
@@ -818,6 +890,7 @@ public class SabotageManager {
     }
 
     activeSabotage = null;
+    activeFixLocation = null;
     cooldownRemaining = COOLDOWN_DURATION;
 
     removeEmergencyVisuals();
@@ -840,6 +913,9 @@ public class SabotageManager {
   }
 
   public void addPlayerToBossBar(Player player) {
+    if(activeSabotage != null && player != null) {
+      showEmergencyVisualsToPlayer(player);
+    }
     if(meltdownBossBar != null && player != null) {
       try {
         player.showBossBar(meltdownBossBar);
