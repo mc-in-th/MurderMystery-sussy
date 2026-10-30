@@ -48,6 +48,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class VentManager {
 
+  static {
+    Class<?> preload = VentSession.class;
+  }
+
   private final Main plugin;
   private final Arena arena;
 

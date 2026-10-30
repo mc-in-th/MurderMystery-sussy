@@ -135,7 +135,10 @@ public class SpecialBlockEvents implements Listener {
       return;
     }
 
-    if(arena.getVotingManager().isVotingActive() || arena.getCutsceneManager().isPlaying()) {
+    if(arena.getVotingManager().isVotingActive()
+      || arena.getCutsceneManager().isPlaying()
+      || arena.getVotingManager().isSeatedOnBusChair(player)
+      || arena.getVotingManager().hasJustDismountedBusChair(player)) {
       return;
     }
 

@@ -171,6 +171,7 @@ public class VotingManager {
   private final Map<UUID, TextDisplay> circleStatusDisplays = new HashMap<>();
   private final Map<UUID, ArmorStand> seatMounts = new HashMap<>();
   private final Map<UUID, Location> seatDismountLocations = new HashMap<>();
+  private final Map<UUID, Long> recentSeatDismounts = new HashMap<>();
   private final Set<UUID> allowingDismounts = new HashSet<>();
   private boolean allowingAllDismounts = false;
   private Location activeVerdictSpot = null;
@@ -343,6 +344,7 @@ public class VotingManager {
     if(expected == null || !expected.equals(dismounted)) {
       return;
     }
+    recentSeatDismounts.put(uuid, System.currentTimeMillis());
     seatMounts.remove(uuid);
     Location safeLoc = seatDismountLocations.remove(uuid);
     Bukkit.getScheduler().runTask(arena.getPlugin(), () -> {
@@ -366,6 +368,14 @@ public class VotingManager {
         VersionUtils.teleport(player, dest);
       }
     });
+  }
+
+  public boolean hasJustDismountedBusChair(Player player) {
+    if(player == null) {
+      return false;
+    }
+    Long ts = recentSeatDismounts.get(player.getUniqueId());
+    return ts != null && (System.currentTimeMillis() - ts) < 400L;
   }
 
   public void unseatPlayer(Player player) {
@@ -2239,6 +2249,7 @@ public class VotingManager {
     pendingSkips.clear();
     preVoteLocations.clear();
     meetingCircleLocations.clear();
+    recentSeatDismounts.clear();
     savedSlotItems.clear();
     pendingEjectedPlayer = null;
     pendingEjectedName = null;
@@ -2283,6 +2294,7 @@ public class VotingManager {
     pendingSkips.remove(player);
     preVoteLocations.remove(player);
     meetingCircleLocations.remove(player.getUniqueId());
+    recentSeatDismounts.remove(player.getUniqueId());
     TextDisplay td = circleStatusDisplays.remove(player.getUniqueId());
     if(td != null) {
       arena.getTextDisplays().remove(td);
@@ -2315,6 +2327,7 @@ public class VotingManager {
     pendingSkips.clear();
     preVoteLocations.clear();
     meetingCircleLocations.clear();
+    recentSeatDismounts.clear();
     savedSlotItems.clear();
     pendingEjectedPlayer = null;
     pendingEjectedName = null;
