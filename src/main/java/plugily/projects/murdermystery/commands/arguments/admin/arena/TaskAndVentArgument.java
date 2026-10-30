@@ -40,10 +40,38 @@ import plugily.projects.murdermystery.commands.arguments.ArgumentsRegistry;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class TaskAndVentArgument {
+
+  private static final Set<Material> TRANSPARENT_TARGET_MATERIALS = buildTransparentMaterials();
+
+  private static Set<Material> buildTransparentMaterials() {
+    Set<Material> set = EnumSet.of(Material.AIR);
+    for(String name : new String[]{"CAVE_AIR", "VOID_AIR", "LIGHT", "STRUCTURE_VOID"}) {
+      Material mat = Material.matchMaterial(name);
+      if(mat != null) {
+        set.add(mat);
+      }
+    }
+    return set;
+  }
+
+  static Block getSetupTargetBlock(Player player, int maxDistance) {
+    Block targetBlock = player.getTargetBlock(TRANSPARENT_TARGET_MATERIALS, maxDistance);
+    if(targetBlock == null || TRANSPARENT_TARGET_MATERIALS.contains(targetBlock.getType())) {
+      return null;
+    }
+    return targetBlock;
+  }
+
+  private static Location getTargetOrStandingLocation(Player player, int maxDistance) {
+    Block targetBlock = getSetupTargetBlock(player, maxDistance);
+    return targetBlock != null ? targetBlock.getLocation() : player.getLocation().getBlock().getLocation();
+  }
 
   private static void msg(CommandSender sender, String text) {
     HalloweenChat.send(sender, text);
@@ -75,10 +103,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          Block targetBlock = player.getTargetBlock(null, 5);
-          Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-            ? targetBlock.getLocation()
-            : player.getLocation().getBlock().getLocation();
+          Location loc = getTargetOrStandingLocation(player, 5);
 
           FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
           String serialized = LocationSerializer.locationToString(loc);
@@ -161,10 +186,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          Block targetBlock = player.getTargetBlock(null, 5);
-          Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-            ? targetBlock.getLocation()
-            : player.getLocation().getBlock().getLocation();
+          Location loc = getTargetOrStandingLocation(player, 5);
 
           FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
           String serialized = LocationSerializer.locationToString(loc);
@@ -586,10 +608,7 @@ public class TaskAndVentArgument {
             return;
           }
 
-          Block targetBlock = player.getTargetBlock(null, 5);
-          Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-            ? targetBlock.getLocation()
-            : player.getLocation().getBlock().getLocation();
+          Location loc = getTargetOrStandingLocation(player, 5);
 
           FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
           List<String> list = config.getStringList("instances." + arenaId + ".sewers");
@@ -1234,10 +1253,7 @@ public class TaskAndVentArgument {
       return;
     }
 
-    Block targetBlock = player.getTargetBlock(null, 5);
-    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-      ? targetBlock.getLocation()
-      : player.getLocation().getBlock().getLocation();
+    Location loc = getTargetOrStandingLocation(player, 5);
 
     FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
     String serialized = LocationSerializer.locationToString(loc);
@@ -1263,10 +1279,7 @@ public class TaskAndVentArgument {
       return;
     }
 
-    Block targetBlock = player.getTargetBlock(null, 5);
-    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-      ? targetBlock.getLocation()
-      : player.getLocation().getBlock().getLocation();
+    Location loc = getTargetOrStandingLocation(player, 5);
 
     FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
     String serialized = LocationSerializer.locationToString(loc);
@@ -1317,10 +1330,7 @@ public class TaskAndVentArgument {
       return;
     }
 
-    Block targetBlock = player.getTargetBlock(null, 5);
-    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-      ? targetBlock.getLocation()
-      : player.getLocation().getBlock().getLocation();
+    Location loc = getTargetOrStandingLocation(player, 5);
 
     FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
     String serialized = LocationSerializer.locationToString(loc);
@@ -1516,10 +1526,7 @@ public class TaskAndVentArgument {
       return;
     }
 
-    Block targetBlock = player.getTargetBlock(null, 5);
-    Location loc = (targetBlock != null && targetBlock.getType() != Material.AIR)
-      ? targetBlock.getLocation()
-      : player.getLocation().getBlock().getLocation();
+    Location loc = getTargetOrStandingLocation(player, 5);
     String serialized = LocationSerializer.locationToString(loc);
 
     boolean firstCorner = mode.equals("pos1") || mode.equals("1");

@@ -57,8 +57,8 @@ public class SpecialBlockRemoverArgument {
         @Override
         public void execute(CommandSender sender, String[] args) {
           Player player = (Player) sender;
-          Block targetBlock = player.getTargetBlock(null, 7);
-          if(targetBlock == null || targetBlock.getType() == Material.AIR) {
+          Block targetBlock = TaskAndVentArgument.getSetupTargetBlock(player, 7);
+          if(targetBlock == null) {
             new MessageBuilder("&cPlease target a special block to continue!").player(player).sendPlayer();
             return;
           }
