@@ -170,6 +170,7 @@ public class VotingManager {
   private final Map<UUID, Location> meetingCircleLocations = new HashMap<>();
   private final Map<UUID, TextDisplay> circleStatusDisplays = new HashMap<>();
   private final Map<UUID, ArmorStand> seatMounts = new HashMap<>();
+  private final Map<UUID, Location> seatDismountLocations = new HashMap<>();
   private final Set<UUID> allowingDismounts = new HashSet<>();
   private boolean allowingAllDismounts = false;
   private Location activeVerdictSpot = null;
@@ -324,10 +325,77 @@ public class VotingManager {
     return expected != null && expected.equals(dismounted);
   }
 
+  public void handleEntityDismount(Player player, Entity dismounted, Runnable cancelAction) {
+    if(player == null || dismounted == null) {
+      return;
+    }
+    if(shouldPreventDismount(player, dismounted)) {
+      if(cancelAction != null) {
+        cancelAction.run();
+      }
+      return;
+    }
+    UUID uuid = player.getUniqueId();
+    if(allowingAllDismounts || allowingDismounts.contains(uuid)) {
+      return;
+    }
+    ArmorStand expected = seatMounts.get(uuid);
+    if(expected == null || !expected.equals(dismounted)) {
+      return;
+    }
+    seatMounts.remove(uuid);
+    Location safeLoc = seatDismountLocations.remove(uuid);
+    Bukkit.getScheduler().runTask(arena.getPlugin(), () -> {
+      if(dismounted.isValid()) {
+        try {
+          dismounted.remove();
+        } catch(Throwable ignored) {
+        }
+      }
+      if(player.isOnline()
+        && arena.getPlayers().contains(player)
+        && !ArenaUtils.isSpectator(player, arena)
+        && !arena.isDeathPlayer(player)
+        && (arena.getVentManager() == null || !arena.getVentManager().isInsideVent(player))
+        && safeLoc != null
+        && safeLoc.getWorld() != null) {
+        Location dest = safeLoc.clone();
+        dest.setYaw(player.getLocation().getYaw());
+        dest.setPitch(player.getLocation().getPitch());
+        player.setFallDistance(0.0f);
+        VersionUtils.teleport(player, dest);
+      }
+    });
+  }
+
+  public void unseatPlayer(Player player) {
+    if(player != null) {
+      unseatPlayer(player.getUniqueId());
+    }
+  }
+
+  public void unseatPlayerToSafeSpot(Player player) {
+    if(player == null) {
+      return;
+    }
+    UUID uuid = player.getUniqueId();
+    Location safeLoc = seatDismountLocations.get(uuid);
+    boolean wasSeated = seatMounts.containsKey(uuid);
+    unseatPlayer(uuid);
+    if(wasSeated && player.isOnline() && safeLoc != null && safeLoc.getWorld() != null) {
+      Location dest = safeLoc.clone();
+      dest.setYaw(player.getLocation().getYaw());
+      dest.setPitch(player.getLocation().getPitch());
+      player.setFallDistance(0.0f);
+      VersionUtils.teleport(player, dest);
+    }
+  }
+
   private void unseatPlayer(UUID uuid) {
     if(uuid == null) {
       return;
     }
+    seatDismountLocations.remove(uuid);
     ArmorStand seat = seatMounts.remove(uuid);
     allowingDismounts.add(uuid);
     try {
@@ -356,6 +424,7 @@ public class VotingManager {
         unseatPlayer(uuid);
       }
       seatMounts.clear();
+      seatDismountLocations.clear();
     } finally {
       allowingAllDismounts = false;
       allowingDismounts.clear();
@@ -491,13 +560,15 @@ public class VotingManager {
     private final Location mountLocation;
     private final Location lookLocation;
     private final Location displayLocation;
+    private final Location dismountLocation;
     private final boolean seated;
     private final boolean compactDisplay;
 
-    private BusSeatSpot(Location mountLocation, Location lookLocation, Location displayLocation, boolean seated, boolean compactDisplay) {
+    private BusSeatSpot(Location mountLocation, Location lookLocation, Location displayLocation, Location dismountLocation, boolean seated, boolean compactDisplay) {
       this.mountLocation = mountLocation;
       this.lookLocation = lookLocation;
       this.displayLocation = displayLocation;
+      this.dismountLocation = dismountLocation;
       this.seated = seated;
       this.compactDisplay = compactDisplay;
     }
@@ -683,6 +754,94 @@ public class VotingManager {
     return new ArrayList<>();
   }
 
+  private static Double getSafeCabinStandY(World world, int x, int baseY, int z) {
+    if(world == null) {
+      return null;
+    }
+    int[] dyOrder = {0, -1, 1};
+    for(int dy : dyOrder) {
+      int y = baseY + dy;
+      Block feet = world.getBlockAt(x, y, z);
+      Block head = world.getBlockAt(x, y + 1, z);
+      Block ground = world.getBlockAt(x, y - 1, z);
+      if(head.isLiquid() || !head.isPassable()) {
+        continue;
+      }
+      if(feet.isPassable() && !feet.isLiquid() && !ground.isPassable() && !ground.isLiquid()) {
+        return (double) y;
+      }
+      if(feet.getType().name().endsWith("_CARPET") && !ground.isPassable() && !ground.isLiquid()) {
+        return y + 0.0625;
+      }
+    }
+    return null;
+  }
+
+  private static Location resolveSafeSeatDismountLocation(
+    World world,
+    int bx,
+    int by,
+    int bz,
+    int prefDx,
+    int prefDz,
+    float defaultYaw,
+    Location fallbackCenter
+  ) {
+    if(world == null) {
+      return fallbackCenter;
+    }
+    List<int[]> offsets = new ArrayList<>();
+    if(prefDx != 0 || prefDz != 0) {
+      offsets.add(new int[]{prefDx, prefDz});
+      offsets.add(new int[]{prefDx * 2, prefDz * 2});
+    }
+    offsets.add(new int[]{1, 0});
+    offsets.add(new int[]{-1, 0});
+    offsets.add(new int[]{0, 1});
+    offsets.add(new int[]{0, -1});
+    offsets.add(new int[]{1, 1});
+    offsets.add(new int[]{1, -1});
+    offsets.add(new int[]{-1, 1});
+    offsets.add(new int[]{-1, -1});
+
+    for(int pass = 0; pass < 2; pass++) {
+      for(int[] off : offsets) {
+        int cx = bx + off[0];
+        int cz = bz + off[1];
+        Block candidateBlock = world.getBlockAt(cx, by, cz);
+        if(candidateBlock.getBlockData() instanceof Stairs) {
+          continue;
+        }
+        Double standY = getSafeCabinStandY(world, cx, by, cz);
+        if(standY == null) {
+          continue;
+        }
+        int baseFloorY = (int) Math.floor(standY);
+        boolean coveredOverhead = !isOpenSkyOrAir(world.getBlockAt(cx, baseFloorY + 2, cz))
+          || !isOpenSkyOrAir(world.getBlockAt(cx, baseFloorY + 3, cz));
+        if(pass == 0 && !coveredOverhead) {
+          continue;
+        }
+        return new Location(world, cx + 0.5, standY, cz + 0.5, defaultYaw, 0.0f);
+      }
+    }
+
+    if(isOpenSkyOrAir(world.getBlockAt(bx, by + 2, bz))) {
+      Double standSelf = getSafeCabinStandY(world, bx, by, bz);
+      if(standSelf != null) {
+        return new Location(world, bx + 0.5, standSelf, bz + 0.5, defaultYaw, 0.0f);
+      }
+    }
+
+    if(fallbackCenter != null) {
+      Location fb = fallbackCenter.clone();
+      fb.setYaw(defaultYaw);
+      fb.setPitch(0.0f);
+      return fb;
+    }
+    return new Location(world, bx + 0.5, by + 1.0, bz + 0.5, defaultYaw, 0.0f);
+  }
+
   private BusSeatPlan buildManualBusSeatPlan(List<Location> configuredLocations) {
     List<BusSeatSpot> spots = new ArrayList<>();
     Location horn = arena.getCampfireLocation();
@@ -690,7 +849,7 @@ public class VotingManager {
     double sumX = 0.0;
     double sumY = 0.0;
     double sumZ = 0.0;
-
+    int validCount = 0;
     for(Location rawLoc : configuredLocations) {
       if(rawLoc == null || rawLoc.getWorld() == null) {
         continue;
@@ -698,6 +857,25 @@ public class VotingManager {
       if(world == null) {
         world = rawLoc.getWorld();
       } else if(!world.equals(rawLoc.getWorld())) {
+        continue;
+      }
+      sumX += rawLoc.getBlockX() + 0.5;
+      sumY += rawLoc.getBlockY();
+      sumZ += rawLoc.getBlockZ() + 0.5;
+      validCount++;
+    }
+    if(validCount == 0 || world == null) {
+      return null;
+    }
+    double avgX = sumX / validCount;
+    double avgY = sumY / validCount;
+    double avgZ = sumZ / validCount;
+    Location centerRef = new Location(world, avgX, avgY, avgZ);
+    double safeY = findSafeStandingY(centerRef, avgX, avgY, avgZ);
+    Location cabinMid = new Location(world, avgX, safeY, avgZ);
+
+    for(Location rawLoc : configuredLocations) {
+      if(rawLoc == null || rawLoc.getWorld() == null || !world.equals(rawLoc.getWorld())) {
         continue;
       }
       try {
@@ -738,26 +916,23 @@ public class VotingManager {
         }
       }
 
+      int prefDx = Math.abs(avgX - (bx + 0.5)) >= Math.abs(avgZ - (bz + 0.5))
+        ? (avgX > (bx + 0.5) ? 1 : -1)
+        : 0;
+      int prefDz = prefDx == 0 ? (avgZ > (bz + 0.5) ? 1 : -1) : 0;
+
       boolean lowCeiling = !block.getRelative(0, 2, 0).getType().isAir()
         || !block.getRelative(0, 3, 0).getType().isAir();
       Location mountLoc = new Location(world, mountX, mountY, mountZ, standYaw, 0.0f);
       Location lookLoc = new Location(world, mountX, by, mountZ, standYaw, 5.0f);
       Location displayLoc = new Location(world, mountX, mountY + (lowCeiling ? 1.35 : 1.75), mountZ);
-      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, true, lowCeiling));
-      sumX += mountX;
-      sumY += by;
-      sumZ += mountZ;
+      Location dismountLoc = resolveSafeSeatDismountLocation(world, bx, by, bz, prefDx, prefDz, standYaw, cabinMid);
+      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, dismountLoc, true, lowCeiling));
     }
 
-    if(spots.isEmpty() || world == null) {
+    if(spots.isEmpty()) {
       return null;
     }
-    double avgX = sumX / spots.size();
-    double avgY = sumY / spots.size();
-    double avgZ = sumZ / spots.size();
-    Location centerRef = new Location(world, avgX, avgY, avgZ);
-    double safeY = findSafeStandingY(centerRef, avgX, avgY, avgZ);
-    Location cabinMid = new Location(world, avgX, safeY, avgZ);
     return new BusSeatPlan(spots, cabinMid, cabinMid.clone());
   }
 
@@ -824,6 +999,23 @@ public class VotingManager {
     double sideMidIndex = (minSide + maxSide) / 2.0;
     double cabinCenterSideCoord = sideMidIndex + 0.5;
 
+    double verdictF = maxForward + 1.0;
+    double verdictX = (verdictF * fx + sideMidIndex * rightX) + 0.5;
+    double verdictZ = (verdictF * fz + sideMidIndex * rightZ) + 0.5;
+    float backTowardCabinYaw = standYaw + 180.0f;
+    if(backTowardCabinYaw > 180.0f) {
+      backTowardCabinYaw -= 360.0f;
+    }
+    Location refCenter = new Location(world, verdictX, chairY, verdictZ);
+    double verdictY = findSafeStandingY(refCenter, verdictX, chairY, verdictZ);
+    Location verdictSpot = new Location(world, verdictX, verdictY, verdictZ, backTowardCabinYaw, 5.0f);
+
+    double specF = (minForward + maxForward) / 2.0;
+    double specX = (specF * fx + sideMidIndex * rightX) + 0.5;
+    double specZ = (specF * fz + sideMidIndex * rightZ) + 0.5;
+    double specY = findSafeStandingY(refCenter, specX, chairY, specZ);
+    Location spectatorSpot = new Location(world, specX, specY, specZ, standYaw, 10.0f);
+
     List<BusSeatSpot> spots = new ArrayList<>();
     for(Block b : chairs) {
       int bx = b.getX();
@@ -838,6 +1030,9 @@ public class VotingManager {
       double mountY = by + 0.50;
       double mountZ = bz + 0.5 + 0.18 * fz + 0.08 * inwardSign * rightZ;
       float lookYaw = standYaw + (float) (20.0 * inwardSign);
+      int inwardStep = (int) Math.round(inwardSign);
+      int prefDx = inwardStep * rightX;
+      int prefDz = inwardStep * rightZ;
 
       Location mountLoc = new Location(world, mountX, mountY, mountZ, standYaw, 0.0f);
       Location lookLoc = new Location(world, mountX, by, mountZ, lookYaw, 5.0f);
@@ -847,7 +1042,8 @@ public class VotingManager {
         mountY + 1.35,
         mountZ + 0.12 * inwardSign * rightZ
       );
-      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, true, true));
+      Location dismountLoc = resolveSafeSeatDismountLocation(world, bx, by, bz, prefDx, prefDz, lookYaw, spectatorSpot);
+      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, dismountLoc, true, true));
     }
 
     if(maxSide - minSide >= 2) {
@@ -866,29 +1062,12 @@ public class VotingManager {
             if(feet.isPassable() && !feet.isLiquid() && head.isPassable() && !head.isLiquid() && !ground.isPassable()) {
               Location aisleStandLoc = new Location(world, ax + 0.5, chairY, az + 0.5, standYaw, 5.0f);
               Location aisleDisplayLoc = new Location(world, ax + 0.5, chairY + 1.90, az + 0.5);
-              spots.add(new BusSeatSpot(aisleStandLoc, aisleStandLoc, aisleDisplayLoc, false, true));
+              spots.add(new BusSeatSpot(aisleStandLoc, aisleStandLoc, aisleDisplayLoc, aisleStandLoc, false, true));
             }
           }
         }
       }
     }
-
-    double verdictF = maxForward + 1.0;
-    double verdictX = (verdictF * fx + sideMidIndex * rightX) + 0.5;
-    double verdictZ = (verdictF * fz + sideMidIndex * rightZ) + 0.5;
-    float backTowardCabinYaw = standYaw + 180.0f;
-    if(backTowardCabinYaw > 180.0f) {
-      backTowardCabinYaw -= 360.0f;
-    }
-    Location refCenter = new Location(world, verdictX, chairY, verdictZ);
-    double verdictY = findSafeStandingY(refCenter, verdictX, chairY, verdictZ);
-    Location verdictSpot = new Location(world, verdictX, verdictY, verdictZ, backTowardCabinYaw, 5.0f);
-
-    double specF = (minForward + maxForward) / 2.0;
-    double specX = (specF * fx + sideMidIndex * rightX) + 0.5;
-    double specZ = (specF * fz + sideMidIndex * rightZ) + 0.5;
-    double specY = findSafeStandingY(refCenter, specX, chairY, specZ);
-    Location spectatorSpot = new Location(world, specX, specY, specZ, standYaw, 10.0f);
 
     return new BusSeatPlan(spots, verdictSpot, spectatorSpot);
   }
@@ -947,9 +1126,15 @@ public class VotingManager {
     }
 
     seatMounts.put(uuid, seat);
+    Location dismountTarget = spot.dismountLocation != null ? spot.dismountLocation.clone() : spot.lookLocation.clone();
+    seatDismountLocations.put(uuid, dismountTarget);
     VersionUtils.teleport(player, spot.lookLocation).thenAccept(ignored -> {
       Runnable attachTask = () -> {
-        if(!isVotingActive() || !player.isOnline() || ArenaUtils.isSpectator(player, arena) || arena.isDeathPlayer(player)) {
+        if(arena.getArenaState() != IArenaState.IN_GAME
+          || arena.getCutsceneManager().isPlaying()
+          || !player.isOnline()
+          || ArenaUtils.isSpectator(player, arena)
+          || arena.isDeathPlayer(player)) {
           unseatPlayer(uuid);
           return;
         }
@@ -1981,16 +2166,63 @@ public class VotingManager {
   private void endVoting() {
     voteState = VoteState.NONE;
     lastVoteEndTime = System.currentTimeMillis();
-    clearSeatMounts();
     clearCircleStatusDisplays();
     activeVerdictSpot = null;
+
+    for(UUID uuid : new ArrayList<>(seatMounts.keySet())) {
+      Player seated = Bukkit.getPlayer(uuid);
+      if(seated == null || !seated.isOnline() || !arena.getPlayersLeft().contains(seated)
+        || ArenaUtils.isSpectator(seated, arena) || arena.isDeathPlayer(seated)) {
+        unseatPlayer(uuid);
+      }
+    }
+
+    BusSeatPlan busSeatPlan = resolveBusSeatPlan();
+    List<BusSeatSpot> freeChairs = new ArrayList<>();
+    if(busSeatPlan != null) {
+      for(BusSeatSpot candidate : busSeatPlan.spots) {
+        if(!candidate.seated || candidate.mountLocation == null || candidate.mountLocation.getWorld() == null) {
+          continue;
+        }
+        boolean occupied = false;
+        for(ArmorStand stand : seatMounts.values()) {
+          if(stand != null && stand.isValid()
+            && stand.getWorld().equals(candidate.mountLocation.getWorld())
+            && stand.getLocation().distanceSquared(candidate.mountLocation) < 0.25) {
+            occupied = true;
+            break;
+          }
+        }
+        if(!occupied) {
+          freeChairs.add(candidate);
+        }
+      }
+    }
+    int freeChairIdx = 0;
 
     for(Player player : arena.getPlayersLeft()) {
       restoreVoteMenuItem(player);
       player.setWalkSpeed(0.2f);
-      Location preLoc = preVoteLocations.get(player);
-      if(preLoc != null) {
-        VersionUtils.teleport(player, preLoc);
+
+      UUID uuid = player.getUniqueId();
+      ArmorStand currentSeat = seatMounts.get(uuid);
+      boolean seatedInBus = false;
+      if(currentSeat != null && currentSeat.isValid()) {
+        if(!currentSeat.getPassengers().contains(player)) {
+          player.setSneaking(false);
+          currentSeat.addPassenger(player);
+        }
+        seatedInBus = true;
+      } else if(freeChairIdx < freeChairs.size()) {
+        mountPlayerOnSeat(player, freeChairs.get(freeChairIdx++));
+        seatedInBus = true;
+      }
+
+      if(seatedInBus) {
+        HalloweenChat.sendActionBar(
+          player,
+          "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Bus<shadow:#000000FF><#5A4E7C>]</shadow> <#F4F1DE>การประชุมสิ้นสุดแล้ว <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>กด Shift เพื่อลุกจากเบาะรถบัส<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
       }
     }
 

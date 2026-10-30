@@ -34,6 +34,7 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.scheduler.BukkitTask;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
+import plugily.projects.murdermystery.arena.task.minigame.TaskGuiHelper;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 public class VisualTaskEffectManager {
@@ -115,7 +116,7 @@ public class VisualTaskEffectManager {
     Particle dustParticle = resolveDustParticle();
 
     if(taskType == TaskType.CHECK_RADIATOR_WATER || taskType == TaskType.FETCH_COOLANT_WATER) {
-      spawnRadiatorSteamBurst(origin, dustParticle);
+      spawnRadiatorSteamBurst(player, origin, dustParticle);
     } else if(taskType == TaskType.CHECK_TIRE_PRESSURE) {
       spawnTirePumpWave(origin, dustParticle);
     }
@@ -159,7 +160,7 @@ public class VisualTaskEffectManager {
 
     spawnSafeParticle(world, "HAPPY_VILLAGER", "VILLAGER_HAPPY", playerCenter, 25, 0.5, 0.6, 0.5, 0.05);
     spawnSafeParticle(world, "END_ROD", "END_ROD", baseLoc, 18, 0.4, 0.5, 0.4, 0.04);
-    XSound.BLOCK_BEACON_ACTIVATE.play(playerCenter, 0.9F, 1.6F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_BEACON_ACTIVATE, 0.9F, 1.6F);
 
     Location verifyLoc = player.getLocation().clone().add(0.0, 2.35, 0.0);
     String verifyText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Visual Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n"
@@ -253,7 +254,7 @@ public class VisualTaskEffectManager {
     }
   }
 
-  private void spawnRadiatorSteamBurst(Location origin, Particle dustParticle) {
+  private void spawnRadiatorSteamBurst(Player player, Location origin, Particle dustParticle) {
     World world = origin.getWorld();
     if(world == null) {
       return;
@@ -267,7 +268,7 @@ public class VisualTaskEffectManager {
       } catch(Exception ignored) {
       }
     }
-    XSound.BLOCK_FIRE_EXTINGUISH.play(origin, 0.75F, 1.4F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_FIRE_EXTINGUISH, 0.75F, 1.4F);
   }
 
   private void spawnTirePumpWave(Location origin, Particle dustParticle) {

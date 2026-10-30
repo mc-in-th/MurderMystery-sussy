@@ -88,7 +88,7 @@ public class SpareBatteryMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_BEACON_AMBIENT.play(player.getLocation(), 0.7F, 1.4F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_BEACON_AMBIENT, 0.7F, 1.4F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกสวิตช์เรืองแสงด้านล่างเพื่อเริ่มพ่วงชาร์จแบตเตอรี่สำรอง");
   }
 
@@ -242,7 +242,7 @@ public class SpareBatteryMinigame implements TaskMinigame {
       session.step = 0;
       Inventory topInv = player.getOpenInventory().getTopInventory();
       buildGui(topInv, session);
-      XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 0.9F, 1.3F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_LEVER_CLICK, 0.9F, 1.3F);
       TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เริ่มส่งกระแสไฟ " + TaskGuiHelper.buildPipeBar(0, PROGRESS_SLOTS.length, 10) + " <#FFB703>0%");
 
       session.task = Bukkit.getScheduler().runTaskTimer(arena.getPlugin(), () -> {
@@ -256,7 +256,7 @@ public class SpareBatteryMinigame implements TaskMinigame {
         }
         session.step++;
         int pct = Math.min(100, session.step * 20);
-        XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.65F, 0.9F + (session.step * 0.18F));
+        TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.65F, 0.9F + (session.step * 0.18F));
         buildGui(topInv, session);
 
         if(session.step >= PROGRESS_SLOTS.length) {
@@ -266,7 +266,7 @@ public class SpareBatteryMinigame implements TaskMinigame {
           }
           completedSessions.add(player.getUniqueId());
           sessions.remove(player.getUniqueId());
-          XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+          TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 0.9F, 1.5F);
           TaskGuiHelper.sendSuccessBar(player, "พ่วงชาร์จแบตเตอรี่สำรองเต็ม 100% สำเร็จ");
 
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -285,7 +285,7 @@ public class SpareBatteryMinigame implements TaskMinigame {
     }
 
     if(rawSlot >= 0 && rawSlot < 27) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 0.9F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 0.9F);
       TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกสวิตช์เรืองแสงช่องล่างสุด <#F4F1DE>เพื่อเริ่มพ่วงไฟ");
     }
     return true;
@@ -313,3 +313,4 @@ public class SpareBatteryMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

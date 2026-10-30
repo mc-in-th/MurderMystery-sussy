@@ -87,7 +87,7 @@ public class EngineOilMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิก <#FFB703>ขวดน้ำมันเครื่องเรืองแสงตรงกลาง <#F4F1DE>จนเต็มขีดสีเขียว (5/5)");
   }
 
@@ -225,18 +225,18 @@ public class EngineOilMinigame implements TaskMinigame {
     if(rawSlot == OIL_CAN_SLOT) {
       if(session.oilLevel < MAX_LEVEL) {
         session.oilLevel++;
-        XSound.ITEM_BUCKET_EMPTY.play(player.getLocation(), 0.9F, 1.25F);
-        XSound.ITEM_BOTTLE_FILL.play(player.getLocation(), 0.8F, 0.95F + (session.oilLevel * 0.1F));
+        TaskGuiHelper.playSound(player, XSound.ITEM_BUCKET_EMPTY, 0.9F, 1.25F);
+        TaskGuiHelper.playSound(player, XSound.ITEM_BOTTLE_FILL, 0.8F, 0.95F + (session.oilLevel * 0.1F));
         buildGui(topInv, session);
 
         if(session.oilLevel >= MAX_LEVEL) {
-          XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 1F, 1.8F);
           TaskGuiHelper.sendTaskBar(player, "<#6EEB83>น้ำมันเครื่องเต็มขีด 5/5 แล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อปิดฝา");
         } else {
           TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เติมน้ำมันเครื่องแล้ว <#FFB703>" + session.oilLevel + "/" + MAX_LEVEL);
         }
       } else {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.2F);
         TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาน้ำมันเครื่อง");
       }
       return true;
@@ -247,8 +247,8 @@ public class EngineOilMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
 
-        XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_USE, 0.8F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "เช็คน้ำมันเครื่องยนต์สำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -260,14 +260,14 @@ public class EngineOilMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.9F, 1F);
         TaskGuiHelper.sendErrorBar(player, "คลิกขวดน้ำมันเรืองแสงตรงกลางให้ครบ 5/5 ขีดก่อน");
       }
       return true;
     }
 
     if(rawSlot >= 0 && rawSlot < 36) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(session.oilLevel < MAX_LEVEL) {
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกขวดน้ำมันเครื่องเรืองแสงตรงกลาง <#F4F1DE>เพื่อเติมน้ำมัน");
       } else {

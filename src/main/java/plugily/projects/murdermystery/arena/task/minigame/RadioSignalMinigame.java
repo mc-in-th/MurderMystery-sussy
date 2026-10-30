@@ -107,7 +107,7 @@ public class RadioSignalMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     int firstSwitch = session.requiredSequence.get(0) + 1;
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกสวิตช์ที่เรืองแสงใต้ไฟสีเหลือง <shadow:#000000FF><#5A4E7C>(</shadow><#FFB703>เริ่มที่สวิตช์ #" + firstSwitch + "<shadow:#000000FF><#5A4E7C>)</shadow>");
   }
@@ -262,14 +262,14 @@ public class RadioSignalMinigame implements TaskMinigame {
 
     if(clickedSwitch == -1) {
       if(rawSlot >= 0 && rawSlot < 36) {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่สวิตช์ #" + (expectedSwitch + 1) + " <#F4F1DE>ที่เรืองแสงใต้ไฟสีเหลือง");
       }
       return true;
     }
 
     if(session.switchState[clickedSwitch]) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.2F);
       return true;
     }
 
@@ -279,8 +279,8 @@ public class RadioSignalMinigame implements TaskMinigame {
       session.switchState[clickedSwitch] = true;
       session.currentStep++;
 
-      XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.4F);
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.8F, 0.85F + (session.currentStep * 0.22F));
+      TaskGuiHelper.playSound(player, XSound.BLOCK_LEVER_CLICK, 1F, 1.4F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.8F, 0.85F + (session.currentStep * 0.22F));
 
       buildGui(topInv, session);
 
@@ -288,7 +288,7 @@ public class RadioSignalMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
 
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "ส่งสัญญาณวิทยุขอรถช่างครบทุกช่องแล้ว");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -305,8 +305,8 @@ public class RadioSignalMinigame implements TaskMinigame {
       }
     } else {
       session.resetProgressKeepSequence();
-      XSound.BLOCK_REDSTONE_TORCH_BURNOUT.play(player.getLocation(), 0.8F, 0.9F);
-      XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.65F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_REDSTONE_TORCH_BURNOUT, 0.8F, 0.9F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_BASS, 0.9F, 0.65F);
 
       int firstSw = session.requiredSequence.get(0) + 1;
       TaskGuiHelper.sendErrorBar(player, "สับผิดช่อง สัญญาณวิทยุขาดหาย เริ่มจูนใหม่ที่สวิตช์ #" + firstSw);
@@ -328,3 +328,4 @@ public class RadioSignalMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

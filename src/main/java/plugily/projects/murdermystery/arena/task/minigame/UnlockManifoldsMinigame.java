@@ -95,7 +95,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_IRON_TRAPDOOR_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มตัวเลขเรียงลำดับจาก <#FFB703>1 <#F4F1DE>ไปถึง <#6EEB83>10");
   }
 
@@ -194,7 +194,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     }
     if(idx == -1) {
       if(rawSlot >= 0 && rawSlot < 36) {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
         TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นหาแล้วคลิกปุ่ม <#FFB703>หมายเลข #" + session.nextExpected);
       }
       return true;
@@ -202,7 +202,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
 
     int clickedNum = session.numbers.get(idx);
     if(clickedNum < session.nextExpected) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.2F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.2F);
       TaskGuiHelper.sendTaskBar(player, "<#6EEB83>หมายเลข #" + clickedNum + " เปิดแล้ว <#FFB703>คลิกหมายเลข #" + session.nextExpected + " ถัดไป");
       return true;
     }
@@ -210,13 +210,13 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
     Inventory topInv = player.getOpenInventory().getTopInventory();
     if(clickedNum == session.nextExpected) {
       session.nextExpected++;
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.85F, 0.85F + (clickedNum * 0.09F));
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.85F, 0.85F + (clickedNum * 0.09F));
       buildGui(topInv, session);
 
       if(session.nextExpected > 10) {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 0.9F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "ปลดล็อกท่อแรงดันครบ 10 วาล์วสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -232,7 +232,7 @@ public class UnlockManifoldsMinigame implements TaskMinigame {
       }
     } else {
       session.nextExpected = 1;
-      XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.6F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_BASS, 0.9F, 0.6F);
       TaskGuiHelper.sendErrorBar(player, "กดผิดลำดับ (#" + clickedNum + ") เริ่มกดใหม่ตั้งแต่หมายเลข #1");
       buildGui(topInv, session);
     }

@@ -82,7 +82,7 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.ITEM_BUCKET_FILL, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ขั้นที่ 1 คลิกถังน้ำเรืองแสงด้านล่างเพื่อชุบน้ำฟองน้ำ");
   }
 
@@ -210,7 +210,7 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     if(rawSlot == BUCKET_SLOT && !session.spongeReady) {
       session.spongeReady = true;
       session.progress = 0;
-      XSound.ITEM_BUCKET_EMPTY.play(player.getLocation(), 0.9F, 1.2F);
+      TaskGuiHelper.playSound(player, XSound.ITEM_BUCKET_EMPTY, 0.9F, 1.2F);
       buildGui(topInv, session);
       TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ขั้นที่ 2 คลิกที่ <#FFB703>ฟองน้ำเรืองแสง <#F4F1DE>ไล่เช็ดจากซ้ายไปขวา (1-7)");
       return true;
@@ -218,7 +218,7 @@ public class CleanWindshieldMinigame implements TaskMinigame {
 
     if(!session.spongeReady) {
       if(rawSlot >= 0 && rawSlot < 27) {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.7F, 1.1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.7F, 1.1F);
         TaskGuiHelper.sendErrorBar(player, "คลิกถังน้ำเรืองแสงด้านล่างเพื่อชุบน้ำฟองน้ำก่อน");
       }
       return true;
@@ -227,14 +227,14 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     int expectedSlot = TRACK_SLOTS[session.progress];
     if(rawSlot == expectedSlot) {
       session.progress++;
-      XSound.BLOCK_SLIME_BLOCK_STEP.play(player.getLocation(), 0.85F, 1.0F + (session.progress * 0.12F));
-      XSound.BLOCK_NOTE_BLOCK_CHIME.play(player.getLocation(), 0.5F, 0.9F + (session.progress * 0.1F));
+      TaskGuiHelper.playSound(player, XSound.BLOCK_SLIME_BLOCK_STEP, 0.85F, 1.0F + (session.progress * 0.12F));
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.9F + (session.progress * 0.1F));
       buildGui(topInv, session);
 
       if(session.progress >= TRACK_SLOTS.length) {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 0.9F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "เช็ดคราบโคลนกระจกหน้ารถบัสสะอาดเรียบร้อย");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -252,7 +252,7 @@ public class CleanWindshieldMinigame implements TaskMinigame {
     }
 
     if(rawSlot >= 10 && rawSlot <= 16) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.6F, 0.8F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.6F, 0.8F);
       TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่ฟองน้ำเรืองแสงช่องที่ " + (session.progress + 1) + " <#F4F1DE>เพื่อเช็ดต่อ");
     }
     return true;

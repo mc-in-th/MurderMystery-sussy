@@ -20,6 +20,7 @@ package plugily.projects.murdermystery.arena.task.minigame;
 
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -28,6 +29,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
+import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
 public final class TaskGuiHelper {
@@ -201,5 +203,20 @@ public final class TaskGuiHelper {
 
   public static void sendErrorBar(Player player, String message) {
     HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ภารกิจ<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>" + message);
+  }
+
+  public static void playSound(Player player, XSound xSound, float volume, float pitch) {
+    if(player == null || !player.isOnline() || xSound == null) {
+      return;
+    }
+    try {
+      Sound parsed = xSound.parseSound();
+      if(parsed != null) {
+        player.playSound(player.getLocation(), parsed, volume, pitch);
+      } else {
+        xSound.play(player, volume, pitch);
+      }
+    } catch(Throwable ignored) {
+    }
   }
 }

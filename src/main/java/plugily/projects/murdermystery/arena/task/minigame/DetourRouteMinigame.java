@@ -95,7 +95,7 @@ public class DetourRouteMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.25F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.25F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกจุดพิกัดบนแผนที่เรียงลำดับจาก <#FFB703>#1 <#F4F1DE>ไปถึง <#6EEB83>#10");
   }
 
@@ -194,7 +194,7 @@ public class DetourRouteMinigame implements TaskMinigame {
     }
     if(idx == -1) {
       if(rawSlot >= 0 && rawSlot < 36) {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
         TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ค้นหาแล้วคลิกหมุดพิกัด <#FFB703>หมายเลข #" + session.nextExpected);
       }
       return true;
@@ -202,7 +202,7 @@ public class DetourRouteMinigame implements TaskMinigame {
 
     int clickedNum = session.numbers.get(idx);
     if(clickedNum < session.nextExpected) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.2F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.2F);
       TaskGuiHelper.sendTaskBar(player, "<#6EEB83>พิกัด #" + clickedNum + " บันทึกแล้ว <#FFB703>คลิกพิกัด #" + session.nextExpected + " ถัดไป");
       return true;
     }
@@ -210,13 +210,13 @@ public class DetourRouteMinigame implements TaskMinigame {
     Inventory topInv = player.getOpenInventory().getTopInventory();
     if(clickedNum == session.nextExpected) {
       session.nextExpected++;
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.85F, 0.85F + (clickedNum * 0.09F));
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.85F, 0.85F + (clickedNum * 0.09F));
       buildGui(topInv, session);
 
       if(session.nextExpected > 10) {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 0.9F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "ตรวจสอบสมุดแผนที่เส้นทางสำรองสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -232,7 +232,7 @@ public class DetourRouteMinigame implements TaskMinigame {
       }
     } else {
       session.nextExpected = 1;
-      XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.6F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_BASS, 0.9F, 0.6F);
       TaskGuiHelper.sendErrorBar(player, "ลากเส้นทางผิดลำดับ (#" + clickedNum + ") เริ่มไล่ใหม่ตั้งแต่จุดที่ #1");
       buildGui(topInv, session);
     }
@@ -251,3 +251,4 @@ public class DetourRouteMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

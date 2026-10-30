@@ -93,7 +93,7 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>ขั้นที่ 1 คลิก <#FFB703>ฝาหม้อน้ำเรืองแสงทางซ้าย <#F4F1DE>เพื่อเปิดฝา");
   }
 
@@ -288,13 +288,13 @@ public class RadiatorWaterMinigame implements TaskMinigame {
     if(rawSlot == CAP_SLOT) {
       if(!session.capOpen) {
         session.capOpen = true;
-        XSound.BLOCK_IRON_TRAPDOOR_OPEN.play(player.getLocation(), 1F, 1.2F);
-        XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_IRON_TRAPDOOR_OPEN, 1F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_FIRE_EXTINGUISH, 0.8F, 1.5F);
         arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, 1, MAX_LEVEL);
         buildGui(topInv, session);
         TaskGuiHelper.sendTaskBar(player, "<#6EEB83>เปิดฝาหม้อน้ำแล้ว <#FFB703>คลิกขวดน้ำยาเรืองแสงทางขวาเพื่อเติม");
       } else {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.2F);
         TaskGuiHelper.sendTaskBar(player, session.waterLevel < MAX_LEVEL
           ? "<#FFB703>คลิกขวดน้ำยาเรืองแสงทางขวา <#F4F1DE>เพื่อเติมน้ำยา"
           : "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาหม้อน้ำ");
@@ -304,26 +304,26 @@ public class RadiatorWaterMinigame implements TaskMinigame {
 
     if(rawSlot == BOTTLE_SLOT) {
       if(!session.capOpen) {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.85F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.85F, 1F);
         TaskGuiHelper.sendErrorBar(player, "คลิกเปิดฝาหม้อน้ำเรืองแสงทางซ้ายก่อน");
         return true;
       }
 
       if(session.waterLevel < MAX_LEVEL) {
         session.waterLevel++;
-        XSound.ITEM_BUCKET_EMPTY.play(player.getLocation(), 0.9F, 1.2F);
-        XSound.BLOCK_WATER_AMBIENT.play(player.getLocation(), 0.8F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ITEM_BUCKET_EMPTY, 0.9F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_WATER_AMBIENT, 0.8F, 1.5F);
         arena.getTaskManager().getVisualEffectManager().triggerStepEffect(player, TaskType.CHECK_RADIATOR_WATER, session.waterLevel, MAX_LEVEL);
         buildGui(topInv, session);
 
         if(session.waterLevel >= MAX_LEVEL) {
-          XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 1F, 1.8F);
           TaskGuiHelper.sendTaskBar(player, "<#6EEB83>น้ำยาเต็ม 5/5 แล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อปิดฝาหม้อน้ำ");
         } else {
           TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เติมน้ำยาหล่อเย็นแล้ว <#72EFDD>" + session.waterLevel + "/" + MAX_LEVEL);
         }
       } else {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.2F);
         TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาหม้อน้ำ");
       }
       return true;
@@ -334,8 +334,8 @@ public class RadiatorWaterMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
 
-        XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_USE, 0.8F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "เช็คระดับน้ำในหม้อน้ำสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -347,14 +347,14 @@ public class RadiatorWaterMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.9F, 1F);
         TaskGuiHelper.sendErrorBar(player, !session.capOpen ? "คลิกเปิดฝาหม้อน้ำทางซ้ายก่อน" : "คลิกขวดน้ำยาทางขวาให้ครบ 5/5 ก่อน");
       }
       return true;
     }
 
     if(rawSlot >= 0 && rawSlot < 36) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(!session.capOpen) {
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>ขั้นที่ 1 คลิกฝาหม้อน้ำเรืองแสงทางซ้าย");
       } else if(session.waterLevel < MAX_LEVEL) {

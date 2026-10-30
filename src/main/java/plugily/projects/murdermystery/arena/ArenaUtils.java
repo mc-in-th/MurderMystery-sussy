@@ -237,6 +237,7 @@ public class ArenaUtils extends PluginArenaUtils {
     if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
       arena.getVentManager().forceExitForMeeting(player);
     }
+    arena.getVotingManager().unseatPlayer(player);
     for(PotionEffect effect : player.getActivePotionEffects()) {
       player.removePotionEffect(effect.getType());
     }

@@ -243,9 +243,11 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena == null) {
       return;
     }
-    if(arena.getVotingManager().shouldPreventDismount(player, event.getDismounted()) && event.isCancellable()) {
-      event.setCancelled(true);
-    }
+    arena.getVotingManager().handleEntityDismount(player, event.getDismounted(), () -> {
+      if(event.isCancellable()) {
+        event.setCancelled(true);
+      }
+    });
   }
 
   @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -515,6 +517,7 @@ public class ArenaEvents extends PluginArenaEvents {
     if(arena.getVentManager() != null && arena.getVentManager().isInsideVent(player)) {
       arena.getVentManager().forceExitForMeeting(player);
     }
+    arena.getVotingManager().unseatPlayer(player);
 
     Player killer = player.getKiller();
     plugin.getCorpseHandler().spawnCorpse(player, arena, killer);
@@ -1231,21 +1234,15 @@ public class ArenaEvents extends PluginArenaEvents {
     }
 
     if(Role.isRole(Role.MURDERER, user, arena)) {
-      if(targetLoc != null) {
-        for(Location loc : arena.getAllTaskLocations()) {
-          if(loc != null && loc.getWorld() != null && loc.getWorld().equals(targetLoc.getWorld())) {
-            if(targetLoc.getBlockX() == loc.getBlockX() && targetLoc.getBlockY() == loc.getBlockY() && targetLoc.getBlockZ() == loc.getBlockZ()) {
-              event.setCancelled(true);
-              HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF3B47>ฆาตกร<shadow:#000000FF><#5A4E7C>]</shadow> <#FF3B47>คุณเป็นฆาตกร ไม่สามารถทำภารกิจได้");
-              return;
-            }
-          }
-        }
+      if(isExactTaskLocation(arena, targetLoc)) {
+        event.setCancelled(true);
       }
       return;
     }
 
     if(arena.getTaskManager().interactTask(player, targetLoc)) {
+      event.setCancelled(true);
+    } else if(isExactTaskLocation(arena, targetLoc)) {
       event.setCancelled(true);
     }
   }

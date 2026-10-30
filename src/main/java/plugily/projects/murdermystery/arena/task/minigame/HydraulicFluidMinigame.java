@@ -88,7 +88,7 @@ public class HydraulicFluidMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     String dirHint = session.angle < 0 ? "หมุนขวา" : "หมุนซ้าย";
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกปุ่มลูกศร <#FFB703>" + dirHint + "ที่เรืองแสง <#F4F1DE>เพื่อตั้งเข็มแรงดันวาล์วให้ตรง <#6EEB83>0");
   }
@@ -248,11 +248,11 @@ public class HydraulicFluidMinigame implements TaskMinigame {
     if(rawSlot == TURN_LEFT_SLOT) {
       if(session.angle > -2) {
         session.angle--;
-        XSound.BLOCK_DISPENSER_DISPENSE.play(player.getLocation(), 0.9F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_DISPENSER_DISPENSE, 0.9F, 1.2F);
         buildGui(topInv, session);
         checkAngleFeedback(player, session);
       } else {
-        XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_HIT, 0.6F, 1.8F);
         TaskGuiHelper.sendErrorBar(player, "สุดระยะซ้ายแล้ว คลิกปุ่มหมุนขวาที่เรืองแสงแทน");
       }
       return true;
@@ -261,11 +261,11 @@ public class HydraulicFluidMinigame implements TaskMinigame {
     if(rawSlot == TURN_RIGHT_SLOT) {
       if(session.angle < 2) {
         session.angle++;
-        XSound.BLOCK_DISPENSER_DISPENSE.play(player.getLocation(), 0.9F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_DISPENSER_DISPENSE, 0.9F, 1.2F);
         buildGui(topInv, session);
         checkAngleFeedback(player, session);
       } else {
-        XSound.BLOCK_ANVIL_HIT.play(player.getLocation(), 0.6F, 1.8F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_HIT, 0.6F, 1.8F);
         TaskGuiHelper.sendErrorBar(player, "สุดระยะขวาแล้ว คลิกปุ่มหมุนซ้ายที่เรืองแสงแทน");
       }
       return true;
@@ -276,8 +276,8 @@ public class HydraulicFluidMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
 
-        XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.5F);
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_USE, 0.8F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "ถ่ายน้ำมันไฮดรอลิกสำรองสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -289,14 +289,14 @@ public class HydraulicFluidMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.85F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.85F, 1F);
         TaskGuiHelper.sendErrorBar(player, "คลิกลูกศรที่เรืองแสงให้เข็มแรงดันตรงศูนย์ 0 ก่อน");
       }
       return true;
     }
 
     if(rawSlot >= 0 && rawSlot < 36) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(session.angle == 0) {
         TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อล็อกวาล์วถ่ายน้ำมัน");
       } else {
@@ -308,7 +308,7 @@ public class HydraulicFluidMinigame implements TaskMinigame {
 
   private void checkAngleFeedback(Player player, HydraulicSession session) {
     if(session.angle == 0) {
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 1F, 1.8F);
       TaskGuiHelper.sendTaskBar(player, "<#6EEB83>แรงดันสมดุลที่ 0 พอดีแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อล็อกวาล์ว");
     } else if(session.angle < 0) {
       TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>แรงดันยังต่ำ <#FFB703>" + session.angle + " <#B8B0C8>(คลิกหมุนขวาต่อ)");
@@ -329,3 +329,4 @@ public class HydraulicFluidMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+

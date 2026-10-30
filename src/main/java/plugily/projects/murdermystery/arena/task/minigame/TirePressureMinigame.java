@@ -84,7 +84,7 @@ public class TirePressureMinigame implements TaskMinigame {
     buildGui(inv, initialPsi);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>สูบลมให้ได้ <#6EEB83>30 - 32 PSI <#B8B0C8>(คลิกปุ่มที่เรืองแสงได้เลย)");
   }
 
@@ -284,23 +284,23 @@ public class TirePressureMinigame implements TaskMinigame {
 
     if(rawSlot == HEAVY_PUMP_SLOT) {
       currentPsi += 5;
-      XSound.BLOCK_PISTON_EXTEND.play(player.getLocation(), 0.9F, 1.2F);
-      XSound.ENTITY_HORSE_BREATHE.play(player.getLocation(), 0.8F, 0.9F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_PISTON_EXTEND, 0.9F, 1.2F);
+      TaskGuiHelper.playSound(player, XSound.ENTITY_HORSE_BREATHE, 0.8F, 0.9F);
       checkAndApplyPsi(player, currentPsi);
       return true;
     }
 
     if(rawSlot == FINE_PUMP_SLOT) {
       currentPsi += 2;
-      XSound.BLOCK_PISTON_EXTEND.play(player.getLocation(), 0.65F, 1.6F);
-      XSound.ENTITY_CHICKEN_EGG.play(player.getLocation(), 0.7F, 0.85F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_PISTON_EXTEND, 0.65F, 1.6F);
+      TaskGuiHelper.playSound(player, XSound.ENTITY_CHICKEN_EGG, 0.7F, 0.85F);
       checkAndApplyPsi(player, currentPsi);
       return true;
     }
 
     if(rawSlot == BLEED_VALVE_SLOT) {
       currentPsi = Math.max(0, currentPsi - 3);
-      XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.8F, 1.5F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_FIRE_EXTINGUISH, 0.8F, 1.5F);
       checkAndApplyPsi(player, currentPsi);
       return true;
     }
@@ -310,8 +310,8 @@ public class TirePressureMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         playerPsi.remove(player.getUniqueId());
 
-        XSound.BLOCK_IRON_DOOR_CLOSE.play(player.getLocation(), 1F, 1.2F);
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_IRON_DOOR_CLOSE, 1F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "ล็อกแรงดันลมยางที่ " + currentPsi + " PSI สำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -323,14 +323,14 @@ public class TirePressureMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.9F, 1F);
         TaskGuiHelper.sendErrorBar(player, "ปรับแรงดันให้ได้ 30-32 PSI ก่อน (ปัจจุบัน " + currentPsi + " PSI)");
       }
       return true;
     }
 
     if(rawSlot >= 0 && rawSlot < 36) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(currentPsi >= MIN_TARGET_PSI && currentPsi <= MAX_TARGET_PSI) {
         TaskGuiHelper.sendTaskBar(player, "<#6EEB83>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อล็อกวาล์วลมยาง");
       } else {
@@ -342,12 +342,12 @@ public class TirePressureMinigame implements TaskMinigame {
 
   private void checkAndApplyPsi(Player player, int newPsi) {
     if(newPsi > MAX_SAFE_PSI) {
-      XSound.BLOCK_FIRE_EXTINGUISH.play(player.getLocation(), 0.95F, 0.7F);
-      XSound.BLOCK_NOTE_BLOCK_BASS.play(player.getLocation(), 0.9F, 0.65F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_FIRE_EXTINGUISH, 0.95F, 0.7F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_BASS, 0.9F, 0.65F);
       newPsi = 16;
       TaskGuiHelper.sendErrorBar(player, "แรงดันทะลุ 34 PSI วาล์วนิรภัยปล่อยลมลดเหลือ 16 PSI");
     } else if(newPsi >= MIN_TARGET_PSI && newPsi <= MAX_TARGET_PSI) {
-      XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.9F, 1.8F);
+      TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.9F, 1.8F);
       TaskGuiHelper.sendTaskBar(player, "<#6EEB83>แรงดัน " + newPsi + " PSI พอดีแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อล็อกวาล์ว");
     } else if(newPsi > MAX_TARGET_PSI) {
       TaskGuiHelper.sendTaskBar(player, "<#FF3B47>แรงดัน " + newPsi + " PSI เกินเกณฑ์ <#FFB703>คลิกวาล์วระบายลม -3 PSI ทางขวา");

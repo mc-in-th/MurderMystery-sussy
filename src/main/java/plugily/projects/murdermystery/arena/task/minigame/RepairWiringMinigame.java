@@ -117,7 +117,7 @@ public class RepairWiringMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิก <#FFB703>สายไฟเรืองแสงฝั่งซ้าย <#F4F1DE>แล้วคลิกต่อกับ <#6EEB83>สีเดียวกันฝั่งขวา");
   }
 
@@ -312,14 +312,14 @@ public class RepairWiringMinigame implements TaskMinigame {
     for(int i = 0; i < 4; i++) {
       if(LEFT_SLOTS[i] == rawSlot) {
         if(session.connected[i]) {
-          XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.1F);
+          TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.1F);
           TaskGuiHelper.sendTaskBar(player, "<#6EEB83>สายเส้นนี้เชื่อมแล้ว <#FFB703>คลิกสายเส้นอื่นที่เรืองแสง");
           return true;
         }
 
         session.selectedLeft = i;
         WireColor color = session.leftWires[i];
-        XSound.BLOCK_LEVER_CLICK.play(player.getLocation(), 1F, 1.25F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_LEVER_CLICK, 1F, 1.25F);
         TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>จับสายไฟ" + color.colorCode + color.name + " <#F4F1DE>แล้ว คลิกขั้ว" + color.colorCode + color.name + " <#F4F1DE>ทางฝั่งขวา");
         buildGui(topInv, session);
         return true;
@@ -329,7 +329,7 @@ public class RepairWiringMinigame implements TaskMinigame {
     for(int j = 0; j < 4; j++) {
       if(RIGHT_SLOTS[j] == rawSlot) {
         if(session.selectedLeft == -1) {
-          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.75F, 1.1F);
+          TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.75F, 1.1F);
           TaskGuiHelper.sendErrorBar(player, "คลิกเลือกสายไฟที่เรืองแสงทางฝั่งซ้ายก่อน");
           return true;
         }
@@ -341,8 +341,8 @@ public class RepairWiringMinigame implements TaskMinigame {
           session.connected[session.selectedLeft] = true;
           session.selectedLeft = -1;
 
-          XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.55F, 1.8F);
-          XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 0.85F, 1.6F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_USE, 0.55F, 1.8F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 0.85F, 1.6F);
 
           buildGui(topInv, session);
 
@@ -360,7 +360,7 @@ public class RepairWiringMinigame implements TaskMinigame {
             completedSessions.add(player.getUniqueId());
             sessions.remove(player.getUniqueId());
 
-            XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+            TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
             TaskGuiHelper.sendSuccessBar(player, "ซ่อมสายไฟเครื่องยนต์ครบทั้ง 4 เส้นสำเร็จ");
 
             Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -375,8 +375,8 @@ public class RepairWiringMinigame implements TaskMinigame {
             TaskGuiHelper.sendTaskBar(player, "<#6EEB83>ต่อสายไฟ" + selectedColor.name + "สำเร็จ (" + doneCount + "/4) <#FFB703>เลือกสายถัดไปฝั่งซ้าย");
           }
         } else {
-          XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 0.85F);
-          XSound.BLOCK_REDSTONE_TORCH_BURNOUT.play(player.getLocation(), 0.65F, 1.4F);
+          TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.9F, 0.85F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_REDSTONE_TORCH_BURNOUT, 0.65F, 1.4F);
 
           TaskGuiHelper.sendErrorBar(player, "ขั้วคนละสี กรุณาคลิกเลือกสายไฟฝั่งซ้ายใหม่อีกครั้ง");
           session.selectedLeft = -1;
@@ -387,7 +387,7 @@ public class RepairWiringMinigame implements TaskMinigame {
     }
 
     if(rawSlot >= 0 && rawSlot < 54) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(session.selectedLeft == -1) {
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกสายไฟที่เรืองแสงทางคอลัมน์ซ้ายก่อน");
       } else {

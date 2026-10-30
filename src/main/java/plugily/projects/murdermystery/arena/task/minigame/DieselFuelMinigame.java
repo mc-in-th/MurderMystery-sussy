@@ -88,7 +88,7 @@ public class DieselFuelMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิก <#FFB703>คันโยกเรืองแสงทางขวา <#F4F1DE>เพื่อปั๊มน้ำมันดีเซลให้เต็ม <#6EEB83>100 ลิตร");
   }
 
@@ -229,18 +229,18 @@ public class DieselFuelMinigame implements TaskMinigame {
     if(rawSlot == PUMP_LEVER_SLOT) {
       if(session.liters < 100) {
         session.liters = Math.min(100, session.liters + 20);
-        XSound.BLOCK_PISTON_EXTEND.play(player.getLocation(), 0.8F, 1.3F);
-        XSound.ITEM_BUCKET_FILL.play(player.getLocation(), 0.75F, 0.9F + (session.liters / 200.0F));
+        TaskGuiHelper.playSound(player, XSound.BLOCK_PISTON_EXTEND, 0.8F, 1.3F);
+        TaskGuiHelper.playSound(player, XSound.ITEM_BUCKET_FILL, 0.75F, 0.9F + (session.liters / 200.0F));
         buildGui(topInv, session);
 
         if(session.liters >= 100) {
-          XSound.BLOCK_NOTE_BLOCK_PLING.play(player.getLocation(), 1F, 1.8F);
+          TaskGuiHelper.playSound(player, XSound.BLOCK_NOTE_BLOCK_PLING, 1F, 1.8F);
           TaskGuiHelper.sendTaskBar(player, "<#6EEB83>น้ำมันเต็ม 100 ลิตรแล้ว <#FFB703>คลิกปุ่มมรกตด้านล่างเพื่อปิดฝาถัง");
         } else {
           TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>เติมน้ำมันแล้ว <#FFB703>" + session.liters + "/100 ลิตร");
         }
       } else {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.5F, 1.2F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.5F, 1.2F);
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกปุ่มมรกตด้านล่าง <#F4F1DE>เพื่อปิดฝาถังน้ำมัน");
       }
       return true;
@@ -251,8 +251,8 @@ public class DieselFuelMinigame implements TaskMinigame {
         completedSessions.add(player.getUniqueId());
         sessions.remove(player.getUniqueId());
 
-        XSound.BLOCK_ANVIL_USE.play(player.getLocation(), 0.8F, 1.6F);
-        XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 1F, 1.5F);
+        TaskGuiHelper.playSound(player, XSound.BLOCK_ANVIL_USE, 0.8F, 1.6F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
         TaskGuiHelper.sendSuccessBar(player, "เติมน้ำมันดีเซลครบ 100 ลิตรสำเร็จ");
 
         Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -264,14 +264,14 @@ public class DieselFuelMinigame implements TaskMinigame {
           }
         }, 8L);
       } else {
-        XSound.ENTITY_VILLAGER_NO.play(player.getLocation(), 0.9F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_VILLAGER_NO, 0.9F, 1F);
         TaskGuiHelper.sendErrorBar(player, "คลิกคันโยกเรืองแสงทางขวาให้ครบ 100 ลิตรก่อน");
       }
       return true;
     }
 
     if(rawSlot >= 0 && rawSlot < 36) {
-      XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+      TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
       if(session.liters < 100) {
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกคันโยกเรืองแสงทางขวา <#F4F1DE>เพื่อสูบน้ำมัน (+20 ลิตร)");
       } else {

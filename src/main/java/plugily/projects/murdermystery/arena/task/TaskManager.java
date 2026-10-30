@@ -43,6 +43,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.arena.task.minigame.TaskGuiHelper;
 import plugily.projects.murdermystery.arena.task.minigame.TaskMinigameManager;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
@@ -280,14 +281,6 @@ public class TaskManager {
 
     Map<Location, Set<TaskType>> locationTasks = new LinkedHashMap<>();
 
-    for(Map.Entry<TaskType, List<Location>> entry : arena.getSpecificTaskLocations().entrySet()) {
-      for(Location loc : entry.getValue()) {
-        if(loc != null && loc.getWorld() != null) {
-          locationTasks.computeIfAbsent(toBlockLocation(loc), k -> new LinkedHashSet<>()).add(entry.getKey());
-        }
-      }
-    }
-
     for(List<GameTask> pTasks : playerTasks.values()) {
       for(GameTask gt : pTasks) {
         Location loc = gt.getLocation();
@@ -297,57 +290,28 @@ public class TaskManager {
       }
     }
 
-    for(Location loc : genericLocations) {
-      if(loc != null && loc.getWorld() != null) {
-        locationTasks.computeIfAbsent(toBlockLocation(loc), k -> new LinkedHashSet<>());
-      }
-    }
-
     List<Location> occupiedHologramLocs = new ArrayList<>(arena.collectActiveStationHologramLocations(null, null));
 
     for(Map.Entry<Location, Set<TaskType>> entry : locationTasks.entrySet()) {
       Location loc = entry.getKey();
       Set<TaskType> types = entry.getValue();
+      if(types.isEmpty()) {
+        continue;
+      }
       Location displayLoc = arena.resolveClearHologramLocation(loc, 1.4, occupiedHologramLocs);
       if(displayLoc != null) {
         occupiedHologramLocs.add(displayLoc);
       }
 
-      String activeText;
-      String completedText;
-      if(types.isEmpty()) {
-        activeText = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#F4F1DE>จุดทำภารกิจ\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>";
-        completedText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#6EEB83>ทำภารกิจเสร็จแล้ว\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>จุดทำภารกิจนี้เสร็จสิ้นแล้ว<shadow:#000000FF><#5A4E7C>)</shadow>";
-      } else if(types.size() == 1) {
-        TaskType t = types.iterator().next();
-        activeText = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n" + t.getHologramTitle() + "\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>";
-        completedText = "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n<#B8B0C8>" + t.getDisplayName() + "\n<#6EEB83>ทำภารกิจเสร็จแล้ว";
-      } else {
-        StringBuilder sbActive = new StringBuilder("<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
-        StringBuilder sbDone = new StringBuilder("<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n");
-        int count = 0;
-        for(TaskType t : types) {
-          if(count > 0) {
-            sbActive.append("\n");
-            sbDone.append("\n");
-          }
-          sbActive.append("<#F4F1DE>").append(t.getDisplayName());
-          sbDone.append("<#B8B0C8>").append(t.getDisplayName());
-          count++;
-        }
-        sbActive.append("\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>");
-        sbDone.append("\n<#6EEB83>ทำภารกิจเสร็จแล้ว");
-        activeText = sbActive.toString();
-        completedText = sbDone.toString();
-      }
-
-      TextDisplay activeHologram = arena.spawnTextDisplay(displayLoc, activeText, false);
-      TextDisplay completedHologram = arena.spawnTextDisplay(displayLoc, completedText, false);
-      arena.applyCompactHologramScaleIfNeeded(activeHologram, displayLoc);
-      arena.applyCompactHologramScaleIfNeeded(completedHologram, displayLoc);
       BlockDisplay glowingBlock = arena.spawnBlockDisplay(loc, null, ChatColor.GOLD);
-
-      stationDisplays.add(new TaskStationDisplay(loc, types, activeHologram, completedHologram, glowingBlock));
+      for(TaskType t : types) {
+        String activeText = "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow>\n\n"
+          + t.getHologramTitle()
+          + "\n\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กดคลิกขวาเพื่อทำภารกิจ<shadow:#000000FF><#5A4E7C>)</shadow>";
+        TextDisplay activeHologram = arena.spawnTextDisplay(displayLoc, activeText, false);
+        arena.applyCompactHologramScaleIfNeeded(activeHologram, displayLoc);
+        stationDisplays.add(new TaskStationDisplay(loc, Collections.singleton(t), activeHologram, null, glowingBlock));
+      }
     }
 
     updateAllPlayersStationVisibility();
@@ -516,7 +480,7 @@ public class TaskManager {
     Location matchedStation = findStationForClickedBlock(targetLoc);
     Location checkLoc = matchedStation != null ? matchedStation : targetLoc;
     for(GameTask task : tasks) {
-      if(isSameBlock(task.getLocation(), checkLoc)) {
+      if(!task.isCompleted() && isSameBlock(task.getLocation(), checkLoc)) {
         return true;
       }
     }
@@ -643,15 +607,7 @@ public class TaskManager {
       }
     }
 
-    for(GameTask task : tasks) {
-      if(task.isCompleted() && isSameBlock(task.getLocation(), stationLoc)) {
-        HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#6EEB83>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#6EEB83>ทำภารกิจจุดนี้เสร็จแล้ว");
-        return true;
-      }
-    }
-
-    HalloweenChat.sendActionBar(player, "<shadow:#000000FF><#5A4E7C>[</shadow><#FF7518>Task<shadow:#000000FF><#5A4E7C>]</shadow> <#B8B0C8>ไม่มีภารกิจที่จุดนี้");
-    return true;
+    return false;
   }
 
   private boolean openOrCompleteTask(Player player, GameTask task) {
@@ -700,10 +656,8 @@ public class TaskManager {
           .value(taskName)
           .build());
 
-        if(ArenaUtils.isSpectator(player, arena)) {
-          player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-        } else {
-          XSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player.getLocation(), 1F, 1F);
+        TaskGuiHelper.playSound(player, XSound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+        if(!ArenaUtils.isSpectator(player, arena)) {
           VersionUtils.sendParticles("VILLAGER_HAPPY", player, player.getLocation().add(0, 1, 0), 15);
         }
 
@@ -1002,6 +956,7 @@ public class TaskManager {
     visualEffectManager.stopVisualSession(player);
     minigameManager.handleClose(player, null);
     updateBossBar();
+    updatePlayerStationVisibility(player);
   }
 
   public void removePlayer(Player player) {
@@ -1050,138 +1005,55 @@ public class TaskManager {
     boolean commsJammed = arena.getSabotageManager() != null && arena.getSabotageManager().isCommsJammed();
     IUser user = arena.getPlugin().getUserManager().getUser(player);
     boolean isMurderer = user != null && Role.isRole(Role.MURDERER, user, arena);
-
-    if(commsJammed && !isMurderer) {
-      for(TaskStationDisplay station : stationDisplays) {
-        if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getActiveHologram());
-          } catch(Throwable ignored) {
-          }
-        }
-        if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
-          } catch(Throwable ignored) {
-          }
-        }
-        if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
-          } catch(Throwable ignored) {
-          }
-        }
-      }
-      return;
-    }
-
-    List<GameTask> pTasks = playerTasks.get(player);
+    List<GameTask> pTasks = (!isMurderer && !commsJammed) ? playerTasks.get(player) : null;
     boolean isSpec = ArenaUtils.isSpectator(player, arena);
     Location activeSabotageLoc = (arena.getSabotageManager() != null && arena.getSabotageManager().hasActiveSabotage())
       ? arena.getSabotageManager().getActiveFixLocation()
       : null;
 
     for(TaskStationDisplay station : stationDisplays) {
-      if(!isSpec && activeSabotageLoc != null && isSameBlock(activeSabotageLoc, station.getLocation())) {
-        if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getActiveHologram());
-          } catch(Throwable ignored) {
-          }
-        }
-        if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
-          } catch(Throwable ignored) {
-          }
-        }
-        if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
-          } catch(Throwable ignored) {
-          }
-        }
-        continue;
-      }
+      Location stationLoc = station.getLocation();
+      boolean blockedBySabotage = !isSpec && activeSabotageLoc != null && isSameBlock(activeSabotageLoc, stationLoc);
 
-      boolean hasTaskHere = false;
-      boolean hasUnfinishedTaskHere = false;
-
-      if(pTasks != null) {
+      TaskType activeTypeAtBlock = null;
+      if(!blockedBySabotage && pTasks != null) {
         for(GameTask gt : pTasks) {
-          Location gLoc = gt.getLocation();
-          if(gLoc != null && gLoc.getWorld() != null && gLoc.getWorld().equals(station.getLocation().getWorld())) {
-            if(gLoc.getBlockX() == station.getLocation().getBlockX()
-              && gLoc.getBlockY() == station.getLocation().getBlockY()
-              && gLoc.getBlockZ() == station.getLocation().getBlockZ()) {
-              hasTaskHere = true;
-              if(!gt.isCompleted()) {
-                hasUnfinishedTaskHere = true;
-              }
-            }
+          if(!gt.isCompleted() && isSameBlock(gt.getLocation(), stationLoc)) {
+            activeTypeAtBlock = gt.getTaskType();
+            break;
           }
         }
       }
 
-      if(hasTaskHere) {
-        if(hasUnfinishedTaskHere) {
-          if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
-            try {
-              player.showEntity(arena.getPlugin(), station.getActiveHologram());
-            } catch(Throwable ignored) {
-            }
-          }
-          if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
-            try {
-              player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
-            } catch(Throwable ignored) {
-            }
-          }
-          if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
-            try {
-              arena.setEntityGlowColor(station.getGlowingBlock(), ChatColor.GOLD);
-              player.showEntity(arena.getPlugin(), station.getGlowingBlock());
-            } catch(Throwable ignored) {
-            }
-          }
-        } else {
-          if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
-            try {
-              player.hideEntity(arena.getPlugin(), station.getActiveHologram());
-            } catch(Throwable ignored) {
-            }
-          }
-          if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
-            try {
-              player.showEntity(arena.getPlugin(), station.getCompletedHologram());
-            } catch(Throwable ignored) {
-            }
-          }
-          if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
-            try {
-              player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
-            } catch(Throwable ignored) {
-            }
-          }
-        }
-      } else {
-        if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
-          try {
+      boolean showActiveHologram = activeTypeAtBlock != null
+        && (station.getTaskTypes().isEmpty() || station.getTaskTypes().contains(activeTypeAtBlock));
+      boolean showGlowingBlock = activeTypeAtBlock != null;
+
+      if(station.getActiveHologram() != null && station.getActiveHologram().isValid()) {
+        try {
+          if(showActiveHologram) {
             player.showEntity(arena.getPlugin(), station.getActiveHologram());
-          } catch(Throwable ignored) {
+          } else {
+            player.hideEntity(arena.getPlugin(), station.getActiveHologram());
           }
+        } catch(Throwable ignored) {
         }
-        if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
-          try {
-            player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
-          } catch(Throwable ignored) {
-          }
+      }
+      if(station.getCompletedHologram() != null && station.getCompletedHologram().isValid()) {
+        try {
+          player.hideEntity(arena.getPlugin(), station.getCompletedHologram());
+        } catch(Throwable ignored) {
         }
-        if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
-          try {
+      }
+      if(station.getGlowingBlock() != null && station.getGlowingBlock().isValid()) {
+        try {
+          if(showGlowingBlock) {
+            arena.setEntityGlowColor(station.getGlowingBlock(), ChatColor.GOLD);
+            player.showEntity(arena.getPlugin(), station.getGlowingBlock());
+          } else {
             player.hideEntity(arena.getPlugin(), station.getGlowingBlock());
-          } catch(Throwable ignored) {
           }
+        } catch(Throwable ignored) {
         }
       }
     }

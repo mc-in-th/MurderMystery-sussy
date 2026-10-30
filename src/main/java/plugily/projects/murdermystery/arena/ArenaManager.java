@@ -86,6 +86,7 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena.getArenaState() == IArenaState.IN_GAME) {
       pluginArena.getTaskManager().addPlayerToBossBar(player);
       pluginArena.getSabotageManager().addPlayerToBossBar(player);
+      pluginArena.getTaskManager().updatePlayerStationVisibility(player);
     } else if(!ArenaUtils.isSpectator(player, pluginArena)) {
       Bukkit.getScheduler().runTaskLater(plugin, () -> {
         if(player.isOnline()
@@ -117,6 +118,7 @@ public class ArenaManager extends PluginArenaManager {
     if(pluginArena.getArenaState() == IArenaState.IN_GAME) {
       pluginArena.getTaskManager().addPlayerToBossBar(player);
       pluginArena.getSabotageManager().addPlayerToBossBar(player);
+      pluginArena.getTaskManager().updatePlayerStationVisibility(player);
     }
     pluginArena.getScoreboardManager().updateScoreboards();
 

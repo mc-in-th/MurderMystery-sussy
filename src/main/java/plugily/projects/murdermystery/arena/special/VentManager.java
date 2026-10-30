@@ -186,6 +186,9 @@ public class VentManager {
     }
 
     player.closeInventory();
+    if(arena.getVotingManager().isSeatedOnBusChair(player)) {
+      arena.getVotingManager().unseatPlayerToSafeSpot(player);
+    }
     Location entryLocation = player.getLocation().clone();
     ItemStack[] saved = player.getInventory().getContents().clone();
     ItemStack[] savedArmor = player.getInventory().getArmorContents().clone();

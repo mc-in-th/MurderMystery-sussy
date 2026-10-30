@@ -105,7 +105,7 @@ public class SparePartsMinigame implements TaskMinigame {
     buildGui(inv, session);
     player.openInventory(inv);
 
-    XSound.BLOCK_CHEST_OPEN.play(player.getLocation(), 0.8F, 1.2F);
+    TaskGuiHelper.playSound(player, XSound.BLOCK_CHEST_OPEN, 0.8F, 1.2F);
     TaskGuiHelper.sendTaskBar(player, "<#F4F1DE>คลิกหยากไย่หรือเศษใบไม้ที่เรืองแสงบนชั้นวางเพื่อค้นหาอะไหล่ให้ครบ <#FFB703>6 จุด");
   }
 
@@ -188,7 +188,7 @@ public class SparePartsMinigame implements TaskMinigame {
 
     if(!session.clogSlots.contains(rawSlot)) {
       if(rawSlot >= 0 && rawSlot < 45) {
-        XSound.UI_BUTTON_CLICK.play(player.getLocation(), 0.45F, 1.0F);
+        TaskGuiHelper.playSound(player, XSound.UI_BUTTON_CLICK, 0.45F, 1.0F);
         TaskGuiHelper.sendTaskBar(player, "<#FFB703>คลิกที่หยากไย่หรือเศษใบไม้ที่เรืองแสง <#F4F1DE>เพื่อรื้อหาอะไหล่");
       }
       return true;
@@ -196,7 +196,7 @@ public class SparePartsMinigame implements TaskMinigame {
 
     session.clogSlots.remove(rawSlot);
     int cleared = TOTAL_CLOGS - session.clogSlots.size();
-    XSound.BLOCK_COMPOSTER_FILL.play(player.getLocation(), 0.9F, 1.1F + (cleared * 0.08F));
+    TaskGuiHelper.playSound(player, XSound.BLOCK_COMPOSTER_FILL, 0.9F, 1.1F + (cleared * 0.08F));
 
     Inventory topInv = player.getOpenInventory().getTopInventory();
     buildGui(topInv, session);
@@ -204,7 +204,7 @@ public class SparePartsMinigame implements TaskMinigame {
     if(session.clogSlots.isEmpty()) {
       completedSessions.add(player.getUniqueId());
       sessions.remove(player.getUniqueId());
-      XSound.ENTITY_PLAYER_LEVELUP.play(player.getLocation(), 0.9F, 1.5F);
+      TaskGuiHelper.playSound(player, XSound.ENTITY_PLAYER_LEVELUP, 0.9F, 1.5F);
       TaskGuiHelper.sendSuccessBar(player, "ค้นหากล่องฟิวส์และอะไหล่สำเร็จ");
 
       Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> {
@@ -233,3 +233,4 @@ public class SparePartsMinigame implements TaskMinigame {
     completedSessions.clear();
   }
 }
+
