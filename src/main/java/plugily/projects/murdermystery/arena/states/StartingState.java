@@ -178,6 +178,8 @@ public class StartingState extends PluginStartingState {
       } else {
         finishStart.run();
       }
+      getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> ArenaUtils.syncArenaNameTags(pluginArena));
+      getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> ArenaUtils.syncArenaNameTags(pluginArena), 3L);
     }
   }
 

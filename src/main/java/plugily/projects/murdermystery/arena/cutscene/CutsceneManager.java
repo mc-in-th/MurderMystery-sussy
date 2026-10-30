@@ -740,6 +740,7 @@ public class CutsceneManager {
     }
     restoreScoreboards();
     ArenaUtils.syncArenaNameTags(arena);
+    Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> ArenaUtils.syncArenaNameTags(arena), 2L);
   }
 
   public void handlePlayerLeave(Player player) {

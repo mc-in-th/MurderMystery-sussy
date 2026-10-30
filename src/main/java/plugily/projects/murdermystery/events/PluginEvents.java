@@ -29,7 +29,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -47,6 +49,7 @@ import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.ArenaUtils;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
+import plugily.projects.murdermystery.arena.managers.NameTagPacketManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
 
@@ -64,8 +67,19 @@ public class PluginEvents implements Listener {
   }
 
   @EventHandler(priority = EventPriority.LOWEST)
+  public void onPlayerJoin(PlayerJoinEvent event) {
+    NameTagPacketManager.handlePlayerJoin(plugin, event.getPlayer());
+  }
+
+  @EventHandler(priority = EventPriority.LOWEST)
   public void onPlayerQuit(PlayerQuitEvent event) {
     CutsceneManager.handlePlayerQuit(plugin, event.getPlayer());
+    NameTagPacketManager.handlePlayerQuit(plugin, event.getPlayer());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+    plugin.getServer().getScheduler().runTaskLater(plugin, ArenaUtils::syncAllNameTags, 1L);
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)

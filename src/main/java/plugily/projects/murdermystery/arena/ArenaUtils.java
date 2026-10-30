@@ -43,6 +43,7 @@ import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.arena.cutscene.CutsceneManager;
+import plugily.projects.murdermystery.arena.managers.NameTagPacketManager;
 import plugily.projects.murdermystery.arena.managers.MapRestorerManager;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.HalloweenChat;
@@ -372,21 +373,21 @@ public class ArenaUtils extends PluginArenaUtils {
     }
   }
 
-  private static final String NAMETAG_HIDE_TEAM = "MM_NT_HIDE";
+  private static final String NAMETAG_HIDE_TEAM = NameTagPacketManager.HIDE_TEAM_NAME;
   private static final String LEGACY_NAMETAG_TEAM = "MMHide";
 
-  private static boolean shouldHidePlayerNameTag(Player player) {
+  public static boolean shouldHidePlayerNameTag(Player player) {
     if(player == null || !player.isOnline()) {
       return false;
+    }
+    if(CutsceneManager.isPreviewing(player)) {
+      return true;
     }
     IPluginArena rawArena = getPlugin().getArenaRegistry().getArena(player);
     if(!(rawArena instanceof Arena)) {
       return false;
     }
     Arena arena = (Arena) rawArena;
-    if(arena == null) {
-      return false;
-    }
     return arena.getArenaState() == IArenaState.IN_GAME || arena.getCutsceneManager().isPlaying();
   }
 
@@ -434,32 +435,32 @@ public class ArenaUtils extends PluginArenaUtils {
 
   public static void syncAllNameTags() {
     ScoreboardManager sbManager = Bukkit.getScoreboardManager();
-    if(sbManager == null) {
-      return;
-    }
-    Scoreboard mainSb = sbManager.getMainScoreboard();
-    Set<Scoreboard> scoreboards = new HashSet<>();
-    if(mainSb != null) {
-      scoreboards.add(mainSb);
-    }
-    for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
-      if(viewer != null && viewer.isOnline()) {
-        Scoreboard viewerSb = viewer.getScoreboard();
-        if(viewerSb != null) {
-          scoreboards.add(viewerSb);
+    if(sbManager != null) {
+      Scoreboard mainSb = sbManager.getMainScoreboard();
+      Set<Scoreboard> scoreboards = new HashSet<>();
+      if(mainSb != null) {
+        scoreboards.add(mainSb);
+      }
+      for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
+        if(viewer != null && viewer.isOnline()) {
+          Scoreboard viewerSb = viewer.getScoreboard();
+          if(viewerSb != null) {
+            scoreboards.add(viewerSb);
+          }
+        }
+      }
+      for(Player target : getPlugin().getServer().getOnlinePlayers()) {
+        if(target == null || !target.isOnline()) {
+          continue;
+        }
+        boolean hide = shouldHidePlayerNameTag(target);
+        String entry = target.getName();
+        for(Scoreboard sb : scoreboards) {
+          applyHideTeamEntry(sb, entry, hide);
         }
       }
     }
-    for(Player target : getPlugin().getServer().getOnlinePlayers()) {
-      if(target == null || !target.isOnline()) {
-        continue;
-      }
-      boolean hide = shouldHidePlayerNameTag(target);
-      String entry = target.getName();
-      for(Scoreboard sb : scoreboards) {
-        applyHideTeamEntry(sb, entry, hide);
-      }
-    }
+    NameTagPacketManager.syncAll(getPlugin());
   }
 
   public static void syncArenaNameTags(Arena arena) {
@@ -471,19 +472,19 @@ public class ArenaUtils extends PluginArenaUtils {
       return;
     }
     ScoreboardManager sbManager = Bukkit.getScoreboardManager();
-    if(sbManager == null) {
-      return;
-    }
-    String entry = player.getName();
-    applyHideTeamEntry(sbManager.getMainScoreboard(), entry, false);
-    if(player.isOnline()) {
-      applyHideTeamEntry(player.getScoreboard(), entry, false);
-    }
-    for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
-      if(viewer != null && viewer.isOnline()) {
-        applyHideTeamEntry(viewer.getScoreboard(), entry, false);
+    if(sbManager != null) {
+      String entry = player.getName();
+      applyHideTeamEntry(sbManager.getMainScoreboard(), entry, false);
+      if(player.isOnline()) {
+        applyHideTeamEntry(player.getScoreboard(), entry, false);
+      }
+      for(Player viewer : getPlugin().getServer().getOnlinePlayers()) {
+        if(viewer != null && viewer.isOnline()) {
+          applyHideTeamEntry(viewer.getScoreboard(), entry, false);
+        }
       }
     }
+    NameTagPacketManager.restorePlayer(getPlugin(), player);
   }
 
   public static void updateNameTagsVisibility(final Player p) {

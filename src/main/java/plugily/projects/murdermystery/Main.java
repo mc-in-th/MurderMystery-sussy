@@ -28,6 +28,7 @@ import plugily.projects.minigamesbox.classic.handlers.setup.categories.PluginSet
 import plugily.projects.minigamesbox.classic.utils.services.ServiceRegistry;
 import plugily.projects.minigamesbox.classic.utils.services.metrics.Metrics;
 import plugily.projects.murdermystery.arena.*;
+import plugily.projects.murdermystery.arena.managers.NameTagPacketManager;
 import plugily.projects.murdermystery.arena.special.SpecialBlockEvents;
 import plugily.projects.murdermystery.arena.special.mysterypotion.MysteryPotionRegistry;
 import plugily.projects.murdermystery.arena.special.pray.PrayerRegistry;
@@ -81,8 +82,9 @@ public class Main extends PluginMain {
     HalloweenChat.applyToLanguageConfig(this);
     new AdditionalValueInitializer(this);
     initializePluginClasses();
+    NameTagPacketManager.init(this);
 
-    getServer().getScheduler().scheduleSyncRepeatingTask(this, ArenaUtils::syncAllNameTags, 40L, 40L);
+    getServer().getScheduler().scheduleSyncRepeatingTask(this, ArenaUtils::syncAllNameTags, 15L, 15L);
 
     getDebugger().debug("Full {0} plugin enabled", getName());
     getDebugger()
@@ -135,6 +137,7 @@ public class Main extends PluginMain {
   @Override
   public void onDisable() {
     plugily.projects.murdermystery.arena.cutscene.CutsceneManager.shutdownAll(this);
+    NameTagPacketManager.shutdown(this);
     if(arenaRegistry != null) {
       for(Arena arena : arenaRegistry.getPluginArenas()) {
         if(arena.getVentManager() != null) {
