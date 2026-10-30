@@ -429,6 +429,14 @@ public class Arena extends PluginArena {
     try {
       loc.getChunk().load();
       for(Entity entity : loc.getWorld().getNearbyEntities(loc, rx, ry, rz)) {
+        if(entity.isPersistent()
+          && !entity.equals(campfireDisplay)
+          && !textDisplays.contains(entity)
+          && !ventDisplays.contains(entity)
+          && !blockDisplays.contains(entity)
+          && !ventBlockDisplays.contains(entity)) {
+          continue;
+        }
         if(entity instanceof TextDisplay) {
           textDisplays.remove(entity);
           ventDisplays.remove(entity);
@@ -752,12 +760,30 @@ public class Arena extends PluginArena {
     return textDisplays;
   }
 
+  public List<BlockDisplay> getBlockDisplays() {
+    return blockDisplays;
+  }
+
   public List<TextDisplay> getVentDisplays() {
     return ventDisplays;
   }
 
   public List<BlockDisplay> getVentBlockDisplays() {
     return ventBlockDisplays;
+  }
+
+  public boolean isPluginManagedEntity(Entity entity) {
+    if(entity == null) {
+      return false;
+    }
+    if(!entity.isPersistent()) {
+      return true;
+    }
+    return entity.equals(campfireDisplay)
+      || textDisplays.contains(entity)
+      || blockDisplays.contains(entity)
+      || ventDisplays.contains(entity)
+      || ventBlockDisplays.contains(entity);
   }
 
   public VentManager getVentManager() {

@@ -360,6 +360,44 @@ public final class BusSchematicLoader {
     return true;
   }
 
+  public static SchematicPart createLiveWorldPart(
+    BlockData blockData,
+    float baseOffsetX,
+    float baseOffsetY,
+    float baseOffsetZ
+  ) {
+    if(blockData == null) {
+      return null;
+    }
+    Material type = blockData.getMaterial();
+    if(type.isAir()
+      || type == Material.BARRIER
+      || type == Material.LIGHT
+      || type == Material.STRUCTURE_VOID
+      || type == Material.MOVING_PISTON) {
+      return null;
+    }
+    String rawState = blockData.getAsString();
+    ResolvedState resolved = resolveBlockState(rawState);
+    if(resolved == null) {
+      return null;
+    }
+    String lowerName = type.name().toLowerCase(Locale.ROOT);
+    boolean isSignFallback = lowerName.endsWith("_wall_sign")
+      || (lowerName.endsWith("_sign") && !lowerName.endsWith("_hanging_sign"));
+    BlockData finalData = isSignFallback ? resolved.blockData : blockData.clone();
+    return new SchematicPart(
+      finalData,
+      baseOffsetX + resolved.offsetX,
+      baseOffsetY + resolved.offsetY,
+      baseOffsetZ + resolved.offsetZ,
+      resolved.scaleX,
+      resolved.scaleY,
+      resolved.scaleZ,
+      resolved.emissive
+    );
+  }
+
   private static ResolvedState resolveBlockState(String rawState) {
     if(rawState == null || rawState.isEmpty()) {
       return null;

@@ -1631,6 +1631,13 @@ public class TaskAndVentArgument {
     }
 
     Location loc = getTargetOrStandingLocation(player, 5);
+    Location refBusLoc = cm.getBusEndLocation() != null ? cm.getBusEndLocation() : cm.getBusStartLocation();
+    if(refBusLoc != null && loc.getWorld() != null && loc.getWorld().equals(refBusLoc.getWorld())) {
+      int busWheelY = (int) Math.floor(refBusLoc.getY() + 0.05);
+      if(loc.getBlockY() == busWheelY - 1) {
+        loc = new Location(loc.getWorld(), loc.getBlockX(), busWheelY, loc.getBlockZ());
+      }
+    }
     String serialized = LocationSerializer.locationToString(loc);
 
     boolean firstCorner = mode.equals("pos1") || mode.equals("1");
@@ -1646,7 +1653,7 @@ public class TaskAndVentArgument {
     msg(player, "<#6EEB83>[+] ตั้งมุม <#FFB703>" + (firstCorner ? "Pos1" : "Pos2") + " <#6EEB83>สำหรับซ่อนรถบัสจริงระหว่าง Cutscene ที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
     if(cm.getBusHidePos1() != null && cm.getBusHidePos2() != null) {
-      msg(player, "<#72EFDD>[พร้อมใช้งาน] <#B8B0C8>ระบบจะซ่อนบล็อกในกรอบนี้เฉพาะฝั่งผู้เล่นระหว่าง Cutscene และคืนค่าบล็อกจริงทันทีเมื่อรถบัสจอดสนิทและเริ่มเกม");
+      msg(player, "<#72EFDD>[พร้อมใช้งาน] <#B8B0C8>ระบบจะซ่อนบล็อกรถบัสและจำลอง BlockDisplay/Display ของรถบัสให้วิ่งมาพร้อมกันระหว่าง Cutscene โดยไม่ลบพื้นถนน และคืนค่าเมื่อเริ่มเกม");
     } else {
       msg(player, "<#B8B0C8>ขั้นตอนต่อไป: ไปที่มุมตรงข้ามของรถบัสจริง แล้วพิมพ์ <#FFB703>/mma " + subcommand + " " + arenaId + " " + (firstCorner ? "pos2" : "pos1"));
     }

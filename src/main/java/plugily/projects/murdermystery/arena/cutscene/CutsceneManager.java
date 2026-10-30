@@ -1877,6 +1877,10 @@ public class CutsceneManager {
     }
   }
 
+  static void syncVehiclePassengers(Entity vehicle, Collection<Player> viewers) {
+    PacketCameraSender.sendPassengersPacket(vehicle, viewers);
+  }
+
   private static final class PacketCameraSender {
     private static volatile boolean initialized = false;
     private static volatile boolean supported = false;
@@ -1890,6 +1894,7 @@ public class CutsceneManager {
     private static Constructor<?> syncPacketConstructor;
     private static Constructor<?> rotateHeadConstructor;
     private static Constructor<?> setCameraConstructor;
+    private static Constructor<?> setPassengersConstructor;
     private static Method entitySetPosMethod;
     private static volatile Method craftEntityGetHandle;
 
@@ -1918,6 +1923,13 @@ public class CutsceneManager {
           setCameraSupported = true;
         } catch(Throwable ignored) {
           setCameraSupported = false;
+        }
+
+        try {
+          Class<?> setPassengersClass = Class.forName("net.minecraft.network.protocol.game.ClientboundSetPassengersPacket");
+          setPassengersConstructor = setPassengersClass.getConstructor(entityClass);
+        } catch(Throwable ignored) {
+          setPassengersConstructor = null;
         }
 
         Class<?> vec3Class = Class.forName("net.minecraft.world.phys.Vec3");
@@ -1972,6 +1984,18 @@ public class CutsceneManager {
         try {
           Object nmsEntity = resolveNmsEntity(entity);
           entitySetPosMethod.invoke(nmsEntity, x, y, z);
+          List<Entity> passengers = entity.getPassengers();
+          if(passengers != null && !passengers.isEmpty()) {
+            for(Entity passenger : passengers) {
+              if(passenger != null && passenger.isValid()) {
+                try {
+                  Object nmsPassenger = resolveNmsEntity(passenger);
+                  entitySetPosMethod.invoke(nmsPassenger, x, y, z);
+                } catch(Throwable ignored) {
+                }
+              }
+            }
+          }
           return;
         } catch(Throwable ignored) {
         }
@@ -1987,6 +2011,31 @@ public class CutsceneManager {
             PlayerTeleportEvent.TeleportCause.PLUGIN,
             io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS
           );
+        }
+      } catch(Throwable ignored) {
+      }
+    }
+
+    static void sendPassengersPacket(Entity vehicle, Collection<Player> viewers) {
+      init();
+      if(setPassengersConstructor == null || vehicle == null || !vehicle.isValid() || viewers == null || viewers.isEmpty()) {
+        return;
+      }
+      try {
+        Object nmsVehicle = resolveNmsEntity(vehicle);
+        Object passengersPacket = setPassengersConstructor.newInstance(nmsVehicle);
+        for(Player viewer : viewers) {
+          if(viewer == null || !viewer.isOnline()) {
+            continue;
+          }
+          if(craftPlayerGetHandle == null) {
+            craftPlayerGetHandle = viewer.getClass().getMethod("getHandle");
+          }
+          Object handle = craftPlayerGetHandle.invoke(viewer);
+          Object connection = serverPlayerConnectionField.get(handle);
+          if(connection != null) {
+            packetSendMethod.invoke(connection, passengersPacket);
+          }
         }
       } catch(Throwable ignored) {
       }
