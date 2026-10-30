@@ -21,9 +21,17 @@ package plugily.projects.murdermystery.arena.voting;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Slab;
+import org.bukkit.block.data.type.Stairs;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.Inventory;
@@ -31,6 +39,9 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
@@ -158,6 +169,10 @@ public class VotingManager {
   private final Map<Player, Location> preVoteLocations = new HashMap<>();
   private final Map<UUID, Location> meetingCircleLocations = new HashMap<>();
   private final Map<UUID, TextDisplay> circleStatusDisplays = new HashMap<>();
+  private final Map<UUID, ArmorStand> seatMounts = new HashMap<>();
+  private final Set<UUID> allowingDismounts = new HashSet<>();
+  private boolean allowingAllDismounts = false;
+  private Location activeVerdictSpot = null;
   private final Map<UUID, ItemStack> savedSlotItems = new HashMap<>();
   private final Map<UUID, Long> recentKills = new HashMap<>();
   private final List<DeadBody> activeBodies = new ArrayList<>();
@@ -276,11 +291,97 @@ public class VotingManager {
 
   private void clearCircleStatusDisplays() {
     for(TextDisplay td : circleStatusDisplays.values()) {
-      if(td != null && td.isValid()) {
-        td.remove();
+      if(td != null) {
+        arena.getTextDisplays().remove(td);
+        if(td.isValid()) {
+          td.remove();
+        }
       }
     }
     circleStatusDisplays.clear();
+  }
+
+  public boolean isSeatedOnBusChair(Player player) {
+    if(player == null) {
+      return false;
+    }
+    ArmorStand seat = seatMounts.get(player.getUniqueId());
+    return seat != null && seat.isValid() && seat.equals(player.getVehicle());
+  }
+
+  public boolean shouldPreventDismount(Player player, Entity dismounted) {
+    if(!isVotingActive() || player == null || dismounted == null) {
+      return false;
+    }
+    UUID uuid = player.getUniqueId();
+    if(allowingAllDismounts || allowingDismounts.contains(uuid)) {
+      return false;
+    }
+    if(!player.isOnline() || ArenaUtils.isSpectator(player, arena) || arena.isDeathPlayer(player)) {
+      return false;
+    }
+    ArmorStand expected = seatMounts.get(uuid);
+    return expected != null && expected.equals(dismounted);
+  }
+
+  private void unseatPlayer(UUID uuid) {
+    if(uuid == null) {
+      return;
+    }
+    ArmorStand seat = seatMounts.remove(uuid);
+    allowingDismounts.add(uuid);
+    try {
+      Player online = Bukkit.getPlayer(uuid);
+      if(online != null && online.isInsideVehicle() && (seat == null || seat.equals(online.getVehicle()))) {
+        online.leaveVehicle();
+      }
+      if(seat != null) {
+        try {
+          seat.eject();
+        } catch(Throwable ignored) {
+        }
+        if(seat.isValid()) {
+          seat.remove();
+        }
+      }
+    } finally {
+      allowingDismounts.remove(uuid);
+    }
+  }
+
+  private void clearSeatMounts() {
+    allowingAllDismounts = true;
+    try {
+      for(UUID uuid : new ArrayList<>(seatMounts.keySet())) {
+        unseatPlayer(uuid);
+      }
+      seatMounts.clear();
+    } finally {
+      allowingAllDismounts = false;
+      allowingDismounts.clear();
+    }
+  }
+
+  private void ensureSeatedPlayersMounted() {
+    if(!isVotingActive() || seatMounts.isEmpty()) {
+      return;
+    }
+    for(Map.Entry<UUID, ArmorStand> entry : new ArrayList<>(seatMounts.entrySet())) {
+      UUID uuid = entry.getKey();
+      ArmorStand seat = entry.getValue();
+      Player player = Bukkit.getPlayer(uuid);
+      if(player == null || !player.isOnline() || ArenaUtils.isSpectator(player, arena) || arena.isDeathPlayer(player)) {
+        unseatPlayer(uuid);
+        continue;
+      }
+      if(verdictExecuted && isPendingEjected(player)) {
+        continue;
+      }
+      if(seat != null && seat.isValid() && !seat.getPassengers().contains(player)) {
+        player.setSneaking(false);
+        seat.addPassenger(player);
+      }
+    }
   }
 
   private void updateCircleStatusDisplays() {
@@ -386,6 +487,486 @@ public class VotingManager {
     }, 13L);
   }
 
+  private static final class BusSeatSpot {
+    private final Location mountLocation;
+    private final Location lookLocation;
+    private final Location displayLocation;
+    private final boolean seated;
+    private final boolean compactDisplay;
+
+    private BusSeatSpot(Location mountLocation, Location lookLocation, Location displayLocation, boolean seated, boolean compactDisplay) {
+      this.mountLocation = mountLocation;
+      this.lookLocation = lookLocation;
+      this.displayLocation = displayLocation;
+      this.seated = seated;
+      this.compactDisplay = compactDisplay;
+    }
+  }
+
+  private static final class BusSeatPlan {
+    private final List<BusSeatSpot> spots;
+    private final Location verdictSpot;
+    private final Location spectatorSpot;
+
+    private BusSeatPlan(List<BusSeatSpot> spots, Location verdictSpot, Location spectatorSpot) {
+      this.spots = spots;
+      this.verdictSpot = verdictSpot;
+      this.spectatorSpot = spectatorSpot;
+    }
+  }
+
+  private static void preloadChunksAround(Location origin, int radiusX, int radiusZ) {
+    if(origin == null || origin.getWorld() == null) {
+      return;
+    }
+    World world = origin.getWorld();
+    int minCx = (origin.getBlockX() - radiusX) >> 4;
+    int maxCx = (origin.getBlockX() + radiusX) >> 4;
+    int minCz = (origin.getBlockZ() - radiusZ) >> 4;
+    int maxCz = (origin.getBlockZ() + radiusZ) >> 4;
+    for(int cx = minCx; cx <= maxCx; cx++) {
+      for(int cz = minCz; cz <= maxCz; cz++) {
+        try {
+          world.getChunkAt(cx, cz).load();
+        } catch(Throwable ignored) {
+        }
+      }
+    }
+  }
+
+  private static boolean isMatchingChairStair(Block block, BlockFace expectedBackrestFacing) {
+    if(block == null) {
+      return false;
+    }
+    BlockData bd = block.getBlockData();
+    if(!(bd instanceof Stairs)) {
+      return false;
+    }
+    Stairs stairs = (Stairs) bd;
+    return stairs.getHalf() == Bisected.Half.BOTTOM
+      && stairs.getShape() == Stairs.Shape.STRAIGHT
+      && stairs.getFacing() == expectedBackrestFacing;
+  }
+
+  private static boolean isOpenSkyOrAir(Block block) {
+    if(block == null) {
+      return true;
+    }
+    Material type = block.getType();
+    return type.isAir() || "LIGHT".equals(type.name());
+  }
+
+  private List<Block> scanBusChairsNear(Location origin) {
+    if(origin == null || origin.getWorld() == null) {
+      return new ArrayList<>();
+    }
+    preloadChunksAround(origin, 16, 8);
+    World world = origin.getWorld();
+    int ox = origin.getBlockX();
+    int oy = origin.getBlockY();
+    int oz = origin.getBlockZ();
+
+    Map<String, List<Block>> groups = new HashMap<>();
+    for(int dy = -2; dy <= 2; dy++) {
+      int y = oy + dy;
+      for(int dx = -16; dx <= 16; dx++) {
+        int x = ox + dx;
+        for(int dz = -8; dz <= 8; dz++) {
+          int z = oz + dz;
+          Block b = world.getBlockAt(x, y, z);
+          BlockData bd = b.getBlockData();
+          if(!(bd instanceof Stairs)) {
+            continue;
+          }
+          Stairs stairs = (Stairs) bd;
+          if(stairs.getHalf() != Bisected.Half.BOTTOM || stairs.getShape() != Stairs.Shape.STRAIGHT) {
+            continue;
+          }
+          BlockFace seatForward = stairs.getFacing().getOppositeFace();
+          if(Math.abs(seatForward.getModX()) + Math.abs(seatForward.getModZ()) != 1) {
+            continue;
+          }
+          Block above1 = b.getRelative(0, 1, 0);
+          if(!above1.isPassable() || above1.isLiquid()) {
+            continue;
+          }
+          Block above2 = b.getRelative(0, 2, 0);
+          Block above3 = b.getRelative(0, 3, 0);
+          if(isOpenSkyOrAir(above2) && isOpenSkyOrAir(above3)) {
+            continue;
+          }
+          Block front = b.getRelative(seatForward);
+          Block frontHead = front.getRelative(0, 1, 0);
+          boolean frontValid = (front.isPassable() && !front.isLiquid())
+            || isMatchingChairStair(front, stairs.getFacing());
+          if(!frontValid || !frontHead.isPassable() || frontHead.isLiquid()) {
+            continue;
+          }
+          String key = b.getType().name() + ":" + y + ":" + stairs.getFacing().name();
+          groups.computeIfAbsent(key, k -> new ArrayList<>()).add(b);
+        }
+      }
+    }
+
+    List<Block> bestGroup = null;
+    double bestAvgDistSq = Double.MAX_VALUE;
+    for(List<Block> candidate : groups.values()) {
+      if(candidate.size() < 2) {
+        continue;
+      }
+      double sumDistSq = 0.0;
+      for(Block b : candidate) {
+        double ddx = (b.getX() + 0.5) - (ox + 0.5);
+        double ddy = (b.getY() + 0.5) - (oy + 0.5);
+        double ddz = (b.getZ() + 0.5) - (oz + 0.5);
+        sumDistSq += ddx * ddx + ddy * ddy + ddz * ddz;
+      }
+      double avgDistSq = sumDistSq / candidate.size();
+      if(bestGroup == null
+        || candidate.size() > bestGroup.size()
+        || (candidate.size() == bestGroup.size() && avgDistSq < bestAvgDistSq)) {
+        bestGroup = candidate;
+        bestAvgDistSq = avgDistSq;
+      }
+    }
+
+    if(bestGroup == null || bestGroup.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    Stairs sampleStairs = (Stairs) bestGroup.get(0).getBlockData();
+    BlockFace seatForward = sampleStairs.getFacing().getOppositeFace();
+    int fx = seatForward.getModX();
+    int fz = seatForward.getModZ();
+    int rightX = -fz;
+    int rightZ = fx;
+
+    Map<Integer, List<Block>> rowsByForward = new HashMap<>();
+    for(Block b : bestGroup) {
+      int forwardProj = b.getX() * fx + b.getZ() * fz;
+      rowsByForward.computeIfAbsent(forwardProj, k -> new ArrayList<>()).add(b);
+    }
+
+    for(List<Block> row : rowsByForward.values()) {
+      row.sort((a, b) -> {
+        int sideA = a.getX() * rightX + a.getZ() * rightZ;
+        int sideB = b.getX() * rightX + b.getZ() * rightZ;
+        return Integer.compare(sideA, sideB);
+      });
+    }
+
+    List<Integer> sortedRowKeys = new ArrayList<>(rowsByForward.keySet());
+    sortedRowKeys.sort((fA, fB) -> {
+      int pairedRankA = rowsByForward.get(fA).size() >= 2 ? 0 : 1;
+      int pairedRankB = rowsByForward.get(fB).size() >= 2 ? 0 : 1;
+      if(pairedRankA != pairedRankB) {
+        return Integer.compare(pairedRankA, pairedRankB);
+      }
+      return Integer.compare(fB, fA);
+    });
+
+    List<Block> ordered = new ArrayList<>();
+    for(Integer fKey : sortedRowKeys) {
+      ordered.addAll(rowsByForward.get(fKey));
+    }
+    return ordered;
+  }
+
+  public List<Block> detectBusChairBlocks() {
+    List<Block> fromHorn = scanBusChairsNear(arena.getCampfireLocation());
+    if(!fromHorn.isEmpty()) {
+      return fromHorn;
+    }
+    if(arena.getMeetingLocation() != null) {
+      return scanBusChairsNear(arena.getMeetingLocation());
+    }
+    return new ArrayList<>();
+  }
+
+  private BusSeatPlan buildManualBusSeatPlan(List<Location> configuredLocations) {
+    List<BusSeatSpot> spots = new ArrayList<>();
+    Location horn = arena.getCampfireLocation();
+    World world = null;
+    double sumX = 0.0;
+    double sumY = 0.0;
+    double sumZ = 0.0;
+
+    for(Location rawLoc : configuredLocations) {
+      if(rawLoc == null || rawLoc.getWorld() == null) {
+        continue;
+      }
+      if(world == null) {
+        world = rawLoc.getWorld();
+      } else if(!world.equals(rawLoc.getWorld())) {
+        continue;
+      }
+      try {
+        rawLoc.getChunk().load();
+      } catch(Throwable ignored) {
+      }
+      Block block = rawLoc.getBlock();
+      int bx = block.getX();
+      int by = block.getY();
+      int bz = block.getZ();
+      BlockData bd = block.getBlockData();
+
+      double mountX = bx + 0.5;
+      double mountY = by + 0.50;
+      double mountZ = bz + 0.5;
+      float standYaw;
+      if(bd instanceof Stairs && ((Stairs) bd).getHalf() == Bisected.Half.BOTTOM) {
+        BlockFace seatForward = ((Stairs) bd).getFacing().getOppositeFace();
+        mountX += 0.18 * seatForward.getModX();
+        mountZ += 0.18 * seatForward.getModZ();
+        standYaw = (float) Math.toDegrees(Math.atan2(-seatForward.getModX(), seatForward.getModZ()));
+      } else {
+        if(bd instanceof Slab && ((Slab) bd).getType() == Slab.Type.BOTTOM) {
+          mountY = by + 0.50;
+        } else if(block.isPassable()) {
+          mountY = by + 0.05;
+        } else {
+          mountY = by + 1.02;
+        }
+        if(horn != null && world.equals(horn.getWorld())) {
+          double dx = (horn.getBlockX() + 0.5) - mountX;
+          double dz = (horn.getBlockZ() + 0.5) - mountZ;
+          standYaw = (dx * dx + dz * dz) > 0.01
+            ? (float) Math.toDegrees(Math.atan2(-dx, dz))
+            : rawLoc.getYaw();
+        } else {
+          standYaw = rawLoc.getYaw();
+        }
+      }
+
+      boolean lowCeiling = !block.getRelative(0, 2, 0).getType().isAir()
+        || !block.getRelative(0, 3, 0).getType().isAir();
+      Location mountLoc = new Location(world, mountX, mountY, mountZ, standYaw, 0.0f);
+      Location lookLoc = new Location(world, mountX, by, mountZ, standYaw, 5.0f);
+      Location displayLoc = new Location(world, mountX, mountY + (lowCeiling ? 1.35 : 1.75), mountZ);
+      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, true, lowCeiling));
+      sumX += mountX;
+      sumY += by;
+      sumZ += mountZ;
+    }
+
+    if(spots.isEmpty() || world == null) {
+      return null;
+    }
+    double avgX = sumX / spots.size();
+    double avgY = sumY / spots.size();
+    double avgZ = sumZ / spots.size();
+    Location centerRef = new Location(world, avgX, avgY, avgZ);
+    double safeY = findSafeStandingY(centerRef, avgX, avgY, avgZ);
+    Location cabinMid = new Location(world, avgX, safeY, avgZ);
+    return new BusSeatPlan(spots, cabinMid, cabinMid.clone());
+  }
+
+  private BusSeatPlan resolveBusSeatPlan() {
+    if(!arena.getBusSeatLocations().isEmpty()) {
+      BusSeatPlan manual = buildManualBusSeatPlan(arena.getBusSeatLocations());
+      if(manual != null) {
+        return manual;
+      }
+    }
+
+    List<Block> chairs = detectBusChairBlocks();
+    if(chairs.isEmpty()) {
+      return null;
+    }
+
+    Block first = chairs.get(0);
+    World world = first.getWorld();
+    int chairY = first.getY();
+    Stairs sampleStairs = (Stairs) first.getBlockData();
+    BlockFace seatForward = sampleStairs.getFacing().getOppositeFace();
+    int fx = seatForward.getModX();
+    int fz = seatForward.getModZ();
+    int rightX = -fz;
+    int rightZ = fx;
+    float standYaw = (float) Math.toDegrees(Math.atan2(-fx, fz));
+
+    Map<Integer, List<Block>> rowsByForward = new HashMap<>();
+    int minForward = Integer.MAX_VALUE;
+    int maxForward = Integer.MIN_VALUE;
+    for(Block b : chairs) {
+      int fProj = b.getX() * fx + b.getZ() * fz;
+      rowsByForward.computeIfAbsent(fProj, k -> new ArrayList<>()).add(b);
+      if(fProj < minForward) {
+        minForward = fProj;
+      }
+      if(fProj > maxForward) {
+        maxForward = fProj;
+      }
+    }
+
+    int minSide = Integer.MAX_VALUE;
+    int maxSide = Integer.MIN_VALUE;
+    boolean hasPairedRows = rowsByForward.values().stream().anyMatch(r -> r.size() >= 2);
+    for(List<Block> row : rowsByForward.values()) {
+      if(hasPairedRows && row.size() < 2) {
+        continue;
+      }
+      for(Block b : row) {
+        int sProj = b.getX() * rightX + b.getZ() * rightZ;
+        if(sProj < minSide) {
+          minSide = sProj;
+        }
+        if(sProj > maxSide) {
+          maxSide = sProj;
+        }
+      }
+    }
+    if(minSide > maxSide) {
+      minSide = first.getX() * rightX + first.getZ() * rightZ;
+      maxSide = minSide;
+    }
+
+    double sideMidIndex = (minSide + maxSide) / 2.0;
+    double cabinCenterSideCoord = sideMidIndex + 0.5;
+
+    List<BusSeatSpot> spots = new ArrayList<>();
+    for(Block b : chairs) {
+      int bx = b.getX();
+      int by = b.getY();
+      int bz = b.getZ();
+      double sideCoord = (bx * rightX + bz * rightZ) + 0.5;
+      double inwardSign = sideCoord < cabinCenterSideCoord - 0.15
+        ? 1.0
+        : (sideCoord > cabinCenterSideCoord + 0.15 ? -1.0 : 0.0);
+
+      double mountX = bx + 0.5 + 0.18 * fx + 0.08 * inwardSign * rightX;
+      double mountY = by + 0.50;
+      double mountZ = bz + 0.5 + 0.18 * fz + 0.08 * inwardSign * rightZ;
+      float lookYaw = standYaw + (float) (20.0 * inwardSign);
+
+      Location mountLoc = new Location(world, mountX, mountY, mountZ, standYaw, 0.0f);
+      Location lookLoc = new Location(world, mountX, by, mountZ, lookYaw, 5.0f);
+      Location displayLoc = new Location(
+        world,
+        mountX + 0.12 * inwardSign * rightX,
+        mountY + 1.35,
+        mountZ + 0.12 * inwardSign * rightZ
+      );
+      spots.add(new BusSeatSpot(mountLoc, lookLoc, displayLoc, true, true));
+    }
+
+    if(maxSide - minSide >= 2) {
+      for(int pass = 0; pass < 2; pass++) {
+        for(int fStep = maxForward - 1; fStep >= minForward; fStep--) {
+          for(int sStep = minSide + 1; sStep <= maxSide - 1; sStep++) {
+            int ax = fStep * fx + sStep * rightX;
+            int az = fStep * fz + sStep * rightZ;
+            Block feet = world.getBlockAt(ax, chairY, az);
+            Block head = world.getBlockAt(ax, chairY + 1, az);
+            Block ground = world.getBlockAt(ax, chairY - 1, az);
+            boolean pureAir = feet.getType().isAir();
+            if((pass == 0 && !pureAir) || (pass == 1 && pureAir)) {
+              continue;
+            }
+            if(feet.isPassable() && !feet.isLiquid() && head.isPassable() && !head.isLiquid() && !ground.isPassable()) {
+              Location aisleStandLoc = new Location(world, ax + 0.5, chairY, az + 0.5, standYaw, 5.0f);
+              Location aisleDisplayLoc = new Location(world, ax + 0.5, chairY + 1.90, az + 0.5);
+              spots.add(new BusSeatSpot(aisleStandLoc, aisleStandLoc, aisleDisplayLoc, false, true));
+            }
+          }
+        }
+      }
+    }
+
+    double verdictF = maxForward + 1.0;
+    double verdictX = (verdictF * fx + sideMidIndex * rightX) + 0.5;
+    double verdictZ = (verdictF * fz + sideMidIndex * rightZ) + 0.5;
+    float backTowardCabinYaw = standYaw + 180.0f;
+    if(backTowardCabinYaw > 180.0f) {
+      backTowardCabinYaw -= 360.0f;
+    }
+    Location refCenter = new Location(world, verdictX, chairY, verdictZ);
+    double verdictY = findSafeStandingY(refCenter, verdictX, chairY, verdictZ);
+    Location verdictSpot = new Location(world, verdictX, verdictY, verdictZ, backTowardCabinYaw, 5.0f);
+
+    double specF = (minForward + maxForward) / 2.0;
+    double specX = (specF * fx + sideMidIndex * rightX) + 0.5;
+    double specZ = (specF * fz + sideMidIndex * rightZ) + 0.5;
+    double specY = findSafeStandingY(refCenter, specX, chairY, specZ);
+    Location spectatorSpot = new Location(world, specX, specY, specZ, standYaw, 10.0f);
+
+    return new BusSeatPlan(spots, verdictSpot, spectatorSpot);
+  }
+
+  private void applyCompactDisplayScale(TextDisplay td) {
+    if(td == null) {
+      return;
+    }
+    try {
+      td.setTransformation(new Transformation(
+        new Vector3f(0.0f, 0.0f, 0.0f),
+        new AxisAngle4f(),
+        new Vector3f(0.68f, 0.68f, 0.68f),
+        new AxisAngle4f()
+      ));
+    } catch(Throwable ignored) {
+    }
+  }
+
+  private void mountPlayerOnSeat(Player player, BusSeatSpot spot) {
+    if(player == null || spot == null || spot.mountLocation == null || spot.mountLocation.getWorld() == null) {
+      return;
+    }
+    UUID uuid = player.getUniqueId();
+    unseatPlayer(uuid);
+    player.setSneaking(false);
+
+    Location mountLoc = spot.mountLocation.clone();
+    World world = mountLoc.getWorld();
+    try {
+      mountLoc.getChunk().load();
+    } catch(Throwable ignored) {
+    }
+
+    ArmorStand seat;
+    try {
+      seat = world.spawn(mountLoc, ArmorStand.class, stand -> {
+        stand.setVisible(false);
+        stand.setMarker(true);
+        stand.setGravity(false);
+        stand.setBasePlate(false);
+        stand.setArms(false);
+        stand.setSilent(true);
+        stand.setInvulnerable(true);
+        stand.setPersistent(false);
+        stand.setCollidable(false);
+        stand.setCanMove(false);
+      });
+    } catch(Throwable t) {
+      seat = null;
+    }
+
+    if(seat == null || !seat.isValid()) {
+      VersionUtils.teleport(player, spot.lookLocation);
+      return;
+    }
+
+    seatMounts.put(uuid, seat);
+    VersionUtils.teleport(player, spot.lookLocation).thenAccept(ignored -> {
+      Runnable attachTask = () -> {
+        if(!isVotingActive() || !player.isOnline() || ArenaUtils.isSpectator(player, arena) || arena.isDeathPlayer(player)) {
+          unseatPlayer(uuid);
+          return;
+        }
+        ArmorStand currentSeat = seatMounts.get(uuid);
+        if(currentSeat != null && currentSeat.isValid() && !currentSeat.getPassengers().contains(player)) {
+          player.setSneaking(false);
+          currentSeat.addPassenger(player);
+        }
+      };
+      if(Bukkit.isPrimaryThread()) {
+        attachTask.run();
+      } else {
+        Bukkit.getScheduler().runTask(arena.getPlugin(), attachTask);
+      }
+    });
+  }
+
   public boolean startVoting(Player reportingPlayer) {
     return startVoting(reportingPlayer, null);
   }
@@ -406,7 +987,11 @@ public class VotingManager {
       return false;
     }
 
+    BusSeatPlan busSeatPlan = resolveBusSeatPlan();
     Location center = resolveMeetingCenter();
+    if(center == null && busSeatPlan != null && busSeatPlan.verdictSpot != null) {
+      center = busSeatPlan.verdictSpot;
+    }
     if(center == null || center.getWorld() == null) {
       return false;
     }
@@ -450,7 +1035,11 @@ public class VotingManager {
     this.pendingEjectedName = null;
     this.pendingEjectedWasMurderer = false;
     this.verdictExecuted = false;
+    this.activeVerdictSpot = busSeatPlan != null ? busSeatPlan.verdictSpot : null;
+    clearSeatMounts();
     clearCircleStatusDisplays();
+    this.voteState = VoteState.DISCUSSION;
+    this.voteTimer = arena.getPlugin().getConfig().getInt("Voting.Discussion-Time", 15);
 
     if(arena.getSabotageManager() != null) {
       arena.getSabotageManager().cancelActiveSabotage("VOTING");
@@ -473,7 +1062,10 @@ public class VotingManager {
         + " <#F4F1DE>บีบแตรรถบัสเรียกประชุมฉุกเฉิน");
     }
 
-    List<Player> alivePlayers = arena.getPlayersLeft();
+    List<Player> alivePlayers = new ArrayList<>(arena.getPlayersLeft());
+    if(reportingPlayer != null && alivePlayers.remove(reportingPlayer)) {
+      alivePlayers.add(0, reportingPlayer);
+    }
     int count = Math.max(1, alivePlayers.size());
     double radius = 2.8;
     double cx = center.getBlockX() + 0.5;
@@ -491,30 +1083,53 @@ public class VotingManager {
       }
       preVoteLocations.put(player, preLoc);
 
-      double angle = (2.0 * Math.PI * i) / count;
-      double px = cx + radius * Math.cos(angle);
-      double pz = cz + radius * Math.sin(angle);
-      double py = findSafeStandingY(center, px, cy, pz);
-
-      double dx = cx - px;
-      double dz = cz - pz;
-      float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-
-      Location circleSpot = new Location(center.getWorld(), px, py, pz, yaw, 10.0f);
-      meetingCircleLocations.put(player.getUniqueId(), circleSpot);
-
-      TextDisplay statusTd = arena.spawnTextDisplay(
-        circleSpot.clone().add(0.0, 2.25, 0.0),
-        "<#FFB703>" + player.getName() + "\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังปรึกษาหารือ<shadow:#000000FF><#5A4E7C>)</shadow>"
-      );
-      if(statusTd != null) {
-        circleStatusDisplays.put(player.getUniqueId(), statusTd);
-      }
-
       player.closeInventory();
-      VersionUtils.teleport(player, circleSpot);
       player.setWalkSpeed(0.0f);
       player.setFoodLevel(20);
+
+      if(busSeatPlan != null && i < busSeatPlan.spots.size()) {
+        BusSeatSpot busSpot = busSeatPlan.spots.get(i);
+        meetingCircleLocations.put(player.getUniqueId(), busSpot.lookLocation.clone());
+
+        TextDisplay statusTd = arena.spawnTextDisplay(
+          busSpot.displayLocation.clone(),
+          "<#FFB703>" + player.getName() + "\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังปรึกษาหารือ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
+        if(statusTd != null) {
+          if(busSpot.compactDisplay) {
+            applyCompactDisplayScale(statusTd);
+          }
+          circleStatusDisplays.put(player.getUniqueId(), statusTd);
+        }
+
+        if(busSpot.seated) {
+          mountPlayerOnSeat(player, busSpot);
+        } else {
+          VersionUtils.teleport(player, busSpot.lookLocation);
+        }
+      } else {
+        double angle = (2.0 * Math.PI * i) / count;
+        double px = cx + radius * Math.cos(angle);
+        double pz = cz + radius * Math.sin(angle);
+        double py = findSafeStandingY(center, px, cy, pz);
+
+        double dx = cx - px;
+        double dz = cz - pz;
+        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+
+        Location circleSpot = new Location(center.getWorld(), px, py, pz, yaw, 10.0f);
+        meetingCircleLocations.put(player.getUniqueId(), circleSpot);
+
+        TextDisplay statusTd = arena.spawnTextDisplay(
+          circleSpot.clone().add(0.0, 2.25, 0.0),
+          "<#FFB703>" + player.getName() + "\n<shadow:#000000FF><#5A4E7C>(</shadow><#B8B0C8>กำลังปรึกษาหารือ<shadow:#000000FF><#5A4E7C>)</shadow>"
+        );
+        if(statusTd != null) {
+          circleStatusDisplays.put(player.getUniqueId(), statusTd);
+        }
+
+        VersionUtils.teleport(player, circleSpot);
+      }
 
       savedSlotItems.put(player.getUniqueId(), player.getInventory().getItem(VOTE_MENU_ITEM_SLOT));
       player.getInventory().setItem(VOTE_MENU_ITEM_SLOT, createVoteMenuItem());
@@ -533,15 +1148,16 @@ public class VotingManager {
       }
     }
 
+    Location spectatorTarget = (busSeatPlan != null && busSeatPlan.spectatorSpot != null)
+      ? busSeatPlan.spectatorSpot.clone()
+      : center.clone().add(0.5, 2.5, 0.5);
     for(Player player : arena.getPlayers()) {
-      if(ArenaUtils.isSpectator(player, arena) && center != null) {
-        VersionUtils.teleport(player, center.clone().add(0.5, 2.5, 0.5)).thenAccept(ignored ->
+      if(ArenaUtils.isSpectator(player, arena)) {
+        VersionUtils.teleport(player, spectatorTarget).thenAccept(ignored ->
           Bukkit.getScheduler().runTaskLater(arena.getPlugin(), () -> ArenaUtils.applySpectatorState(player, arena, true), 1L));
       }
     }
 
-    voteState = VoteState.DISCUSSION;
-    voteTimer = arena.getPlugin().getConfig().getInt("Voting.Discussion-Time", 15);
     arena.updateCampfireHologram();
 
     String meetingPrefix = victimName != null
@@ -611,6 +1227,7 @@ public class VotingManager {
       }
     }
 
+    ensureSeatedPlayersMounted();
     voteTimer--;
 
     switch(voteState) {
@@ -1289,18 +1906,36 @@ public class VotingManager {
       wasMurderer = Role.isRole(Role.MURDERER, ejectedUser, arena);
     }
 
-    Location center = resolveMeetingCenter();
-    if(center != null && center.getWorld() != null) {
-      double cx = center.getBlockX() + 0.5;
-      double cz = center.getBlockZ() + 0.5;
-      double safeY = findSafeStandingY(center, cx, center.getBlockY(), cz);
-      Location fireCenter = new Location(center.getWorld(), cx, safeY, cz);
+    if(ejectedOnline) {
+      unseatPlayer(ejectedPlayer.getUniqueId());
+      TextDisplay ejectedTd = circleStatusDisplays.remove(ejectedPlayer.getUniqueId());
+      if(ejectedTd != null) {
+        arena.getTextDisplays().remove(ejectedTd);
+        if(ejectedTd.isValid()) {
+          ejectedTd.remove();
+        }
+      }
+    }
+
+    Location fireCenter = null;
+    if(activeVerdictSpot != null && activeVerdictSpot.getWorld() != null) {
+      fireCenter = activeVerdictSpot.clone();
+    } else {
+      Location center = resolveMeetingCenter();
+      if(center != null && center.getWorld() != null) {
+        double cx = center.getBlockX() + 0.5;
+        double cz = center.getBlockZ() + 0.5;
+        double safeY = findSafeStandingY(center, cx, center.getBlockY(), cz);
+        fireCenter = new Location(center.getWorld(), cx, safeY, cz);
+      }
+    }
+    if(fireCenter != null && fireCenter.getWorld() != null) {
       if(ejectedOnline) {
         meetingCircleLocations.put(ejectedPlayer.getUniqueId(), fireCenter);
         VersionUtils.teleport(ejectedPlayer, fireCenter);
       }
       try {
-        center.getWorld().strikeLightningEffect(fireCenter);
+        fireCenter.getWorld().strikeLightningEffect(fireCenter);
       } catch(Throwable ignored) {
       }
     }
@@ -1346,7 +1981,9 @@ public class VotingManager {
   private void endVoting() {
     voteState = VoteState.NONE;
     lastVoteEndTime = System.currentTimeMillis();
+    clearSeatMounts();
     clearCircleStatusDisplays();
+    activeVerdictSpot = null;
 
     for(Player player : arena.getPlayersLeft()) {
       restoreVoteMenuItem(player);
@@ -1405,6 +2042,7 @@ public class VotingManager {
   }
 
   public void handlePlayerLeave(Player player) {
+    unseatPlayer(player.getUniqueId());
     restoreVoteMenuItem(player);
     player.setWalkSpeed(0.2f);
     votes.remove(player);
@@ -1414,8 +2052,11 @@ public class VotingManager {
     preVoteLocations.remove(player);
     meetingCircleLocations.remove(player.getUniqueId());
     TextDisplay td = circleStatusDisplays.remove(player.getUniqueId());
-    if(td != null && td.isValid()) {
-      td.remove();
+    if(td != null) {
+      arena.getTextDisplays().remove(td);
+      if(td.isValid()) {
+        td.remove();
+      }
     }
     votes.values().removeIf(target -> target.equals(player));
     pendingVotes.values().removeIf(target -> target.equals(player));
@@ -1426,7 +2067,9 @@ public class VotingManager {
 
   public void cleanup() {
     musicManager.stopAll();
+    clearSeatMounts();
     clearCircleStatusDisplays();
+    activeVerdictSpot = null;
     for(Player player : arena.getPlayers()) {
       restoreVoteMenuItem(player);
       player.setWalkSpeed(0.2f);

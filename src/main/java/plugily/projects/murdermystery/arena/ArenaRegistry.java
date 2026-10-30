@@ -168,6 +168,19 @@ public class ArenaRegistry extends PluginArenaRegistry {
       }
     }
 
+    List<Location> customBusSeats = new ArrayList<>();
+    for(String seatStr : section.getStringList(id + ".busseats")) {
+      if(seatStr != null && !seatStr.isEmpty()) {
+        Location seatLoc = LocationSerializer.getLocation(seatStr);
+        if(seatLoc != null) {
+          customBusSeats.add(seatLoc);
+        }
+      }
+    }
+    if(!customBusSeats.isEmpty()) {
+      ((Arena) arena).setBusSeatLocations(customBusSeats);
+    }
+
     int customTasksPerPlayer = section.getInt(id + ".tasksperplayer", -1);
     if(customTasksPerPlayer > 0) {
       ((Arena) arena).setTasksPerPlayer(customTasksPerPlayer);

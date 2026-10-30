@@ -124,6 +124,7 @@ public class Arena extends PluginArena {
   private final Map<SabotageType, Location> sabotageLocations = new EnumMap<>(SabotageType.class);
   private Location campfireLocation;
   private Location meetingLocation;
+  private List<Location> busSeatLocations = new ArrayList<>();
   private TextDisplay campfireDisplay;
   private int tasksPerPlayer = -1;
   private boolean visualTasksEnabled = true;
@@ -1140,6 +1141,34 @@ public class Arena extends PluginArena {
 
   public Location getEffectiveMeetingLocation() {
     return meetingLocation != null ? meetingLocation : campfireLocation;
+  }
+
+  public List<Location> getBusSeatLocations() {
+    return busSeatLocations;
+  }
+
+  public void setBusSeatLocations(List<Location> locations) {
+    List<Location> normalized = new ArrayList<>();
+    if(locations != null) {
+      for(Location loc : locations) {
+        Location blockLoc = normalizeBlockLocation(loc);
+        if(blockLoc != null && normalized.stream().noneMatch(existing -> isSameBlockLocation(existing, blockLoc))) {
+          normalized.add(blockLoc);
+        }
+      }
+    }
+    this.busSeatLocations = normalized;
+  }
+
+  public void addBusSeatLocation(Location loc) {
+    Location blockLoc = normalizeBlockLocation(loc);
+    if(blockLoc != null && busSeatLocations.stream().noneMatch(existing -> isSameBlockLocation(existing, blockLoc))) {
+      busSeatLocations.add(blockLoc);
+    }
+  }
+
+  public void clearBusSeatLocations() {
+    busSeatLocations.clear();
   }
 
   public int getTasksPerPlayer() {

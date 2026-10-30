@@ -263,10 +263,21 @@ public class TaskAndVentArgument {
           Location cf = arena.getCampfireLocation();
           msg(player, "<#FF7518>จุดแตรรถบัสฉุกเฉิน (Bus Horn): "
             + (cf == null ? "<#FF3B47>ยังไม่ได้ตั้งค่า (/mma setbushorn " + arenaId + ")" : "<#6EEB83>" + cf.getBlockX() + ", " + cf.getBlockY() + ", " + cf.getBlockZ()));
+          List<Location> manualBusSeats = arena.getBusSeatLocations();
+          int autoSeatCount = manualBusSeats.isEmpty() ? arena.getVotingManager().detectBusChairBlocks().size() : 0;
+          String busSeatStatus;
+          if(!manualBusSeats.isEmpty()) {
+            busSeatStatus = "<#6EEB83>กำหนดเอง " + manualBusSeats.size() + " ที่นั่ง <#B8B0C8>(ล้างกลับเป็นอัตโนมัติ: /mma clearbusseats " + arenaId + ")";
+          } else if(autoSeatCount > 0) {
+            busSeatStatus = "<#6EEB83>ตรวจพบเบาะบนรถบัสอัตโนมัติ " + autoSeatCount + " ที่นั่ง (จัดแถวคู่ 1  1)";
+          } else {
+            busSeatStatus = "<#B8B0C8>ไม่พบเบาะบันไดในรถ (ใช้การยืนล้อมวงโหวต หรือเพิ่มเองด้วย /mma addbusseat " + arenaId + ")";
+          }
+          msg(player, "<#72EFDD>เบาะที่นั่งประชุมบนรถบัส (Bus Chairs): " + busSeatStatus);
           Location mp = arena.getMeetingLocation();
-          msg(player, "<#FFB703>จุดรวมตัวประชุมโหวต (Meeting Point): "
+          msg(player, "<#FFB703>จุดสำรองรวมตัวประชุมโหวต (Fallback Meeting Point): "
             + (mp == null
-              ? "<#B8B0C8>ใช้จุดเดียวกับ Bus Horn (แยกจุดนอกรถได้ด้วย /mma setmeetingpoint " + arenaId + ")"
+              ? "<#B8B0C8>ใช้จุดเดียวกับ Bus Horn"
               : "<#6EEB83>" + mp.getBlockX() + ", " + mp.getBlockY() + ", " + mp.getBlockZ()));
           CutsceneManager cm = arena.getCutsceneManager();
           String hideBoxNote = (cm.getBusHidePos1() != null && cm.getBusHidePos2() != null)
@@ -580,6 +591,40 @@ public class TaskAndVentArgument {
         @Override
         public void execute(CommandSender sender, String[] args) {
           handleClearMeetingPoint(registry, (Player) sender, args, "clearmeeting");
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "addbusseat",
+        "murdermystery.admin.addtask",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma addbusseat <arena>",
+          "/mma addbusseat <arena>",
+          "&7เพิ่มเบาะที่นั่งประชุมบนรถบัสแบบกำหนดเอง (หากไม่ได้ใช้เบาะบันไดอัตโนมัติ)\n&6Permission: &7murdermystery.admin.addtask")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleAddBusSeat(registry, (Player) sender, args);
+        }
+      }
+    );
+
+    registry.mapArgument(
+      "murdermysteryadmin",
+      new LabeledCommandArgument(
+        "clearbusseats",
+        "murdermystery.admin.cleartasks",
+        CommandArgument.ExecutorType.PLAYER,
+        new LabelData(
+          "/mma clearbusseats <arena>",
+          "/mma clearbusseats <arena>",
+          "&7ล้างเบาะที่นั่งกำหนดเองของห้อง (กลับไปตรวจจับเบาะบันได 1  1 บนรถบัสอัตโนมัติ)\n&6Permission: &7murdermystery.admin.cleartasks")) {
+        @Override
+        public void execute(CommandSender sender, String[] args) {
+          handleClearBusSeats(registry, (Player) sender, args);
         }
       }
     );
@@ -1291,9 +1336,68 @@ public class TaskAndVentArgument {
 
     msg(player, "<#6EEB83>[+] ตั้งจุดแตรรถบัสฉุกเฉิน (Bus Horn) ให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>เรียบร้อยแล้วที่ <#F4F1DE>"
       + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
-    if(arena.getMeetingLocation() == null) {
-      msg(player, "<#B8B0C8>Tip: หากตั้งแตรไว้ในห้องคนขับแคบๆ แนะนำให้ตั้งจุดยืนล้อมวงโหวตไว้นอกรถด้วยคำสั่ง <#FFB703>/mma setmeetingpoint " + arenaId);
+    int detectedChairs = arena.getVotingManager().detectBusChairBlocks().size();
+    if(detectedChairs > 0) {
+      msg(player, "<#72EFDD>[Bus Chairs] <#F4F1DE>ตรวจพบเบาะผู้โดยสารในรถบัสอัตโนมัติ <#6EEB83>" + detectedChairs + " ที่นั่ง <#B8B0C8>(ผู้เล่นจะนั่งเรียงแถวคู่ 1  1 เมื่อกดแตร)");
+    } else if(arena.getMeetingLocation() == null) {
+      msg(player, "<#B8B0C8>Tip: ไม่พบเบาะบันไดในรถ หากต้องการตั้งจุดยืนล้อมวงโหวตแยกใช้ <#FFB703>/mma setmeetingpoint " + arenaId + " <#B8B0C8>หรือเพิ่มที่นั่งเองด้วย <#FFB703>/mma addbusseat " + arenaId);
     }
+  }
+
+  private static void handleAddBusSeat(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma addbusseat <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    Location loc = getTargetOrStandingLocation(player, 5);
+    Location blockLoc = new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), player.getLocation().getYaw(), 0.0f);
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    List<String> list = config.getStringList("instances." + arenaId + ".busseats");
+    String serialized = LocationSerializer.locationToString(blockLoc);
+    if(!list.contains(serialized)) {
+      list.add(serialized);
+    }
+    config.set("instances." + arenaId + ".busseats", list);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.addBusSeatLocation(blockLoc);
+
+    msg(player, "<#6EEB83>[+] เพิ่มเบาะที่นั่งประชุมบนรถบัสให้ห้อง <#FFB703>" + arenaId + " <#6EEB83>ที่ <#F4F1DE>"
+      + blockLoc.getBlockX() + ", " + blockLoc.getBlockY() + ", " + blockLoc.getBlockZ()
+      + " <#6EEB83>(รวม <#FFB703>" + arena.getBusSeatLocations().size() + " <#6EEB83>ที่นั่ง)");
+  }
+
+  private static void handleClearBusSeats(ArgumentsRegistry registry, Player player, String[] args) {
+    if(args.length < 2) {
+      msg(player, "<#FF3B47>การใช้งาน: /mma clearbusseats <ชื่อห้อง/arena>");
+      return;
+    }
+    String arenaId = args[1];
+    Arena arena = (Arena) registry.getPlugin().getArenaRegistry().getArena(arenaId);
+    if(arena == null) {
+      msg(player, "<#FF3B47>ไม่พบห้องชื่อ " + arenaId);
+      return;
+    }
+
+    FileConfiguration config = ConfigUtils.getConfig(registry.getPlugin(), "arenas");
+    config.set("instances." + arenaId + ".busseats", null);
+    ConfigUtils.saveConfig(registry.getPlugin(), config, "arenas");
+
+    arena.clearBusSeatLocations();
+
+    int autoSeats = arena.getVotingManager().detectBusChairBlocks().size();
+    msg(player, "<#FF3B47>[!] ล้างเบาะที่นั่งกำหนดเองของห้อง <#FFB703>" + arenaId + " <#FF3B47>แล้ว "
+      + (autoSeats > 0
+        ? "<#6EEB83>(สลับกลับไปใช้เบาะอัตโนมัติบนรถบัส " + autoSeats + " ที่นั่ง)"
+        : "<#B8B0C8>(กลับไปใช้การตรวจจับเบาะอัตโนมัติ)"));
   }
 
   private static void handleClearBusHorn(ArgumentsRegistry registry, Player player, String[] args, String subcommand) {

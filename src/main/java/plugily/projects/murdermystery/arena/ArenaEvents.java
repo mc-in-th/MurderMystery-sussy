@@ -39,6 +39,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -50,6 +51,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -226,6 +228,21 @@ public class ArenaEvents extends PluginArenaEvents {
     Player player = (Player) event.getEntered();
     Arena arena = plugin.getArenaRegistry().getArena(player);
     if(arena != null) {
+      event.setCancelled(true);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  public void onEntityDismount(EntityDismountEvent event) {
+    if(!(event.getEntity() instanceof Player)) {
+      return;
+    }
+    Player player = (Player) event.getEntity();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null) {
+      return;
+    }
+    if(arena.getVotingManager().shouldPreventDismount(player, event.getDismounted()) && event.isCancellable()) {
       event.setCancelled(true);
     }
   }
@@ -735,6 +752,9 @@ public class ArenaEvents extends PluginArenaEvents {
       return;
     }
     if(arena.getVotingManager().isVotingActive()) {
+      if(arena.getVotingManager().isSeatedOnBusChair(player)) {
+        return;
+      }
       Location to = event.getTo();
       if(to != null && (event.getFrom().getX() != to.getX() || event.getFrom().getZ() != to.getZ())) {
         Location spot = arena.getVotingManager().getMeetingSpot(player);
@@ -928,6 +948,23 @@ public class ArenaEvents extends PluginArenaEvents {
         arena.getTaskManager().getMinigameManager().handleClose(player, title);
       }
     }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH)
+  public void onVotingEntityInteract(PlayerInteractEntityEvent event) {
+    if(event.getHand() == EquipmentSlot.OFF_HAND) {
+      return;
+    }
+    Player player = event.getPlayer();
+    Arena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null || arena.getArenaState() != IArenaState.IN_GAME || !arena.getVotingManager().isVotingActive()) {
+      return;
+    }
+    if(ArenaUtils.isSpectator(player, arena) || arena.getCutsceneManager().isPlaying()) {
+      return;
+    }
+    event.setCancelled(true);
+    arena.getVotingManager().openVotingGUI(player);
   }
 
   @EventHandler(priority = EventPriority.HIGH)
